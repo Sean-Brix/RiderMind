@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import LessonModal from '../../../../components/LessonModal';
 import { ModuleListItem, ActiveModuleItem, DroppableArea, FileUpload } from './components';
 import * as moduleService from '../../../../services/moduleService';
+import * as categoryService from '../../../../services/categoryService';
 
 // Sortable Slide Item Component
 function SortableSlideItem({ slide, index, isEditingModule, onEdit, onDelete }) {
@@ -104,6 +105,13 @@ export default function Modules() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeId, setActiveId] = useState(null);
   
+  // Category state
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryStudentType, setNewCategoryStudentType] = useState('BOTH');
+  
   // All modules data
   const [allModules, setAllModules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -140,6 +148,7 @@ export default function Modules() {
   // Load all modules on component mount
   useEffect(() => {
     loadModules();
+    loadCategories();
   }, []);
 
   async function loadModules() {
@@ -165,6 +174,92 @@ export default function Modules() {
     }
   }
 
+  async function loadCategories() {
+    try {
+      const response = await categoryService.getAllCategories({ isActive: true });
+      setCategories(response.data);
+      
+      // Set default category as selected
+      const defaultCategory = response.data.find(cat => cat.isDefault);
+      if (defaultCategory) {
+        setSelectedCategoryId(defaultCategory.id);
+        loadCategoryModules(defaultCategory.id);
+      }
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  }
+
+  async function loadCategoryModules(categoryId) {
+    try {
+      const response = await categoryService.getCategoryById(categoryId);
+      const categoryModules = response.data.modules.map(cm => ({
+        ...cm.module,
+        categoryPosition: cm.position
+      }));
+      setActiveModules(categoryModules);
+      setSavedModules(categoryModules);
+    } catch (err) {
+      console.error('Failed to load category modules:', err);
+    }
+  }
+
+  async function handleCategoryChange(categoryId) {
+    if (hasChanges) {
+      if (!confirm('You have unsaved changes. Do you want to switch categories without saving?')) {
+        return;
+      }
+    }
+    setSelectedCategoryId(categoryId);
+    loadCategoryModules(categoryId);
+  }
+
+  async function handleCreateCategory() {
+    if (!newCategoryName.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    try {
+      const response = await categoryService.createCategory({
+        name: newCategoryName.trim(),
+        studentType: newCategoryStudentType,
+        isActive: true
+      });
+      
+      setCategories([...categories, response.data]);
+      setSelectedCategoryId(response.data.id);
+      setNewCategoryName('');
+      setNewCategoryStudentType('BOTH');
+      setIsCreatingCategory(false);
+      setActiveModules([]);
+      setSavedModules([]);
+      alert('Category created successfully!');
+    } catch (err) {
+      console.error('Failed to create category:', err);
+      alert('Failed to create category: ' + err.message);
+    }
+  }
+
+  async function handleSaveOrder() {
+    if (!selectedCategoryId) {
+      alert('Please select a category first');
+      return;
+    }
+
+    try {
+      const moduleIds = activeModules.map(m => m.id);
+      await categoryService.assignModulesToCategory(selectedCategoryId, moduleIds);
+      
+      setSavedModules([...activeModules]);
+      setIsEditMode(false);
+      alert('Module order saved successfully!');
+    } catch (err) {
+      console.error('Failed to save order:', err);
+      alert('Failed to save order: ' + err.message);
+    }
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -178,13 +273,6 @@ export default function Modules() {
   );
 
   const hasChanges = JSON.stringify(activeModules) !== JSON.stringify(savedModules);
-
-  function handleSaveOrder() {
-    setSavedModules([...activeModules]);
-    setIsEditMode(false);
-    // TODO: API call to save order
-    // await fetch('/api/admin/modules/order', { method: 'POST', body: JSON.stringify(activeModules) });
-  }
 
   function handleCancelEdit() {
     setActiveModules([...savedModules]);
@@ -601,17 +689,85 @@ export default function Modules() {
         {/* Tab Content */}
         <div className="p-6">
           {activeTab === 'order' ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
+            <>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
               <div className="flex gap-6">
                 {/* Left Sidebar - All Modules */}
                 <div className="w-80 flex-shrink-0">
                   <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col">
                     <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+                      {/* Category Selector */}
+                      <div className="mb-3">
+                        <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5 block">
+                          Category
+                        </label>
+                        <select
+                          value={isCreatingCategory ? 'create-new' : (selectedCategoryId || '')}
+                          onChange={(e) => {
+                            if (e.target.value === 'create-new') {
+                              setIsCreatingCategory(true);
+                            } else {
+                              handleCategoryChange(Number(e.target.value));
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-sm text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                        >
+                          <option value="">Select a category</option>
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name} {cat.isDefault ? '★' : ''} ({cat.studentType})
+                            </option>
+                          ))}
+                          <option value="create-new">+ Create New Category</option>
+                        </select>
+                      </div>
+
+                      {/* Create Category Form */}
+                      {isCreatingCategory && (
+                        <div className="mb-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                          <input
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="Category name"
+                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
+                          />
+                          <select
+                            value={newCategoryStudentType}
+                            onChange={(e) => setNewCategoryStudentType(e.target.value)}
+                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
+                          >
+                            <option value="CAR">Car</option>
+                            <option value="MOTORCYCLE">Motorcycle</option>
+                            <option value="BOTH">Both</option>
+                          </select>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleCreateCategory}
+                              disabled={!newCategoryName.trim()}
+                              className="flex-1 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Create
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsCreatingCategory(false);
+                                setNewCategoryName('');
+                                setNewCategoryStudentType('CAR');
+                              }}
+                              className="flex-1 px-3 py-1.5 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded text-xs font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
                           All Modules
@@ -736,6 +892,7 @@ export default function Modules() {
                 ) : null}
               </DragOverlay>
             </DndContext>
+            </>
           ) : (
             // Edit Modules Tab
             <div className="flex gap-6">
