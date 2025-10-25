@@ -164,7 +164,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                       <div className="w-full h-full flex items-center justify-center">
                         <video
                           key={currentSlide}
-                          className="max-w-full max-h-full rounded-xl shadow-2xl"
+                          className="w-full h-full object-contain rounded-xl shadow-2xl"
                           controls
                           autoPlay
                           src={currentSlideData.content}
@@ -180,7 +180,18 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                         <img
                           src={currentSlideData.content}
                           alt={currentSlideData.title}
-                          className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                          className="w-full h-full object-contain rounded-xl shadow-2xl"
+                          onError={(e) => {
+                            console.error('Image failed to load:', {
+                              src: currentSlideData.content,
+                              title: currentSlideData.title,
+                              error: e
+                            });
+                            e.target.style.border = '2px solid red';
+                          }}
+                          onLoad={() => {
+                            console.log('Image loaded successfully:', currentSlideData.content);
+                          }}
                         />
                       </div>
                     )}

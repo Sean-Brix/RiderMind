@@ -88,12 +88,49 @@ model Module {
   createdBy   Int?
   updatedBy   Int?
 
-  objectives    ModuleObjective[]
-  slides        ModuleSlide[]
+  objectives       ModuleObjective[]
+  slides           ModuleSlide[]
+  categoryModules  ModuleCategoryModule[]
 
   @@index([position])
   @@index([isActive])
   @@map("modules")
+}
+
+model ModuleCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  studentType StudentType?
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+
+  modules ModuleCategoryModule[]
+
+  @@index([isActive])
+  @@index([isDefault])
+  @@map("module_categories")
+}
+
+model ModuleCategoryModule {
+  id         Int      @id @default(autoincrement())
+  categoryId Int
+  moduleId   Int
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  category ModuleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, moduleId])
+  @@index([categoryId])
+  @@index([moduleId])
+  @@index([position])
+  @@map("module_category_modules")
 }
 
 model ModuleObjective {
@@ -137,4 +174,10 @@ enum SlideType {
   text
   image
   video
+}
+
+enum StudentType {
+  CAR
+  MOTORCYCLE
+  BOTH
 }

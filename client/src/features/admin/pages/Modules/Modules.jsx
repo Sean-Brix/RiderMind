@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -16,36 +16,22 @@ import {
 } from '@dnd-kit/sortable';
 import LessonModal from '../../../../components/LessonModal';
 import { ModuleListItem, ActiveModuleItem, DroppableArea, FileUpload } from './components';
-
-// Mock data for all available modules
-const ALL_MODULES = [
-  { id: 1, title: 'Road Safety Basics' },
-  { id: 2, title: 'Traffic Signs & Signals' },
-  { id: 3, title: 'Defensive Riding Techniques' },
-  { id: 4, title: 'Motorcycle Maintenance' },
-  { id: 5, title: 'Weather & Road Conditions' },
-  { id: 6, title: 'Night Riding Safety' },
-  { id: 7, title: 'Emergency Procedures' },
-  { id: 8, title: 'Group Riding' },
-];
+import * as moduleService from '../../../../services/moduleService';
 
 export default function Modules() {
   const [activeTab, setActiveTab] = useState('order');
-  const [activeModules, setActiveModules] = useState([
-    ALL_MODULES[0],
-    ALL_MODULES[1],
-    ALL_MODULES[2],
-  ]);
-  const [savedModules, setSavedModules] = useState([
-    ALL_MODULES[0],
-    ALL_MODULES[1],
-    ALL_MODULES[2],
-  ]);
+  const [activeModules, setActiveModules] = useState([]);
+  const [savedModules, setSavedModules] = useState([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeId, setActiveId] = useState(null);
   
+  // All modules data
+  const [allModules, setAllModules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   // Edit Module Tab State
-  const [selectedModuleId, setSelectedModuleId] = useState(null); // null = create new, number = edit existing
+  const [selectedModuleId, setSelectedModuleId] = useState(null); // null = not selected, 'new' = create new, number = edit existing
   const [moduleForm, setModuleForm] = useState({
     title: '',
     description: '',
@@ -63,6 +49,38 @@ export default function Modules() {
   
   // Preview Modal State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  // Saving states
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load all modules on component mount
+  useEffect(() => {
+    loadModules();
+  }, []);
+
+  async function loadModules() {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await moduleService.getAllModules({
+        includeObjectives: true,
+        includeSlides: true
+      });
+      
+      setAllModules(response.data);
+      
+      // Set active modules (isActive = true)
+      const active = response.data.filter(m => m.isActive);
+      setActiveModules(active);
+      setSavedModules(active);
+    } catch (err) {
+      console.error('Failed to load modules:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -72,7 +90,7 @@ export default function Modules() {
   );
 
   // Get available modules (not yet active)
-  const availableModules = ALL_MODULES.filter(
+  const availableModules = allModules.filter(
     module => !activeModules.find(am => am.id === module.id)
   );
 
@@ -106,18 +124,27 @@ export default function Modules() {
     setEditingSlideIndex(null);
   }
 
-  function handleSelectModule(moduleId) {
-    setSelectedModuleId(moduleId);
-    const module = ALL_MODULES.find(m => m.id === moduleId);
-    if (module) {
-      setModuleForm({
-        title: module.title,
-        description: module.description || '',
-        objectives: module.objectives || [''],
-        slides: module.slides || [],
-      });
+  async function handleSelectModule(moduleId) {
+    try {
+      setSelectedModuleId(moduleId);
+      const response = await moduleService.getModuleById(moduleId);
+      const module = response.data;
+      
+      if (module) {
+        setModuleForm({
+          title: module.title,
+          description: module.description || '',
+          objectives: module.objectives && module.objectives.length > 0 
+            ? module.objectives.map(obj => obj.objective)
+            : [''],
+          slides: module.slides || [],
+        });
+      }
+      setEditingSlideIndex(null);
+    } catch (err) {
+      console.error('Failed to load module:', err);
+      alert('Failed to load module: ' + err.message);
     }
-    setEditingSlideIndex(null);
   }
 
   function handleModuleFormChange(field, value) {
@@ -166,8 +193,12 @@ export default function Modules() {
       // Adding new slide
       newSlides.push(slideForm);
     } else {
-      // Editing existing slide
-      newSlides[editingSlideIndex] = slideForm;
+      // Editing existing slide - preserve the ID if it exists
+      const existingSlide = moduleForm.slides[editingSlideIndex];
+      newSlides[editingSlideIndex] = {
+        ...slideForm,
+        id: existingSlide?.id, // Preserve existing slide ID
+      };
     }
     setModuleForm(prev => ({ ...prev, slides: newSlides }));
     setEditingSlideIndex(null);
@@ -176,7 +207,7 @@ export default function Modules() {
       title: '',
       content: '',
       description: '',
-      icon: '💡',
+      file: null,
     });
   }
 
@@ -199,21 +230,93 @@ export default function Modules() {
     }
   }
 
-  function handleSaveModule() {
-    // TODO: API call to create/update module
-    console.log('Saving module:', moduleForm);
-    // Reset form
-    setSelectedModuleId(null);
-    setModuleForm({
-      title: '',
-      icon: '📚',
-      description: '',
-      objectives: [''],
-      slides: [],
-    });
+  async function handleSaveModule() {
+    try {
+      setIsSaving(true);
+      
+      // Prepare module data
+      const moduleData = {
+        title: moduleForm.title,
+        description: moduleForm.description,
+        isActive: false, // New modules are inactive by default
+        objectives: moduleForm.objectives
+          .filter(obj => obj.trim() !== '')
+          .map((obj, index) => ({
+            objective: obj,
+            position: index + 1
+          }))
+      };
+
+      let savedModule;
+      
+      if (selectedModuleId === 'new') {
+        // Create new module
+        const response = await moduleService.createModule(moduleData);
+        savedModule = response.data;
+        alert('Module created successfully!');
+      } else {
+        // Update existing module
+        const response = await moduleService.updateModule(selectedModuleId, moduleData);
+        savedModule = response.data;
+        alert('Module updated successfully!');
+      }
+
+      // Handle slides - need to save/update them individually
+      for (let i = 0; i < moduleForm.slides.length; i++) {
+        const slide = moduleForm.slides[i];
+        const slideData = {
+          type: slide.type,
+          title: slide.title,
+          content: slide.type === 'text' ? slide.content : '', // Only text slides have content in DB
+          description: slide.description,
+          position: i + 1,
+          imageFile: slide.type === 'image' ? slide.file : undefined // Include image file for conversion
+        };
+
+        if (slide.id) {
+          // Update existing slide
+          await moduleService.updateSlide(slide.id, slideData);
+          
+          // Upload new video if file exists (replacement)
+          if (slide.type === 'video' && slide.file) {
+            await moduleService.uploadSlideVideo(slide.id, slide.file);
+          }
+        } else {
+          // Create new slide
+          const newSlideResponse = await moduleService.addSlide(savedModule.id, slideData);
+          
+          // Upload video if file exists
+          if (slide.type === 'video' && slide.file) {
+            await moduleService.uploadSlideVideo(newSlideResponse.data.id, slide.file);
+          }
+        }
+      }
+
+      // Reload modules
+      await loadModules();
+      
+      // Reset form
+      setSelectedModuleId(null);
+      setModuleForm({
+        title: '',
+        description: '',
+        objectives: [''],
+        slides: [],
+      });
+    } catch (err) {
+      console.error('Failed to save module:', err);
+      alert('Failed to save module: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handleCancelModuleEdit() {
+    if (editingSlideIndex !== null) {
+      alert('Please save or cancel the slide you are editing first.');
+      return;
+    }
+    
     setSelectedModuleId(null);
     setModuleForm({
       title: '',
@@ -221,14 +324,34 @@ export default function Modules() {
       objectives: [''],
       slides: [],
     });
-    setEditingSlideIndex(null);
   }
 
-  function handleDeleteModule() {
-    if (window.confirm('Are you sure you want to delete this module?')) {
-      // TODO: API call to delete module
-      console.log('Deleting module:', selectedModuleId);
+  async function handleDeleteModule() {
+    if (!window.confirm('Are you sure you want to delete this module? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await moduleService.deleteModule(selectedModuleId);
+      alert('Module deleted successfully!');
+      
+      // Reload modules
+      await loadModules();
+      
+      // Reset form
       setSelectedModuleId(null);
+      setModuleForm({
+        title: '',
+        description: '',
+        objectives: [''],
+        slides: [],
+      });
+    } catch (err) {
+      console.error('Failed to delete module:', err);
+      alert('Failed to delete module: ' + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -243,7 +366,7 @@ export default function Modules() {
     if (!over) return;
     if (!isEditMode) return; // Only allow drag in edit mode
 
-    const draggedModule = ALL_MODULES.find(m => m.id === active.id);
+    const draggedModule = allModules.find(m => m.id === active.id);
     const isFromAvailable = availableModules.find(m => m.id === active.id);
     const isFromActive = activeModules.find(m => m.id === active.id);
     const isOverAvailable = availableModules.find(m => m.id === over.id);
@@ -287,7 +410,37 @@ export default function Modules() {
         </p>
       </div>
 
-      {/* Tabs */}
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700 p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">Loading modules...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900 dark:text-red-100">Failed to load modules</h3>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
+            <button
+              onClick={loadModules}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!loading && !error && (
       <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700">
         <div className="border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex gap-1 p-1">
@@ -445,7 +598,7 @@ export default function Modules() {
                   <div className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-800 border-2 border-brand-500 rounded-lg shadow-xl">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
-                        {ALL_MODULES.find(m => m.id === activeId)?.title}
+                        {allModules.find(m => m.id === activeId)?.title}
                       </h3>
                     </div>
                   </div>
@@ -474,7 +627,7 @@ export default function Modules() {
                   </div>
                   
                   <div className="p-3 space-y-2 overflow-y-auto flex-1">
-                    {ALL_MODULES.map((module) => (
+                    {allModules.map((module) => (
                       <button
                         key={module.id}
                         onClick={() => handleSelectModule(module.id)}
@@ -547,17 +700,24 @@ export default function Modules() {
                         {selectedModuleId !== 'new' && (
                           <button
                             onClick={handleDeleteModule}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors"
+                            disabled={isDeleting}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                           >
-                            Delete
+                            {isDeleting && (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            )}
+                            {isDeleting ? 'Deleting...' : 'Delete'}
                           </button>
                         )}
                         <button
                           onClick={handleSaveModule}
-                          disabled={!moduleForm.title || moduleForm.slides.length === 0}
-                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={!moduleForm.title || moduleForm.slides.length === 0 || isSaving}
+                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                          Save Module
+                          {isSaving && (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          )}
+                          {isSaving ? 'Saving...' : 'Save Module'}
                         </button>
                       </div>
                     </div>
@@ -820,6 +980,7 @@ export default function Modules() {
           )}
         </div>
       </div>
+      )}
 
       {/* Preview Modal */}
       <LessonModal
@@ -830,7 +991,23 @@ export default function Modules() {
           title: moduleForm.title,
           description: moduleForm.description,
           objectives: moduleForm.objectives.filter(obj => obj.trim() !== ''),
-          slides: moduleForm.slides,
+          slides: moduleForm.slides.map(slide => {
+            // Convert slide data for preview
+            if (slide.type === 'video') {
+              // If slide has an ID, use the API endpoint. Otherwise use the file preview
+              const videoUrl = slide.id 
+                ? moduleService.getSlideVideoUrl(slide.id)
+                : slide.file ? URL.createObjectURL(slide.file) : '';
+              return { ...slide, content: videoUrl };
+            } else if (slide.type === 'image') {
+              // If slide has an ID, use the API endpoint. Otherwise use the file preview
+              const imageUrl = slide.id
+                ? moduleService.getSlideImageUrl(slide.id)
+                : slide.file ? URL.createObjectURL(slide.file) : '';
+              return { ...slide, content: imageUrl };
+            }
+            return slide;
+          }),
         }}
       />
     </div>

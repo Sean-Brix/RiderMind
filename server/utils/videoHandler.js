@@ -3,10 +3,15 @@
  * Handles video file uploads and serves them with streaming support
  */
 
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Video storage directory
 const VIDEO_DIR = path.join(__dirname, '..', 'public', 'videos');
@@ -168,7 +173,7 @@ function validateVideo(file) {
   return true;
 }
 
-module.exports = {
+export {
   uploadVideo,
   deleteVideoFile,
   getVideoInfo,
