@@ -74,3 +74,67 @@ enum CivilStatus {
   Divorced
   Separated
 }
+
+// ==================== LEARNING MODULES ====================
+
+model Module {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  isActive    Boolean  @default(false)
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+
+  objectives    ModuleObjective[]
+  slides        ModuleSlide[]
+
+  @@index([position])
+  @@index([isActive])
+  @@map("modules")
+}
+
+model ModuleObjective {
+  id          Int      @id @default(autoincrement())
+  moduleId    Int
+  objective   String   @db.VarChar(500)
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@map("module_objectives")
+}
+
+model ModuleSlide {
+  id          Int        @id @default(autoincrement())
+  moduleId    Int
+  type        SlideType
+  title       String     @db.VarChar(255)
+  content     String     @db.Text
+  description String?    @db.VarChar(500)
+  position    Int        @default(0)
+  
+  imageData   Bytes?
+  imageMime   String?    @db.VarChar(50)
+  videoPath   String?    @db.VarChar(500)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@index([position])
+  @@map("module_slides")
+}
+
+enum SlideType {
+  text
+  image
+  video
+}

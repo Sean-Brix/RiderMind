@@ -1,0 +1,387 @@
+[
+  {
+    "title": "Introduction to Road Safety",
+    "description": "Learn the fundamental principles of road safety and defensive driving techniques.",
+    "isActive": true,
+    "position": 1,
+    "objectives": [
+      "Understand the importance of road safety",
+      "Identify common road hazards",
+      "Learn defensive driving principles",
+      "Recognize traffic signs and signals"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Welcome to Road Safety Training",
+        "content": "Road safety is everyone's responsibility. This module will teach you essential skills to become a safer, more responsible driver.",
+        "description": "Introduction to the course",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "The Importance of Road Safety",
+        "content": "Every year, thousands of lives are lost due to road accidents. Understanding and practicing road safety can prevent these tragedies and protect you, your passengers, and other road users.",
+        "description": "Why road safety matters",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Defensive Driving Principles",
+        "content": "Defensive driving means anticipating dangerous situations and making safe decisions. Always stay alert, maintain safe following distances, and be prepared for the unexpected actions of other drivers.",
+        "description": "Core defensive driving concepts",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Traffic Rules and Regulations",
+    "description": "Comprehensive guide to Philippine traffic laws and regulations.",
+    "isActive": true,
+    "position": 2,
+    "objectives": [
+      "Master Philippine traffic laws",
+      "Understand right-of-way rules",
+      "Learn speed limit regulations",
+      "Know parking and stopping rules"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Philippine Traffic Laws Overview",
+        "content": "The Land Transportation and Traffic Code governs all road users in the Philippines. Knowing these laws is essential for safe and legal driving.",
+        "description": "Overview of traffic laws",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Right-of-Way Rules",
+        "content": "Understanding who has the right-of-way in various situations prevents accidents. At intersections without signals, vehicles on the right generally have priority. Always yield to emergency vehicles.",
+        "description": "Right-of-way guidelines",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Speed Limits and Zones",
+        "content": "Speed limits vary by location: 30 km/h in school zones, 40 km/h in residential areas, 60 km/h on city roads, and up to 100 km/h on expressways. Always adjust speed to road and weather conditions.",
+        "description": "Speed limit regulations",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Vehicle Safety and Maintenance",
+    "description": "Essential vehicle maintenance and safety checks for motorcycles and cars.",
+    "isActive": true,
+    "position": 3,
+    "objectives": [
+      "Perform pre-ride safety inspections",
+      "Understand basic vehicle maintenance",
+      "Identify warning signs of mechanical issues",
+      "Learn proper tire and brake care"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Pre-Ride Safety Inspection",
+        "content": "Before every ride, check: tires (pressure and tread), brakes (function and fluid), lights (all working), mirrors (properly adjusted), and oil levels. A quick inspection can prevent breakdowns and accidents.",
+        "description": "Daily safety checks",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Tire Maintenance",
+        "content": "Proper tire pressure improves handling and fuel efficiency. Check pressure weekly. Replace tires when tread depth falls below 1.6mm. Rotate tires every 10,000 km for even wear.",
+        "description": "Tire care essentials",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Brake System Care",
+        "content": "Brakes are your vehicle's most critical safety feature. Have them inspected every 6 months. Warning signs include squealing, grinding noises, or soft brake pedals. Never ignore these symptoms.",
+        "description": "Brake maintenance",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Motorcycle Safety Fundamentals",
+    "description": "Specialized safety training for motorcycle riders.",
+    "isActive": true,
+    "position": 4,
+    "objectives": [
+      "Master motorcycle control techniques",
+      "Learn proper protective gear usage",
+      "Understand motorcycle-specific hazards",
+      "Practice safe lane positioning"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Essential Protective Gear",
+        "content": "Always wear: DOT-approved helmet, motorcycle jacket with armor, gloves, long pants, and proper footwear. Protective gear reduces injury severity by up to 50% in accidents.",
+        "description": "Rider protective equipment",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Motorcycle Control Basics",
+        "content": "Master clutch and throttle control, smooth braking with both front and rear brakes, and proper body positioning. Practice in safe areas before riding in traffic.",
+        "description": "Basic motorcycle operation",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Lane Positioning Strategy",
+        "content": "Position yourself where you're most visible to other drivers. Avoid blind spots. Use the left third of the lane on multi-lane roads. Adjust position based on road conditions and traffic.",
+        "description": "Safe lane positioning",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Road Signs and Markings",
+    "description": "Complete guide to understanding traffic signs, signals, and road markings.",
+    "isActive": true,
+    "position": 5,
+    "objectives": [
+      "Identify regulatory signs",
+      "Recognize warning signs",
+      "Understand road markings",
+      "Interpret traffic signal timing"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Types of Road Signs",
+        "content": "Regulatory signs (red/blue) tell you what you must or must not do. Warning signs (yellow) alert you to hazards. Guide signs (green/blue) provide directions. Learn to recognize each type instantly.",
+        "description": "Sign classification",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Common Road Markings",
+        "content": "Solid white lines: no lane changing. Broken white lines: changing allowed. Yellow lines: separate opposing traffic. White arrows: required direction. Pedestrian crossings: yield to pedestrians.",
+        "description": "Road marking meanings",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Traffic Light Sequences",
+        "content": "Green: proceed with caution. Yellow: prepare to stop if safe. Red: stop completely. Flashing yellow: slow and proceed with caution. Flashing red: treat as stop sign.",
+        "description": "Traffic signal interpretation",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Weather and Night Riding",
+    "description": "Safe driving techniques for adverse weather and low-light conditions.",
+    "isActive": true,
+    "position": 6,
+    "objectives": [
+      "Handle wet road conditions safely",
+      "Navigate fog and reduced visibility",
+      "Master night riding techniques",
+      "Understand hydroplaning prevention"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Riding in Rain",
+        "content": "Reduce speed by 30% in wet conditions. Increase following distance to 4-6 seconds. Avoid sudden braking or sharp turns. Be extra cautious on painted road markings and metal surfaces.",
+        "description": "Wet weather riding",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Night Riding Safety",
+        "content": "Ensure all lights work properly. Reduce speed to compensate for reduced visibility. Watch for pedestrians and animals. Avoid staring at oncoming headlights. Use high beams when appropriate.",
+        "description": "Night riding techniques",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Fog Navigation",
+        "content": "Use low-beam headlights (high beams reflect off fog). Reduce speed significantly. Use fog lights if equipped. Follow road markings closely. Increase following distance to 6-8 seconds.",
+        "description": "Driving in foggy conditions",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Emergency Vehicles and Accident Response",
+    "description": "How to handle emergency situations and respond to accidents properly.",
+    "isActive": true,
+    "position": 7,
+    "objectives": [
+      "Respond to brake failure",
+      "Handle tire blowouts",
+      "Perform emergency stops",
+      "Follow accident reporting procedures"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Brake Failure Response",
+        "content": "Don't panic. Pump the brake pedal rapidly. Shift to lower gear to slow down. Use emergency brake gradually. Look for escape route or safe area to stop. Avoid collisions if possible.",
+        "description": "Handling brake failure",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Tire Blowout Procedure",
+        "content": "Grip steering wheel firmly. Don't brake immediately. Let vehicle slow naturally. Steer straight. Once speed drops, brake gently and move to roadside. Turn on hazard lights.",
+        "description": "Dealing with blowouts",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Accident Scene Protocol",
+        "content": "Ensure scene safety. Call emergency services (911). Provide first aid if trained. Don't move injured unless necessary. Exchange information with other parties. Document scene with photos. File police report.",
+        "description": "Accident response steps",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Defensive Driving Advanced Techniques",
+    "description": "Advanced defensive driving strategies for experienced riders.",
+    "isActive": true,
+    "position": 8,
+    "objectives": [
+      "Master situational awareness",
+      "Predict other drivers' actions",
+      "Use escape routes effectively",
+      "Apply the SIPDE process"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "The SIPDE Process",
+        "content": "Scan: constantly scan the road environment. Identify: recognize potential hazards. Predict: anticipate what might happen. Decide: choose the best response. Execute: take appropriate action smoothly.",
+        "description": "SIPDE defensive method",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "360-Degree Awareness",
+        "content": "Check mirrors every 3-5 seconds. Monitor peripheral vision. Identify escape routes. Track vehicles in adjacent lanes. Watch for pedestrians and cyclists. Stay aware of road surface conditions.",
+        "description": "Complete situational awareness",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Reading Other Drivers",
+        "content": "Watch vehicle positioning and speed changes. Note brake lights early. Observe driver behavior (phone use, erratic movement). Predict lane changes from turn signals and body language. Expect the unexpected.",
+        "description": "Predicting driver behavior",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Alcohol, Drugs, and Impaired Driving",
+    "description": "Understanding the dangers of impaired driving and legal consequences.",
+    "isActive": true,
+    "position": 9,
+    "objectives": [
+      "Understand alcohol's effects on driving",
+      "Know legal BAC limits",
+      "Recognize medication side effects",
+      "Learn about DUI consequences"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Alcohol and Driving Don't Mix",
+        "content": "Even small amounts of alcohol impair judgment, reaction time, and coordination. Blood Alcohol Content (BAC) of 0.05% doubles accident risk. BAC of 0.08% is illegal and increases risk by 11 times.",
+        "description": "Alcohol impairment facts",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Medication and Driving",
+        "content": "Many medications cause drowsiness, dizziness, or impaired coordination. Read warning labels. Consult your doctor about driving. Common culprits: antihistamines, pain relievers, anxiety medications.",
+        "description": "Medication effects",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Legal Consequences",
+        "content": "DUI penalties: license suspension, heavy fines, possible jail time, criminal record. Accidents while impaired can result in manslaughter charges. Insurance rates skyrocket. Lives destroyed. Never drive impaired.",
+        "description": "DUI legal consequences",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Sharing the Road",
+    "description": "Safely sharing the road with other vehicles, cyclists, and pedestrians.",
+    "isActive": true,
+    "position": 10,
+    "objectives": [
+      "Navigate around large vehicles",
+      "Share road with cyclists safely",
+      "Yield to pedestrians properly",
+      "Handle school buses and emergency vehicles"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Large Vehicle Safety",
+        "content": "Trucks and buses have large blind spots. If you can't see the driver's mirrors, they can't see you. Don't cut in front of large vehicles - they need more stopping distance. Pass quickly and safely.",
+        "description": "Sharing with large vehicles",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Cyclist Safety",
+        "content": "Give cyclists at least 1 meter clearance when passing. Check mirrors and blind spots before turning right. Watch for cyclists at intersections. Never honk aggressively. They have equal road rights.",
+        "description": "Sharing with bicycles",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Pedestrian Right-of-Way",
+        "content": "Always yield to pedestrians in crosswalks. Stop completely behind the crosswalk line. Watch for pedestrians at intersections. Be extra cautious near schools and residential areas. Children are unpredictable.",
+        "description": "Pedestrian safety",
+        "position": 3
+      }
+    ]
+  },
+  {
+    "title": "Environmental and Eco-Friendly Riding",
+    "description": "Reduce your environmental impact through efficient riding practices.",
+    "isActive": true,
+    "position": 11,
+    "objectives": [
+      "Practice fuel-efficient riding",
+      "Reduce vehicle emissions",
+      "Understand proper maintenance impact",
+      "Learn eco-friendly driving habits"
+    ],
+    "slides": [
+      {
+        "type": "text",
+        "title": "Fuel-Efficient Riding Techniques",
+        "content": "Maintain steady speeds. Avoid aggressive acceleration and braking. Keep tires properly inflated. Remove unnecessary weight. Use cruise control on highways. Plan routes to minimize distance.",
+        "description": "Saving fuel while riding",
+        "position": 1
+      },
+      {
+        "type": "text",
+        "title": "Reducing Emissions",
+        "content": "Regular maintenance keeps emissions low. Replace air filters regularly. Fix leaks promptly. Don't idle for extended periods. Combine trips. Consider carpooling. Every small action helps the environment.",
+        "description": "Environmental responsibility",
+        "position": 2
+      },
+      {
+        "type": "text",
+        "title": "Proper Disposal and Recycling",
+        "content": "Dispose of oil, batteries, and tires properly at designated facilities. Never pour oil down drains. Recycle when possible. Use eco-friendly cleaning products. Maintain your vehicle to extend its life.",
+        "description": "Waste management",
+        "position": 3
+      }
+    ]
+  }
+]

@@ -1,56 +1,97 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import colors from 'colors';
+import seedAccounts from './seeds/accounts.seed.js';
+import seedModules from './seeds/modules.seed.js';
 
-dotenv.config();
 const prisma = new PrismaClient();
 
-// Get the directory path for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Animation helpers
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Load accounts from JSON file
-const accountsPath = join(__dirname, 'data', 'accounts.json');
-const accountsData = JSON.parse(readFileSync(accountsPath, 'utf-8'));
-
-async function main() {
-  console.log('Starting seed process...\n');
-
-  for (const account of accountsData) {
-    const { email, password, birthdate, ...userData } = account;
-    
-    const existing = await prisma.user.findUnique({ where: { email } });
-    
-    if (!existing) {
-      const passwordHash = await bcrypt.hash(password, 10);
-      await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          birthdate: birthdate ? new Date(birthdate) : null,
-          ...userData,
-        },
-      });
-      console.log(`✓ Created ${userData.role}: ${email} (${userData.first_name} ${userData.last_name})`);
-    } else {
-      console.log(`- Already exists: ${email}`);
-    }
-  }
-
-  console.log('\n✓ Seed completed successfully!');
-  console.log(`\nDeveloper Credentials:`);
-  console.log(`  Admin: username="admin", password="123456"`);
-  console.log(`  User:  username="user", password="123456"`);
+async function showBanner() {
+  const banner = `
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║     🏍️  RIDERMIND DATABASE SEEDING SYSTEM 🏍️              ║
+║                                                            ║
+║     Initializing database with sample data...             ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+  `.cyan.bold;
+  
+  console.log(banner);
+  await sleep(500);
 }
 
-main()
-  .catch((e) => {
-    console.error('Error during seed:', e);
+async function showProgress(current, total, label) {
+  const percentage = Math.round((current / total) * 100);
+  const filled = Math.round((current / total) * 30);
+  const empty = 30 - filled;
+  
+  const bar = '█'.repeat(filled).green + '░'.repeat(empty).gray;
+  process.stdout.write(`\r[$bar] ${percentage}% - ${label}`.cyan);
+  
+  if (current === total) {
+    console.log('');
+  }
+}
+
+async function main() {
+  try {
+    await showBanner();
+
+    const seedFunctions = [
+      { name: 'User Accounts', fn: seedAccounts, emoji: '👥' },
+      { name: 'Learning Modules', fn: seedModules, emoji: '📚' }
+    ];
+
+    let totalSuccess = 0;
+    let totalSkipped = 0;
+
+    console.log('🚀 Starting seed process...\n'.bold.green);
+
+    for (let i = 0; i < seedFunctions.length; i++) {
+      const { name, fn, emoji } = seedFunctions[i];
+      
+      console.log(`\n${emoji} ${`[${i + 1}/${seedFunctions.length}]`.gray} Processing: ${name}`.bold);
+      console.log('─'.repeat(60).gray);
+      
+      const result = await fn();
+      
+      totalSuccess += result.success;
+      totalSkipped += result.skipped;
+      
+      await showProgress(i + 1, seedFunctions.length, name);
+      await sleep(300);
+    }
+
+    // Final summary
+    console.log('\n\n' + '═'.repeat(60).rainbow);
+    console.log('  ✨ SEEDING COMPLETED SUCCESSFULLY! ✨'.bold.green);
+    console.log('═'.repeat(60).rainbow);
+    
+    console.log('\n📊 Overall Statistics:'.bold);
+    console.log(`   ✓ Total Created: ${totalSuccess} records`.green);
+    console.log(`   ⏭️  Total Skipped: ${totalSkipped} records`.yellow);
+    console.log(`   📦 Total Seeds Run: ${seedFunctions.length}`.cyan);
+    
+    console.log('\n🎉 Database is ready for use!\n'.bold.magenta);
+
+  } catch (error) {
+    console.error('\n❌ Error during seeding:'.red.bold);
+    console.error(error);
     process.exit(1);
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+    console.log('🔌 Database connection closed.'.dim);
+  }
+}
+
+// ASCII art on exit
+process.on('exit', () => {
+  console.log('\n' + '─'.repeat(60).gray);
+  console.log('  Thanks for using RiderMind Seed System! 🏍️💨'.cyan);
+  console.log('─'.repeat(60).gray + '\n');
+});
+
+main();
