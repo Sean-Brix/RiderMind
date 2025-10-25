@@ -14,13 +14,63 @@ model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique
   passwordHash String
-  name         String
   role         Role      @default(USER)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  // Personal Information
+  last_name      String?
+  first_name     String?
+  middle_name    String?
+  name_extension String?
+  birthdate      DateTime?
+  sex            String?
+  nationality    Nationality?
+  civil_status   CivilStatus?
+  weight         Float?
+  height         Float?
+  blood_type     String?
+  eye_color      String?
+
+  // Address Information
+  address_house_no           String?
+  address_street             String?
+  address_barangay           String?
+  address_city_municipality  String?
+  address_province           String?
+
+  // Contact Information
+  telephone_number  String?
+  cellphone_number  String?
+  email_address     String?
+
+  // Emergency Contact
+  emergency_contact_name         String?
+  emergency_contact_relationship String?
+  emergency_contact_number       String?
+
+  // Vehicle Categories
+  vehicle_categories  String? // Comma-separated, e.g. "A,B1,C"
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum Nationality {
+  Filipino
+  American
+  Chinese
+  Japanese
+  Korean
+  Other
+}
+
+enum CivilStatus {
+  Single
+  Married
+  Widowed
+  Divorced
+  Separated
 }

@@ -21,13 +21,21 @@ export default async function login(req, res) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = signToken({ id: user.id, role: user.role, email: user.email, name: user.name });
+    const displayName = [user.first_name, user.middle_name, user.last_name, user.name_extension]
+      .filter(Boolean)
+      .join(' ') || user.email;
+
+    const token = signToken({ id: user.id, role: user.role, email: user.email, displayName });
     return res.json({
       token,
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        displayName,
+        first_name: user.first_name,
+        middle_name: user.middle_name,
+        last_name: user.last_name,
+        name_extension: user.name_extension,
         role: user.role,
       },
     });
