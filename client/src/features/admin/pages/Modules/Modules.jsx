@@ -13,10 +13,89 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import LessonModal from '../../../../components/LessonModal';
 import { ModuleListItem, ActiveModuleItem, DroppableArea, FileUpload } from './components';
 import * as moduleService from '../../../../services/moduleService';
+
+// Sortable Slide Item Component
+function SortableSlideItem({ slide, index, isEditingModule, onEdit, onDelete }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `slide-${index}`, disabled: !isEditingModule });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || 'transform 200ms ease',
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
+        isDragging 
+          ? 'bg-brand-50 dark:bg-brand-900/30 border-brand-500 shadow-xl scale-105' 
+          : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-600'
+      }`}
+    >
+      {isEditingModule && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1.5 hover:bg-brand-100 dark:hover:bg-brand-900/30 rounded transition-colors flex-shrink-0"
+          title="Drag to reorder"
+        >
+          <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+      )}
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold text-sm">
+        {index + 1}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
+          {slide.title || 'Untitled Slide'}
+        </h4>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
+          {slide.type}
+        </p>
+      </div>
+      {isEditingModule && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(index)}
+            className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            title="Edit slide"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onDelete(index)}
+            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            title="Delete slide"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Modules() {
   const [activeTab, setActiveTab] = useState('order');
@@ -32,6 +111,7 @@ export default function Modules() {
   
   // Edit Module Tab State
   const [selectedModuleId, setSelectedModuleId] = useState(null); // null = not selected, 'new' = create new, number = edit existing
+  const [isEditingModule, setIsEditingModule] = useState(false); // Whether the selected module is in edit mode
   const [moduleForm, setModuleForm] = useState({
     title: '',
     description: '',
@@ -53,6 +133,9 @@ export default function Modules() {
   // Saving states
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Slide drag-and-drop state
+  const [activeSlideId, setActiveSlideId] = useState(null);
 
   // Load all modules on component mount
   useEffect(() => {
@@ -115,6 +198,7 @@ export default function Modules() {
   // Edit Module Tab Handlers
   function handleCreateNewModule() {
     setSelectedModuleId('new');
+    setIsEditingModule(true); // Automatically enter edit mode for new modules
     setModuleForm({
       title: '',
       description: '',
@@ -127,6 +211,7 @@ export default function Modules() {
   async function handleSelectModule(moduleId) {
     try {
       setSelectedModuleId(moduleId);
+      setIsEditingModule(false); // View mode by default
       const response = await moduleService.getModuleById(moduleId);
       const module = response.data;
       
@@ -144,6 +229,33 @@ export default function Modules() {
     } catch (err) {
       console.error('Failed to load module:', err);
       alert('Failed to load module: ' + err.message);
+    }
+  }
+
+  function handleEditModule() {
+    setIsEditingModule(true);
+  }
+
+  function handleCancelModuleEdit() {
+    if (editingSlideIndex !== null) {
+      alert('Please save or cancel the slide you are editing first.');
+      return;
+    }
+    
+    if (selectedModuleId === 'new') {
+      // If canceling new module creation, clear selection
+      setSelectedModuleId(null);
+      setIsEditingModule(false);
+      setModuleForm({
+        title: '',
+        description: '',
+        objectives: [''],
+        slides: [],
+      });
+    } else {
+      // If canceling edit of existing module, reload the module data and exit edit mode
+      setIsEditingModule(false);
+      handleSelectModule(selectedModuleId);
     }
   }
 
@@ -400,6 +512,25 @@ export default function Modules() {
     }
   }
 
+  // Slide drag-and-drop handlers
+  function handleSlideDragStart(event) {
+    setActiveSlideId(event.active.id);
+  }
+
+  function handleSlideDragEnd(event) {
+    const { active, over } = event;
+    setActiveSlideId(null);
+
+    if (!over || !isEditingModule) return;
+    if (active.id === over.id) return;
+
+    const oldIndex = parseInt(active.id.replace('slide-', ''));
+    const newIndex = parseInt(over.id.replace('slide-', ''));
+
+    const newSlides = arrayMove(moduleForm.slides, oldIndex, newIndex);
+    setModuleForm(prev => ({ ...prev, slides: newSlides }));
+  }
+
   return (
     <div>
       {/* Header */}
@@ -557,7 +688,7 @@ export default function Modules() {
                             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            Save Order
+                            Save
                           </button>
                         </>
                       )}
@@ -674,7 +805,7 @@ export default function Modules() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {selectedModuleId === 'new' ? 'Create New Module' : 'Edit Module'}
+                        {selectedModuleId === 'new' ? 'Create New Module' : isEditingModule ? 'Edit Module' : 'View Module'}
                       </h2>
                       <div className="flex items-center gap-2">
                         {/* Preview Button */}
@@ -691,34 +822,65 @@ export default function Modules() {
                             Preview
                           </button>
                         )}
-                        <button
-                          onClick={handleCancelModuleEdit}
-                          className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 font-medium text-sm transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        {selectedModuleId !== 'new' && (
-                          <button
-                            onClick={handleDeleteModule}
-                            disabled={isDeleting}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                          >
-                            {isDeleting && (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            )}
-                            {isDeleting ? 'Deleting...' : 'Delete'}
-                          </button>
+                        
+                        {/* View Mode: Show Edit and Delete buttons */}
+                        {!isEditingModule && selectedModuleId !== 'new' && (
+                          <>
+                            <button
+                              onClick={handleEditModule}
+                              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              onClick={handleDeleteModule}
+                              disabled={isDeleting}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                              {isDeleting && (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              )}
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </>
                         )}
-                        <button
-                          onClick={handleSaveModule}
-                          disabled={!moduleForm.title || moduleForm.slides.length === 0 || isSaving}
-                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                          {isSaving && (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          )}
-                          {isSaving ? 'Saving...' : 'Save Module'}
-                        </button>
+                        
+                        {/* Edit Mode: Show Cancel and Save buttons */}
+                        {isEditingModule && (
+                          <>
+                            <button
+                              onClick={handleCancelModuleEdit}
+                              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 font-medium text-sm transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            {selectedModuleId !== 'new' && (
+                              <button
+                                onClick={handleDeleteModule}
+                                disabled={isDeleting}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                {isDeleting && (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                              </button>
+                            )}
+                            <button
+                              onClick={handleSaveModule}
+                              disabled={!moduleForm.title || moduleForm.slides.length === 0 || isSaving}
+                              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                              {isSaving && (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              )}
+                              {isSaving ? 'Saving...' : 'Save'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -734,27 +896,39 @@ export default function Modules() {
                           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                             Module Title *
                           </label>
-                          <input
-                            type="text"
-                            value={moduleForm.title}
-                            onChange={(e) => handleModuleFormChange('title', e.target.value)}
-                            placeholder="e.g., Road Safety Basics"
-                            className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                          />
+                          {isEditingModule ? (
+                            <input
+                              type="text"
+                              value={moduleForm.title}
+                              onChange={(e) => handleModuleFormChange('title', e.target.value)}
+                              placeholder="e.g., Road Safety Basics"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            />
+                          ) : (
+                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100">
+                              {moduleForm.title || 'N/A'}
+                            </p>
+                          )}
                         </div>
 
                         {/* Description */}
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                Description
-                            </label>
+                          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Description
+                          </label>
+                          {isEditingModule ? (
                             <textarea
-                                value={moduleForm.description}
-                                onChange={(e) => handleModuleFormChange('description', e.target.value)}
-                                placeholder="Brief description of what students will learn..."
-                                rows={3}
-                                className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                              value={moduleForm.description}
+                              onChange={(e) => handleModuleFormChange('description', e.target.value)}
+                              placeholder="Brief description of what students will learn..."
+                              rows={3}
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                             />
+                          ) : (
+                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 min-h-[88px] whitespace-pre-wrap">
+                              {moduleForm.description || 'No description provided'}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -765,39 +939,53 @@ export default function Modules() {
                         <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
                           Learning Objectives
                         </h3>
-                        <button
-                          onClick={handleAddObjective}
-                          className="px-3 py-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg font-medium text-sm transition-colors flex items-center gap-1"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Add Objective
-                        </button>
+                        {isEditingModule && (
+                          <button
+                            onClick={handleAddObjective}
+                            className="px-3 py-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg font-medium text-sm transition-colors flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Objective
+                          </button>
+                        )}
                       </div>
 
                       <div className="space-y-2">
-                        {moduleForm.objectives.map((objective, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={objective}
-                              onChange={(e) => handleObjectiveChange(index, e.target.value)}
-                              placeholder={`Objective ${index + 1}`}
-                              className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                            />
-                            {moduleForm.objectives.length > 1 && (
-                              <button
-                                onClick={() => handleRemoveObjective(index)}
-                                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                        {isEditingModule ? (
+                          // Edit mode: Show input fields
+                          moduleForm.objectives.map((objective, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={objective}
+                                onChange={(e) => handleObjectiveChange(index, e.target.value)}
+                                placeholder={`Objective ${index + 1}`}
+                                className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              />
+                              {moduleForm.objectives.length > 1 && (
+                                <button
+                                  onClick={() => handleRemoveObjective(index)}
+                                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          // View mode: Show as list
+                          <ul className="list-disc list-inside space-y-1.5">
+                            {moduleForm.objectives.map((objective, index) => (
+                              <li key={index} className="text-neutral-900 dark:text-neutral-100">
+                                {objective || `Objective ${index + 1}`}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
 
@@ -807,58 +995,70 @@ export default function Modules() {
                         <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
                           Slides ({moduleForm.slides.length})
                         </h3>
-                        <button
-                          onClick={handleAddSlide}
-                          disabled={editingSlideIndex !== null}
-                          className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Add Slide
-                        </button>
+                        {isEditingModule && (
+                          <button
+                            onClick={handleAddSlide}
+                            disabled={editingSlideIndex !== null}
+                            className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Slide
+                          </button>
+                        )}
                       </div>
 
                       {/* Slide List */}
                       {moduleForm.slides.length > 0 && editingSlideIndex === null && (
-                        <div className="space-y-2 mb-4">
-                          {moduleForm.slides.map((slide, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
-                            >
-                              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold text-sm">
-                                {index + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
-                                  {slide.title || 'Untitled Slide'}
-                                </h4>
-                                <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
-                                  {slide.type}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditSlide(index)}
-                                  className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteSlide(index)}
-                                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragStart={handleSlideDragStart}
+                          onDragEnd={handleSlideDragEnd}
+                        >
+                          <SortableContext
+                            items={moduleForm.slides.map((_, index) => `slide-${index}`)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-2 mb-4">
+                              {moduleForm.slides.map((slide, index) => (
+                                <SortableSlideItem
+                                  key={`slide-${index}`}
+                                  slide={slide}
+                                  index={index}
+                                  isEditingModule={isEditingModule}
+                                  onEdit={handleEditSlide}
+                                  onDelete={handleDeleteSlide}
+                                />
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </SortableContext>
+                          
+                          {/* Drag Overlay for Slides */}
+                          <DragOverlay>
+                            {activeSlideId !== null ? (
+                              <div className="flex items-center gap-3 p-3 bg-brand-50 dark:bg-brand-900/30 border-2 border-brand-500 rounded-lg shadow-2xl opacity-90">
+                                <div className="p-1.5 bg-brand-100 dark:bg-brand-900/50 rounded">
+                                  <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                  </svg>
+                                </div>
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold text-sm">
+                                  {parseInt(activeSlideId.replace('slide-', '')) + 1}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
+                                    {moduleForm.slides[parseInt(activeSlideId.replace('slide-', ''))]?.title || 'Untitled Slide'}
+                                  </h4>
+                                  <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
+                                    {moduleForm.slides[parseInt(activeSlideId.replace('slide-', ''))]?.type}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : null}
+                          </DragOverlay>
+                        </DndContext>
                       )}
 
                       {/* Slide Editor */}
@@ -992,6 +1192,7 @@ export default function Modules() {
           description: moduleForm.description,
           objectives: moduleForm.objectives.filter(obj => obj.trim() !== ''),
           slides: moduleForm.slides.map(slide => {
+            
             // Convert slide data for preview
             if (slide.type === 'video') {
               // If slide has an ID, use the API endpoint. Otherwise use the file preview

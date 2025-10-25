@@ -5,12 +5,13 @@ const prisma = new PrismaClient();
 /**
  * Add slide to a module
  * Params: moduleId
- * Body: { type, title, content, description, position, imageData, imageMime, videoPath }
+ * Body: { type, title, content, description, position, videoPath }
+ * Note: Use POST /slides/:slideId/image for image uploads (FormData) after creating the slide
  */
 export default async function addSlide(req, res) {
   try {
     const { moduleId } = req.params;
-    const { type, title, content, description, position, imageData, imageMime, videoPath } = req.body;
+    const { type, title, content, description, position, videoPath } = req.body;
 
     // Validation
     if (!type || !['text', 'image', 'video'].includes(type)) {
@@ -32,21 +33,7 @@ export default async function addSlide(req, res) {
       });
     }
 
-    // Process image data if present
-    let processedImageData = null;
-    if (imageData) {
-      // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
-      const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-      processedImageData = Buffer.from(base64Data, 'base64');
-      console.log('Image data processed:', {
-        originalLength: imageData.length,
-        base64Length: base64Data.length,
-        bufferLength: processedImageData.length,
-        imageMime
-      });
-    }
-
-    // Create slide
+    // Create slide (image will be uploaded separately via FormData)
     const slide = await prisma.moduleSlide.create({
       data: {
         moduleId: parseInt(moduleId),
@@ -55,8 +42,6 @@ export default async function addSlide(req, res) {
         content: content || '',
         description: description || null,
         position: position || 0,
-        imageData: processedImageData,
-        imageMime: imageMime || null,
         videoPath: videoPath || null
       },
       select: {
@@ -76,7 +61,7 @@ export default async function addSlide(req, res) {
 
     res.status(201).json({
       success: true,
-      message: 'Slide added successfully',
+      message: 'Slide added successfully. Upload image via POST /slides/:slideId/image if needed.',
       data: slide
     });
 

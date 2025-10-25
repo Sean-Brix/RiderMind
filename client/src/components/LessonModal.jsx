@@ -15,14 +15,18 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState('next'); // 'next' or 'prev' for animation
   const [isAnimating, setIsAnimating] = useState(false);
+  const [imageError, setImageError] = useState(null);
 
   // Reset to first slide when modal opens
   useEffect(() => {
     if (isOpen) {
+      console.log('LessonModal opened, lesson:', lesson);
+      console.log('Lesson slides:', lesson?.slides);
       setCurrentSlide(0);
       setDirection('next');
+      setImageError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, lesson]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -59,6 +63,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
     if (currentSlide < lesson.slides.length - 1) {
       setDirection('next');
       setIsAnimating(true);
+      setImageError(null); // Reset error when changing slides
       setTimeout(() => {
         setCurrentSlide((prev) => prev + 1);
         setIsAnimating(false);
@@ -71,6 +76,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
     if (currentSlide > 0) {
       setDirection('prev');
       setIsAnimating(true);
+      setImageError(null); // Reset error when changing slides
       setTimeout(() => {
         setCurrentSlide((prev) => prev - 1);
         setIsAnimating(false);
@@ -177,22 +183,48 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                     {/* Image Slide */}
                     {currentSlideData.type === 'image' && (
                       <div className="w-full h-full flex items-center justify-center">
-                        <img
-                          src={currentSlideData.content}
-                          alt={currentSlideData.title}
-                          className="w-full h-full object-contain rounded-xl shadow-2xl"
-                          onError={(e) => {
-                            console.error('Image failed to load:', {
-                              src: currentSlideData.content,
-                              title: currentSlideData.title,
-                              error: e
-                            });
-                            e.target.style.border = '2px solid red';
-                          }}
-                          onLoad={() => {
-                            console.log('Image loaded successfully:', currentSlideData.content);
-                          }}
-                        />
+                        {imageError === currentSlide ? (
+                          <div className="text-center p-8">
+                            <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
+                              <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
+                              Image Not Available
+                            </h3>
+                            <p className="text-red-700 dark:text-red-300 mb-4">
+                              This slide's image could not be loaded.
+                            </p>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 font-mono bg-neutral-100 dark:bg-neutral-800 p-3 rounded">
+                              {currentSlideData.content}
+                            </p>
+                          </div>
+                        ) : (
+                          <img
+                            src={currentSlideData.content}
+                            alt={currentSlideData.title}
+                            className="w-full h-full object-contain rounded-xl shadow-2xl"
+                            onError={(e) => {
+                              console.error('Image failed to load:', {
+                                src: currentSlideData.content,
+                                title: currentSlideData.title,
+                                slideIndex: currentSlide,
+                                error: e,
+                                naturalWidth: e.target.naturalWidth,
+                                naturalHeight: e.target.naturalHeight,
+                                complete: e.target.complete,
+                                currentSrc: e.target.currentSrc
+                              });
+                              // Log the actual HTTP request details
+                              console.error('Image element details:', e.target);
+                              setImageError(currentSlide);
+                            }}
+                            onLoad={(e) => {
+                              setImageError(null);
+                            }}
+                          />
+                        )}
                       </div>
                     )}
 

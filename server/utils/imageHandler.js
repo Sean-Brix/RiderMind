@@ -3,7 +3,42 @@
  * Handles image upload, compression, and retrieval
  */
 
-const sharp = require('sharp');
+import sharp from 'sharp';
+import multer from 'multer';
+import path from 'path';
+
+/**
+ * Multer memory storage for images (store in memory, not disk)
+ * We'll read from memory and save directly to MySQL LONGBLOB
+ */
+const imageStorage = multer.memoryStorage();
+
+/**
+ * File filter to accept only images
+ */
+const imageFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
+  }
+};
+
+/**
+ * Multer upload instance for images
+ * Stores in memory for direct database insertion
+ */
+export const uploadImage = multer({
+  storage: imageStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: imageFilter
+});
 
 /**
  * Process and compress image for LONGBLOB storage
@@ -11,7 +46,7 @@ const sharp = require('sharp');
  * @param {Object} options - Processing options
  * @returns {Promise<{data: Buffer, mime: string}>}
  */
-async function processImageForStorage(fileBuffer, options = {}) {
+export async function processImageForStorage(fileBuffer, options = {}) {
   const {
     maxWidth = 1920,
     maxHeight = 1080,
@@ -47,7 +82,7 @@ async function processImageForStorage(fileBuffer, options = {}) {
  * @param {string} mimeType - The MIME type
  * @returns {string} Base64 data URL
  */
-function bufferToBase64(imageData, mimeType) {
+export function bufferToBase64(imageData, mimeType) {
   if (!imageData) return null;
   const base64 = imageData.toString('base64');
   return `data:${mimeType};base64,${base64}`;
@@ -58,7 +93,7 @@ function bufferToBase64(imageData, mimeType) {
  * @param {Object} file - Multer file object
  * @returns {boolean}
  */
-function validateImage(file) {
+export function validateImage(file) {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   const maxSize = 10 * 1024 * 1024; // 10MB
 
@@ -78,7 +113,7 @@ function validateImage(file) {
  * @param {Buffer} fileBuffer - The uploaded file buffer
  * @returns {Promise<{data: Buffer, mime: string}>}
  */
-async function createThumbnail(fileBuffer) {
+export async function createThumbnail(fileBuffer) {
   try {
     const thumbnailBuffer = await sharp(fileBuffer)
       .resize(300, 300, {
@@ -103,7 +138,7 @@ async function createThumbnail(fileBuffer) {
  * @param {Buffer} fileBuffer - The image buffer
  * @returns {Promise<Object>}
  */
-async function getImageMetadata(fileBuffer) {
+export async function getImageMetadata(fileBuffer) {
   try {
     const metadata = await sharp(fileBuffer).metadata();
     return {
@@ -119,11 +154,3 @@ async function getImageMetadata(fileBuffer) {
     throw new Error(`Failed to get image metadata: ${error.message}`);
   }
 }
-
-module.exports = {
-  processImageForStorage,
-  bufferToBase64,
-  validateImage,
-  createThumbnail,
-  getImageMetadata
-};

@@ -6,12 +6,13 @@ const prisma = new PrismaClient();
 /**
  * Update a slide
  * Params: slideId
- * Body: { type, title, content, description, position, imageData, imageMime, videoPath }
+ * Body: { type, title, content, description, position, videoPath }
+ * Note: Use POST /slides/:slideId/image for image uploads (FormData)
  */
 export default async function updateSlide(req, res) {
   try {
     const { slideId } = req.params;
-    const { type, title, content, description, position, imageData, imageMime, videoPath } = req.body;
+    const { type, title, content, description, position, videoPath } = req.body;
 
     // Check if slide exists
     const existing = await prisma.moduleSlide.findUnique({
@@ -32,19 +33,6 @@ export default async function updateSlide(req, res) {
     if (content !== undefined) updateData.content = content;
     if (description !== undefined) updateData.description = description;
     if (position !== undefined) updateData.position = position;
-    
-    // Process image data if present
-    if (imageData !== undefined) {
-      if (imageData) {
-        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
-        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-        updateData.imageData = Buffer.from(base64Data, 'base64');
-      } else {
-        updateData.imageData = null;
-      }
-    }
-    
-    if (imageMime !== undefined) updateData.imageMime = imageMime;
     
     // Handle video replacement
     if (videoPath !== undefined) {

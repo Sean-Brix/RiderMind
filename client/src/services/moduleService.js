@@ -1,18 +1,6 @@
 const API_BASE = '/api/modules';
 
 /**
- * Helper function to convert File to base64
- */
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-}
-
-/**
  * Get authentication token from localStorage
  */
 function getAuthToken() {
@@ -219,7 +207,7 @@ export async function deleteObjective(objectiveId) {
 export async function addSlide(moduleId, slideData) {
   const token = getAuthToken();
   
-  // Prepare request body
+  // Prepare request body (NO image data in JSON)
   const requestBody = {
     type: slideData.type,
     title: slideData.title,
@@ -227,13 +215,6 @@ export async function addSlide(moduleId, slideData) {
     description: slideData.description,
     position: slideData.position
   };
-
-  // If it's an image slide and there's a file, convert to base64
-  if (slideData.type === 'image' && slideData.imageFile) {
-    const base64 = await fileToBase64(slideData.imageFile);
-    requestBody.imageData = base64;
-    requestBody.imageMime = slideData.imageFile.type;
-  }
   
   const response = await fetch(`${API_BASE}/${moduleId}/slides`, {
     method: 'POST',
@@ -249,7 +230,14 @@ export async function addSlide(moduleId, slideData) {
     throw new Error(error.error || 'Failed to add slide');
   }
 
-  return response.json();
+  const result = await response.json();
+  
+  // If it's an image slide and there's a file, upload it separately
+  if (slideData.type === 'image' && slideData.imageFile) {
+    await uploadSlideImage(result.data.id, slideData.imageFile);
+  }
+
+  return result;
 }
 
 /**
@@ -260,7 +248,7 @@ export async function addSlide(moduleId, slideData) {
 export async function updateSlide(slideId, slideData) {
   const token = getAuthToken();
   
-  // Prepare request body
+  // Prepare request body (NO image data in JSON)
   const requestBody = {
     type: slideData.type,
     title: slideData.title,
@@ -268,13 +256,6 @@ export async function updateSlide(slideId, slideData) {
     description: slideData.description,
     position: slideData.position
   };
-
-  // If it's an image slide and there's a file, convert to base64
-  if (slideData.type === 'image' && slideData.imageFile) {
-    const base64 = await fileToBase64(slideData.imageFile);
-    requestBody.imageData = base64;
-    requestBody.imageMime = slideData.imageFile.type;
-  }
   
   const response = await fetch(`${API_BASE}/slides/${slideId}`, {
     method: 'PUT',
@@ -290,7 +271,14 @@ export async function updateSlide(slideId, slideData) {
     throw new Error(error.error || 'Failed to update slide');
   }
 
-  return response.json();
+  const result = await response.json();
+  
+  // If it's an image slide and there's a NEW file, upload it separately
+  if (slideData.type === 'image' && slideData.imageFile) {
+    await uploadSlideImage(slideId, slideData.imageFile);
+  }
+
+  return result;
 }
 
 /**
@@ -337,6 +325,33 @@ export async function uploadSlideVideo(slideId, videoFile) {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to upload video');
+  }
+
+  return response.json();
+}
+
+/**
+ * Upload image to a slide using FormData
+ * @param {number} slideId - Slide ID
+ * @param {File} imageFile - Image file
+ */
+export async function uploadSlideImage(slideId, imageFile) {
+  const token = getAuthToken();
+  
+  const formData = new FormData();
+  formData.append('image', imageFile);
+
+  const response = await fetch(`${API_BASE}/slides/${slideId}/image`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to upload image');
   }
 
   return response.json();

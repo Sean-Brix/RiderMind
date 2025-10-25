@@ -17,8 +17,8 @@ const publicPath = path.join(__dirname, './public');
 const app = express();
 
 // Middleware
-app.use(urlencoded({ extended: true }));
-app.use(express.json());
+app.use(urlencoded({ extended: true, limit: '50mb' })); // Increased limit for image uploads
+app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use(cookieParser());
 app.use(express.static(viewPath));
 app.use('/public', express.static(publicPath));

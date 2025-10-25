@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/roles.js';
 import { uploadVideo } from '../../utils/videoHandler.js';
+import { uploadImage } from '../../utils/imageHandler.js';
 
 // Module controllers
 import getModules from '../../Controller/modules/getModules.js';
@@ -22,6 +23,7 @@ import deleteSlide from '../../Controller/modules/deleteSlide.js';
 import getSlideImage from '../../Controller/modules/getSlideImage.js';
 import streamSlideVideo from '../../Controller/modules/streamSlideVideo.js';
 import uploadSlideVideo from '../../Controller/modules/uploadSlideVideo.js';
+import uploadSlideImage from '../../Controller/modules/uploadSlideImage.js';
 
 const router = Router();
 
@@ -75,6 +77,9 @@ router.get('/slides/:slideId/image', getSlideImage);
 
 // Stream slide video (public access, supports range requests)
 router.get('/slides/:slideId/video', streamSlideVideo);
+
+// Upload image to slide (ADMIN only, multipart/form-data)
+router.post('/slides/:slideId/image', authenticate, requireRole('ADMIN'), uploadImage.single('image'), uploadSlideImage);
 
 // Upload video to slide (ADMIN only, multipart/form-data)
 router.post('/slides/:slideId/video', authenticate, requireRole('ADMIN'), uploadVideo.single('video'), uploadSlideVideo);

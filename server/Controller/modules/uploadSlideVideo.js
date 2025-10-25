@@ -43,12 +43,14 @@ export default async function uploadSlideVideo(req, res) {
       }
     }
 
-    // Update slide with new video path
+    // Update slide with new video path (include /videos/ prefix for serving)
+    const videoPath = `/videos/${req.file.filename}`;
+    
     const updated = await prisma.moduleSlide.update({
       where: { id: parseInt(slideId) },
       data: {
         type: 'video',
-        videoPath: req.file.filename
+        videoPath: videoPath
       },
       select: {
         id: true,
