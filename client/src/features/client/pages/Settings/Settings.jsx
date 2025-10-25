@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Navbar from '../components/Navbar';
+import Navbar from '../../../../components/Navbar';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('preferences');
@@ -33,13 +33,13 @@ export default function Settings() {
   ];
 
   return (
-    <>
+    <div>
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Settings</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-1">Manage your application preferences and settings</p>
-        </div>
+      
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Settings</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">Manage your application preferences and settings</p>
+      </div>
 
       {/* Tabs */}
       <div className="border-b border-neutral-200 dark:border-neutral-700 mb-6">
@@ -249,7 +249,6 @@ export default function Settings() {
           </div>
         )}
       </div>
-      </div>
-    </>
+    </div>
   );
 }

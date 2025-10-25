@@ -2,14 +2,17 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css'
 import Login from './features/auth/pages/Login.jsx';
 import Landing from './features/client/pages/Landing.jsx';
-import Settings from './pages/Settings.jsx';
-import Profile from './pages/Profile.jsx';
+import Settings from './features/client/pages/Settings';
+import Profile from './features/client/pages/Profile';
+import About from './features/client/pages/About';
+import ModulesPage from './features/client/pages/Modules';
+import Leaderboard from './features/client/pages/Leaderboard';
 import AdminLayout from './features/admin/layout/AdminLayout.jsx';
-import Analytics from './features/admin/pages/Analytics.jsx';
-import Modules from './features/admin/pages/Modules.jsx';
-import Quizes from './features/admin/pages/Quizes.jsx';
-import FAQ from './features/admin/pages/FAQ.jsx';
-import Feedback from './features/admin/pages/Feedback.jsx';
+import Analytics from './features/admin/pages/Analytics';
+import Modules from './features/admin/pages/Modules';
+import Quizes from './features/admin/pages/Quizes';
+import FAQ from './features/admin/pages/FAQ';
+import Feedback from './features/admin/pages/Feedback';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
 
@@ -37,6 +40,9 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<Protected><Landing /></Protected>} />
+      <Route path="/about" element={<Protected><About /></Protected>} />
+      <Route path="/modules" element={<Protected><ModulesPage /></Protected>} />
+      <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/profile" element={<Protected><Profile /></Protected>} />
       <Route path="/admin" element={<Protected role="ADMIN"><AdminLayout /></Protected>}>

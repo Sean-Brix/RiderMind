@@ -1,0 +1,838 @@
+import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import LessonModal from '../../../../components/LessonModal';
+import { ModuleListItem, ActiveModuleItem, DroppableArea, FileUpload } from './components';
+
+// Mock data for all available modules
+const ALL_MODULES = [
+  { id: 1, title: 'Road Safety Basics' },
+  { id: 2, title: 'Traffic Signs & Signals' },
+  { id: 3, title: 'Defensive Riding Techniques' },
+  { id: 4, title: 'Motorcycle Maintenance' },
+  { id: 5, title: 'Weather & Road Conditions' },
+  { id: 6, title: 'Night Riding Safety' },
+  { id: 7, title: 'Emergency Procedures' },
+  { id: 8, title: 'Group Riding' },
+];
+
+export default function Modules() {
+  const [activeTab, setActiveTab] = useState('order');
+  const [activeModules, setActiveModules] = useState([
+    ALL_MODULES[0],
+    ALL_MODULES[1],
+    ALL_MODULES[2],
+  ]);
+  const [savedModules, setSavedModules] = useState([
+    ALL_MODULES[0],
+    ALL_MODULES[1],
+    ALL_MODULES[2],
+  ]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+  
+  // Edit Module Tab State
+  const [selectedModuleId, setSelectedModuleId] = useState(null); // null = create new, number = edit existing
+  const [moduleForm, setModuleForm] = useState({
+    title: '',
+    description: '',
+    objectives: [''],
+    slides: [],
+  });
+  const [editingSlideIndex, setEditingSlideIndex] = useState(null); // Which slide is being edited
+  const [slideForm, setSlideForm] = useState({
+    type: 'text',
+    title: '',
+    content: '',
+    description: '',
+    file: null, // For file uploads
+  });
+  
+  // Preview Modal State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Get available modules (not yet active)
+  const availableModules = ALL_MODULES.filter(
+    module => !activeModules.find(am => am.id === module.id)
+  );
+
+  const hasChanges = JSON.stringify(activeModules) !== JSON.stringify(savedModules);
+
+  function handleSaveOrder() {
+    setSavedModules([...activeModules]);
+    setIsEditMode(false);
+    // TODO: API call to save order
+    // await fetch('/api/admin/modules/order', { method: 'POST', body: JSON.stringify(activeModules) });
+  }
+
+  function handleCancelEdit() {
+    setActiveModules([...savedModules]);
+    setIsEditMode(false);
+  }
+
+  function handleEnterEditMode() {
+    setIsEditMode(true);
+  }
+  
+  // Edit Module Tab Handlers
+  function handleCreateNewModule() {
+    setSelectedModuleId('new');
+    setModuleForm({
+      title: '',
+      description: '',
+      objectives: [''],
+      slides: [],
+    });
+    setEditingSlideIndex(null);
+  }
+
+  function handleSelectModule(moduleId) {
+    setSelectedModuleId(moduleId);
+    const module = ALL_MODULES.find(m => m.id === moduleId);
+    if (module) {
+      setModuleForm({
+        title: module.title,
+        description: module.description || '',
+        objectives: module.objectives || [''],
+        slides: module.slides || [],
+      });
+    }
+    setEditingSlideIndex(null);
+  }
+
+  function handleModuleFormChange(field, value) {
+    setModuleForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  function handleObjectiveChange(index, value) {
+    const newObjectives = [...moduleForm.objectives];
+    newObjectives[index] = value;
+    setModuleForm(prev => ({ ...prev, objectives: newObjectives }));
+  }
+
+  function handleAddObjective() {
+    setModuleForm(prev => ({ ...prev, objectives: [...prev.objectives, ''] }));
+  }
+
+  function handleRemoveObjective(index) {
+    if (moduleForm.objectives.length === 1) return; // Keep at least one
+    const newObjectives = moduleForm.objectives.filter((_, i) => i !== index);
+    setModuleForm(prev => ({ ...prev, objectives: newObjectives }));
+  }
+
+  function handleAddSlide() {
+    setEditingSlideIndex(moduleForm.slides.length);
+    setSlideForm({
+      type: 'text',
+      title: '',
+      content: '',
+      description: '',
+      file: null,
+    });
+  }
+
+  function handleEditSlide(index) {
+    setEditingSlideIndex(index);
+    setSlideForm(moduleForm.slides[index]);
+  }
+
+  function handleSlideFormChange(field, value) {
+    setSlideForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  function handleSaveSlide() {
+    const newSlides = [...moduleForm.slides];
+    if (editingSlideIndex === moduleForm.slides.length) {
+      // Adding new slide
+      newSlides.push(slideForm);
+    } else {
+      // Editing existing slide
+      newSlides[editingSlideIndex] = slideForm;
+    }
+    setModuleForm(prev => ({ ...prev, slides: newSlides }));
+    setEditingSlideIndex(null);
+    setSlideForm({
+      type: 'text',
+      title: '',
+      content: '',
+      description: '',
+      icon: '💡',
+    });
+  }
+
+  function handleCancelSlideEdit() {
+    setEditingSlideIndex(null);
+    setSlideForm({
+      type: 'text',
+      title: '',
+      content: '',
+      description: '',
+      file: null,
+    });
+  }
+
+  function handleDeleteSlide(index) {
+    const newSlides = moduleForm.slides.filter((_, i) => i !== index);
+    setModuleForm(prev => ({ ...prev, slides: newSlides }));
+    if (editingSlideIndex === index) {
+      setEditingSlideIndex(null);
+    }
+  }
+
+  function handleSaveModule() {
+    // TODO: API call to create/update module
+    console.log('Saving module:', moduleForm);
+    // Reset form
+    setSelectedModuleId(null);
+    setModuleForm({
+      title: '',
+      icon: '📚',
+      description: '',
+      objectives: [''],
+      slides: [],
+    });
+  }
+
+  function handleCancelModuleEdit() {
+    setSelectedModuleId(null);
+    setModuleForm({
+      title: '',
+      description: '',
+      objectives: [''],
+      slides: [],
+    });
+    setEditingSlideIndex(null);
+  }
+
+  function handleDeleteModule() {
+    if (window.confirm('Are you sure you want to delete this module?')) {
+      // TODO: API call to delete module
+      console.log('Deleting module:', selectedModuleId);
+      setSelectedModuleId(null);
+    }
+  }
+
+  function handleDragStart(event) {
+    setActiveId(event.active.id);
+  }
+
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+    if (!isEditMode) return; // Only allow drag in edit mode
+
+    const draggedModule = ALL_MODULES.find(m => m.id === active.id);
+    const isFromAvailable = availableModules.find(m => m.id === active.id);
+    const isFromActive = activeModules.find(m => m.id === active.id);
+    const isOverAvailable = availableModules.find(m => m.id === over.id);
+    const isOverActive = activeModules.find(m => m.id === over.id);
+
+    // Scenario 1: Dragging from available to active (adding module)
+    if (isFromAvailable && !isFromActive) {
+      if (isOverActive) {
+        // Insert at specific position before the module we're hovering over
+        const overIndex = activeModules.findIndex(m => m.id === over.id);
+        const newActive = [...activeModules];
+        newActive.splice(overIndex, 0, draggedModule);
+        setActiveModules(newActive);
+      } else if (over.id === 'active-droppable') {
+        // Dropped on the active droppable area (could be empty)
+        setActiveModules([...activeModules, draggedModule]);
+      }
+    }
+    // Scenario 2: Dragging from active back to available (removing module)
+    else if (isFromActive && !isFromAvailable) {
+      // Check if dropped over available area
+      if (isOverAvailable || over.id === 'available-droppable') {
+        // Remove from active modules
+        setActiveModules(activeModules.filter(m => m.id !== active.id));
+      } else if (isOverActive && active.id !== over.id) {
+        // Reordering within active modules
+        const oldIndex = activeModules.findIndex(m => m.id === active.id);
+        const newIndex = activeModules.findIndex(m => m.id === over.id);
+        setActiveModules(arrayMove(activeModules, oldIndex, newIndex));
+      }
+    }
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Module Management</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
+          Organize and manage learning modules for students
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700">
+        <div className="border-b border-neutral-200 dark:border-neutral-700">
+          <div className="flex gap-1 p-1">
+            <button
+              onClick={() => setActiveTab('order')}
+              className={`flex-1 px-6 py-3 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'order'
+                  ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
+            >
+              Active Modules
+            </button>
+            <button
+              onClick={() => setActiveTab('new')}
+              className={`flex-1 px-6 py-3 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'new'
+                  ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+              }`}
+            >
+              Edit Modules
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === 'order' ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex gap-6">
+                {/* Left Sidebar - All Modules */}
+                <div className="w-80 flex-shrink-0">
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col">
+                    <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                          All Modules
+                        </h3>
+                        <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-md text-xs font-medium">
+                          {availableModules.length}
+                        </span>
+                      </div>
+                      {isEditMode && (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                          Drag to activate →
+                        </p>
+                      )}
+                    </div>
+                    <SortableContext
+                      items={availableModules.map(m => m.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="p-3 space-y-2 overflow-y-auto flex-1" data-droppable-id="available-droppable">
+                        {availableModules.map((module) => (
+                          <ModuleListItem key={module.id} module={module} isEditMode={isEditMode} />
+                        ))}
+                        {availableModules.length === 0 && (
+                          <div className="text-center py-8 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-600">
+                            All modules active
+                          </div>
+                        )}
+                      </div>
+                    </SortableContext>
+                  </div>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-transparent via-neutral-200 dark:via-neutral-700 to-transparent"></div>
+
+                {/* Right Main Content - Active Modules */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                        Active Modules
+                      </h2>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                        {isEditMode ? 'Drag to reorder or remove modules' : 'These modules are visible to students'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-lg text-sm font-medium">
+                        {activeModules.length} active
+                      </span>
+                      {!isEditMode ? (
+                        <button 
+                          onClick={handleEnterEditMode}
+                          className="btn btn-primary btn-sm"
+                        >
+                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit Order
+                        </button>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={handleCancelEdit}
+                            className="btn btn-ghost btn-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button 
+                            onClick={handleSaveOrder}
+                            disabled={!hasChanges}
+                            className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save Order
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <SortableContext
+                    items={activeModules.map(m => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <DroppableArea id="active-droppable">
+                      <div className="space-y-3 min-h-[400px]">
+                        {activeModules.map((module, index) => (
+                          <ActiveModuleItem key={module.id} module={module} index={index} isEditMode={isEditMode} />
+                        ))}
+                        {activeModules.length === 0 && (
+                          <div className="text-center py-20 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600 h-full flex flex-col items-center justify-center min-h-[400px]">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full mb-4">
+                              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </div>
+                            <p className="font-medium mb-1">No active modules</p>
+                            <p className="text-xs">
+                              {isEditMode ? 'Drag modules from the sidebar to activate them' : 'Click "Edit Order" to manage modules'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </DroppableArea>
+                  </SortableContext>
+                </div>
+              </div>
+
+              {/* Drag Overlay */}
+              <DragOverlay>
+                {activeId ? (
+                  <div className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-800 border-2 border-brand-500 rounded-lg shadow-xl">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
+                        {ALL_MODULES.find(m => m.id === activeId)?.title}
+                      </h3>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          ) : (
+            // Edit Modules Tab
+            <div className="flex gap-6">
+              {/* Left Sidebar - Module List */}
+              <div className="w-80 flex-shrink-0">
+                <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col">
+                  <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+                    <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
+                      All Modules
+                    </h3>
+                    <button
+                      onClick={handleCreateNewModule}
+                      className="w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Create New Module
+                    </button>
+                  </div>
+                  
+                  <div className="p-3 space-y-2 overflow-y-auto flex-1">
+                    {ALL_MODULES.map((module) => (
+                      <button
+                        key={module.id}
+                        onClick={() => handleSelectModule(module.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+                          selectedModuleId === module.id
+                            ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500'
+                            : 'bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
+                            {module.title}
+                          </h3>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Divider */}
+              <div className="w-px bg-gradient-to-b from-transparent via-neutral-200 dark:via-neutral-700 to-transparent"></div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 min-w-0">
+                {selectedModuleId === null ? (
+                  // Empty State
+                  <div className="text-center py-20">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full mb-4">
+                      <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                      Select a module or create a new one
+                    </h3>
+                    <p className="text-neutral-600 dark:text-neutral-400 text-sm max-w-md mx-auto">
+                      Choose a module from the sidebar to edit its content and slides, or create a brand new learning module.
+                    </p>
+                  </div>
+                ) : (
+                  // Module Editor
+                  <div className="space-y-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                        {selectedModuleId === 'new' ? 'Create New Module' : 'Edit Module'}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        {/* Preview Button */}
+                        {moduleForm.slides.length > 0 && (
+                          <button
+                            onClick={() => setIsPreviewOpen(true)}
+                            className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                            title="Preview module"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Preview
+                          </button>
+                        )}
+                        <button
+                          onClick={handleCancelModuleEdit}
+                          className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 font-medium text-sm transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        {selectedModuleId !== 'new' && (
+                          <button
+                            onClick={handleDeleteModule}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={handleSaveModule}
+                          disabled={!moduleForm.title || moduleForm.slides.length === 0}
+                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Save Module
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Module Basic Info */}
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+                      <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4">
+                        Basic Information
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Title */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                            Module Title *
+                          </label>
+                          <input
+                            type="text"
+                            value={moduleForm.title}
+                            onChange={(e) => handleModuleFormChange('title', e.target.value)}
+                            placeholder="e.g., Road Safety Basics"
+                            className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                Description
+                            </label>
+                            <textarea
+                                value={moduleForm.description}
+                                onChange={(e) => handleModuleFormChange('description', e.target.value)}
+                                placeholder="Brief description of what students will learn..."
+                                rows={3}
+                                className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                            />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Learning Objectives */}
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                          Learning Objectives
+                        </h3>
+                        <button
+                          onClick={handleAddObjective}
+                          className="px-3 py-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg font-medium text-sm transition-colors flex items-center gap-1"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Add Objective
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {moduleForm.objectives.map((objective, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={objective}
+                              onChange={(e) => handleObjectiveChange(index, e.target.value)}
+                              placeholder={`Objective ${index + 1}`}
+                              className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            />
+                            {moduleForm.objectives.length > 1 && (
+                              <button
+                                onClick={() => handleRemoveObjective(index)}
+                                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Slides Section */}
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                          Slides ({moduleForm.slides.length})
+                        </h3>
+                        <button
+                          onClick={handleAddSlide}
+                          disabled={editingSlideIndex !== null}
+                          className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Add Slide
+                        </button>
+                      </div>
+
+                      {/* Slide List */}
+                      {moduleForm.slides.length > 0 && editingSlideIndex === null && (
+                        <div className="space-y-2 mb-4">
+                          {moduleForm.slides.map((slide, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                            >
+                              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold text-sm">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
+                                  {slide.title || 'Untitled Slide'}
+                                </h4>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
+                                  {slide.type}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditSlide(index)}
+                                  className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSlide(index)}
+                                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Slide Editor */}
+                      {editingSlideIndex !== null && (
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border-2 border-brand-500 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                              {editingSlideIndex === moduleForm.slides.length ? 'New Slide' : `Edit Slide ${editingSlideIndex + 1}`}
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={handleCancelSlideEdit}
+                                className="px-3 py-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg font-medium text-sm transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleSaveSlide}
+                                disabled={!slideForm.title || !slideForm.content}
+                                className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Save Slide
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Slide Type */}
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Slide Type *
+                            </label>
+                            <select
+                              value={slideForm.type}
+                              onChange={(e) => handleSlideFormChange('type', e.target.value)}
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            >
+                              <option value="text">Text</option>
+                              <option value="image">Image</option>
+                              <option value="video">Video</option>
+                            </select>
+                          </div>
+
+                          {/* Title */}
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Slide Title *
+                            </label>
+                            <input
+                              type="text"
+                              value={slideForm.title}
+                              onChange={(e) => handleSlideFormChange('title', e.target.value)}
+                              placeholder="e.g., Welcome to the Course"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          {/* Content */}
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Content *
+                            </label>
+                            {slideForm.type === 'text' ? (
+                              <textarea
+                                value={slideForm.content}
+                                onChange={(e) => handleSlideFormChange('content', e.target.value)}
+                                placeholder="Enter your slide content here..."
+                                rows={6}
+                                className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                              />
+                            ) : (
+                              <FileUpload
+                                type={slideForm.type}
+                                file={slideForm.file}
+                                onChange={(file) => {
+                                  handleSlideFormChange('file', file);
+                                  handleSlideFormChange('content', file.name);
+                                }}
+                                onRemove={() => {
+                                  handleSlideFormChange('file', null);
+                                  handleSlideFormChange('content', '');
+                                }}
+                              />
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Description (for sidebar preview)
+                            </label>
+                            <input
+                              type="text"
+                              value={slideForm.description}
+                              onChange={(e) => handleSlideFormChange('description', e.target.value)}
+                              placeholder="Brief description of this slide"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Empty State */}
+                      {moduleForm.slides.length === 0 && editingSlideIndex === null && (
+                        <div className="text-center py-8 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600">
+                          <div className="inline-flex items-center justify-center w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-3">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <p className="font-medium mb-1">No slides yet</p>
+                          <p className="text-xs">Click "Add Slide" to create your first slide</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Preview Modal */}
+      <LessonModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        lesson={{
+          moduleId: selectedModuleId,
+          title: moduleForm.title,
+          description: moduleForm.description,
+          objectives: moduleForm.objectives.filter(obj => obj.trim() !== ''),
+          slides: moduleForm.slides,
+        }}
+      />
+    </div>
+  );
+}

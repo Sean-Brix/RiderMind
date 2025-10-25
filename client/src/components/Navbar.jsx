@@ -70,7 +70,7 @@ export default function Navbar() {
               Modules
             </Link>
             <Link
-              to="/modules"
+              to="/leaderboard"
               className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
             >
               Leaderboard
