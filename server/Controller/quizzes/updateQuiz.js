@@ -19,8 +19,6 @@ export default async function updateQuiz(req, res) {
       timeLimit,
       shuffleQuestions,
       showResults,
-      allowReview,
-      maxAttempts,
       isActive
     } = req.body;
 
@@ -66,8 +64,6 @@ export default async function updateQuiz(req, res) {
     if (timeLimit !== undefined) updateData.timeLimit = timeLimit;
     if (shuffleQuestions !== undefined) updateData.shuffleQuestions = shuffleQuestions;
     if (showResults !== undefined) updateData.showResults = showResults;
-    if (allowReview !== undefined) updateData.allowReview = allowReview;
-    if (maxAttempts !== undefined) updateData.maxAttempts = maxAttempts;
     if (isActive !== undefined) updateData.isActive = isActive;
 
     // Update quiz

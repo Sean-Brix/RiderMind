@@ -59,7 +59,6 @@ export default async function createQuiz(req, res) {
 
     // Prepare quiz data
     const quizData = {
-      moduleId: parseInt(moduleId),
       title,
       description: description || null,
       instructions: instructions || null,
@@ -67,10 +66,11 @@ export default async function createQuiz(req, res) {
       timeLimit: timeLimit || null,
       shuffleQuestions: shuffleQuestions !== undefined ? shuffleQuestions : false,
       showResults: showResults !== undefined ? showResults : true,
-      allowReview: allowReview !== undefined ? allowReview : true,
-      maxAttempts: maxAttempts || null,
       createdBy: req.user?.id || null,
-      updatedBy: req.user?.id || null
+      updatedBy: req.user?.id || null,
+      module: {
+        connect: { id: parseInt(moduleId) }
+      }
     };
 
     // Add questions if provided
@@ -80,9 +80,9 @@ export default async function createQuiz(req, res) {
           const questionData = {
             type: q.type,
             question: q.question,
+            description: q.description || null,
             points: q.points || 1,
             position: q.position || qIndex + 1,
-            explanation: q.explanation || null,
             caseSensitive: q.caseSensitive || false,
             shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
             imageData: q.imageData || null,
