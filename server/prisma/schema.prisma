@@ -49,8 +49,8 @@ model User {
   emergency_contact_relationship String?
   emergency_contact_number       String?
 
-  // Vehicle Categories
-  vehicle_categories  String? // Comma-separated, e.g. "A,B1,C"
+  // Relations
+  quizAttempts QuizAttempt[]
 }
 
 enum Role {
@@ -91,6 +91,7 @@ model Module {
   objectives       ModuleObjective[]
   slides           ModuleSlide[]
   categoryModules  ModuleCategoryModule[]
+  quizzes          Quiz[]
 
   @@index([position])
   @@index([isActive])
@@ -177,7 +178,146 @@ enum SlideType {
 }
 
 enum StudentType {
-  CAR
-  MOTORCYCLE
-  BOTH
+  A
+  A1
+  B
+  B1
+  B2
+  C
+  D
+  BE
+  CE
+}
+
+// ==================== QUIZ SYSTEM ====================
+
+model Quiz {
+  id              Int      @id @default(autoincrement())
+  moduleId        Int?     // Optional: can be standalone or attached to module
+  title           String   @db.VarChar(255)
+  description     String?  @db.Text
+  instructions    String?  @db.Text
+  passingScore    Int      @default(70) // Percentage
+  timeLimit       Int?     // In minutes, null = no limit
+  shuffleQuestions Boolean @default(false)
+  showResults     Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  position        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       Int?
+  updatedBy       Int?
+
+  module    Module?         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([moduleId])
+  @@index([isActive])
+  @@index([position])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id          Int          @id @default(autoincrement())
+  quizId      Int
+  type        QuestionType
+  question    String       @db.Text
+  description String?      @db.Text
+  points      Int          @default(1)
+  position    Int          @default(0)
+  isRequired  Boolean      @default(true)
+  
+  // Media attachments (similar to module slides)
+  imageData   Bytes?
+  imageMime   String?      @db.VarChar(50)
+  videoPath   String?      @db.VarChar(500)
+  
+  // Question settings
+  caseSensitive Boolean    @default(false) // For identification/text questions
+  shuffleOptions Boolean   @default(false) // For multiple choice
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  quiz    Quiz               @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuizQuestionOption[]
+  answers QuizAnswer[]
+
+  @@index([quizId])
+  @@index([position])
+  @@map("quiz_questions")
+}
+
+model QuizQuestionOption {
+  id          Int      @id @default(autoincrement())
+  questionId  Int
+  optionText  String   @db.Text
+  isCorrect   Boolean  @default(false)
+  position    Int      @default(0)
+  
+  // Optional media for option
+  imageData   Bytes?
+  imageMime   String?  @db.VarChar(50)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses QuizAnswer[] @relation("SelectedOption")
+
+  @@index([questionId])
+  @@index([position])
+  @@map("quiz_question_options")
+}
+
+model QuizAttempt {
+  id          Int      @id @default(autoincrement())
+  quizId      Int
+  userId      Int
+  startedAt   DateTime @default(now())
+  submittedAt DateTime?
+  score       Float?   // Percentage
+  passed      Boolean  @default(false)
+  timeSpent   Int?     // In seconds
+  
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@index([quizId])
+  @@index([userId])
+  @@index([submittedAt])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id            Int      @id @default(autoincrement())
+  attemptId     Int
+  questionId    Int
+  selectedOptionId Int?  // For multiple choice
+  answerText    String?  @db.Text // For identification/text questions
+  isCorrect     Boolean  @default(false)
+  pointsEarned  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  attempt        QuizAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       QuizQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption QuizQuestionOption? @relation("SelectedOption", fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId]) // One answer per question per attempt
+  @@index([attemptId])
+  @@index([questionId])
+  @@map("quiz_answers")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE      // Single answer from options
+  TRUE_FALSE           // Boolean question
+  IDENTIFICATION       // Text input, checked against correct answer
+  ESSAY                // Text input, manually graded
+  MULTIPLE_ANSWER      // Multiple correct options
+  MATCHING             // Match items (future enhancement)
+  FILL_BLANK           // Fill in the blank (future enhancement)
 }

@@ -786,16 +786,18 @@ export default function Modules() {
                       items={availableModules.map(m => m.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="p-3 space-y-2 overflow-y-auto flex-1" data-droppable-id="available-droppable">
-                        {availableModules.map((module) => (
-                          <ModuleListItem key={module.id} module={module} isEditMode={isEditMode} />
-                        ))}
-                        {availableModules.length === 0 && (
-                          <div className="text-center py-8 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-600">
-                            All modules active
-                          </div>
-                        )}
-                      </div>
+                      <DroppableArea id="available-droppable">
+                        <div className="p-3 space-y-2 overflow-y-auto flex-1">
+                          {availableModules.map((module) => (
+                            <ModuleListItem key={module.id} module={module} isEditMode={isEditMode} />
+                          ))}
+                          {availableModules.length === 0 && (
+                            <div className="text-center py-8 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-600">
+                              All modules active
+                            </div>
+                          )}
+                        </div>
+                      </DroppableArea>
                     </SortableContext>
                   </div>
                 </div>

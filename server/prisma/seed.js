@@ -1,7 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import colors from 'colors';
-import seedAccounts from './seeds/accounts.seed.js';
-import seedModules from './seeds/modules.seed.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import seedAccounts from './Seeds/accounts.seed.js';
+import seedModules from './Seeds/modules.seed.js';
+import seedCategories from './Seeds/categories.seed.js';
+import seedQuizzes from './Seeds/quizzes.seed.js';
+
+// Load environment variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const prisma = new PrismaClient();
 
@@ -42,7 +52,9 @@ async function main() {
 
     const seedFunctions = [
       { name: 'User Accounts', fn: seedAccounts, emoji: '👥' },
-      { name: 'Learning Modules', fn: seedModules, emoji: '📚' }
+      { name: 'Learning Modules', fn: seedModules, emoji: '📚' },
+      { name: 'Module Categories', fn: seedCategories, emoji: '🏷️' },
+      { name: 'Quizzes', fn: seedQuizzes, emoji: '📝' }
     ];
 
     let totalSuccess = 0;

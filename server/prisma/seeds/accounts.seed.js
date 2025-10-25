@@ -62,8 +62,7 @@ const accountsData = [
     civil_status: 'Married',
     birthdate: '1988-03-20',
     cellphone_number: '09191234567',
-    email_address: 'john.doe@email.com',
-    vehicle_categories: 'A,B1'
+    email_address: 'john.doe@email.com'
   },
   {
     email: 'jane.santos@email.com',
@@ -77,8 +76,7 @@ const accountsData = [
     civil_status: 'Single',
     birthdate: '1992-07-12',
     cellphone_number: '09209876543',
-    email_address: 'jane.santos@email.com',
-    vehicle_categories: 'A,B'
+    email_address: 'jane.santos@email.com'
   }
 ];
 
