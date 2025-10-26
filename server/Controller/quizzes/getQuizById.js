@@ -14,7 +14,17 @@ export default async function getQuizById(req, res) {
     
     // Only admins should see correct answers before quiz submission
     const isAdmin = req.user?.role === 'ADMIN';
-    const showAnswers = includeCorrectAnswers === 'true' && isAdmin;
+    const showAnswers = (includeCorrectAnswers === 'true' || includeCorrectAnswers === true) && isAdmin;
+
+    console.log('📚 getQuizById called:', {
+      quizId: id,
+      userId: req.user?.id,
+      userRole: req.user?.role,
+      isAdmin,
+      includeCorrectAnswers,
+      includeCorrectAnswersType: typeof includeCorrectAnswers,
+      showAnswers
+    });
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: parseInt(id) },
@@ -45,7 +55,7 @@ export default async function getQuizById(req, res) {
               select: {
                 id: true,
                 optionText: true,
-                isCorrect: showAnswers, // Hide correct answers for students
+                isCorrect: true, // Always select it
                 position: true,
                 imageMime: true,
                 imageData: false
@@ -72,6 +82,31 @@ export default async function getQuizById(req, res) {
       if (question.shuffleOptions && !showAnswers) {
         question.options = question.options.sort(() => Math.random() - 0.5);
       }
+      
+      console.log(`Processing question: "${question.question}"`);
+      console.log(`  showAnswers: ${showAnswers}`);
+      console.log(`  Options before filter:`, question.options.map(o => ({text: o.optionText, isCorrect: o.isCorrect})));
+      
+      // Remove isCorrect from options if user is not allowed to see it
+      if (!showAnswers) {
+        console.log(`  ❌ Removing isCorrect because showAnswers is false`);
+        question.options = question.options.map(opt => {
+          const { isCorrect, ...optionWithoutCorrect } = opt;
+          return optionWithoutCorrect;
+        });
+      } else {
+        console.log(`  ✅ Keeping isCorrect because showAnswers is true`);
+      }
+      
+      console.log(`  Options after filter:`, question.options.map(o => ({text: o.optionText, isCorrect: o.isCorrect})));
+    });
+
+    console.log('📝 Quiz data loaded:', {
+      quizId: quiz?.id,
+      title: quiz?.title,
+      questionsCount: quiz?.questions?.length,
+      firstQuestionOptions: quiz?.questions?.[0]?.options,
+      showAnswers
     });
 
     res.status(200).json({

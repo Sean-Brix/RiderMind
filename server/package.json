@@ -9,8 +9,10 @@
     "prisma": "prisma",
     "migrate": "prisma migrate dev --name init",
     "generate": "prisma generate",
+    "seed": "node prisma/seed.js",
     "fill": "node prisma/seed.js",
-    "reset": "node prisma/reset.js"
+    "reset": "node prisma/reset.js",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@prisma/client": "^6.18.0",

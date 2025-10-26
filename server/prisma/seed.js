@@ -6,7 +6,7 @@ import { dirname, join } from 'path';
 import seedAccounts from './Seeds/accounts.seed.js';
 import seedModules from './Seeds/modules.seed.js';
 import seedCategories from './Seeds/categories.seed.js';
-import seedQuizzes from './Seeds/quizzes.seed.js';
+import seedQuizzesComplete from './Seeds/quizzes-complete.seed.js';
 import { seedFAQs } from './Seeds/faqs.seed.js';
 
 // Load environment variables
@@ -55,7 +55,7 @@ async function main() {
       { name: 'User Accounts', fn: seedAccounts, emoji: '👥' },
       { name: 'Learning Modules', fn: seedModules, emoji: '📚' },
       { name: 'Module Categories', fn: seedCategories, emoji: '🏷️' },
-      { name: 'Quizzes', fn: seedQuizzes, emoji: '📝' },
+      { name: 'Complete Quizzes (11 Modules)', fn: seedQuizzesComplete, emoji: '📝' },
       { name: 'FAQs', fn: seedFAQs, emoji: '❓' }
     ];
 

@@ -9,9 +9,8 @@ export default function Analytics() {
       />
       
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center justify-between">
                 <div>
@@ -74,7 +73,6 @@ export default function Analytics() {
             <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Recent Activity</h2>
             <p className="text-neutral-600 dark:text-neutral-400 text-sm">No recent activity to display.</p>
           </div>
-        </div>
       </div>
     </div>
   );

@@ -178,26 +178,25 @@ const FAQs = () => {
 
         {/* FAQ List */}
         <div className="p-6">
-          <div className="max-w-7xl mx-auto">
-            {loading ? (
-              <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">Loading FAQs...</div>
-            ) : selectedCategory === 'All' ? (
-              FAQ_CATEGORIES.map(category => (
-                groupedFAQs[category].length > 0 && (
-                  <div key={category} className="mb-8">
-                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 pb-2 border-b-2 border-brand-500">
-                      {category}
-                    </h2>
-                    <div className="space-y-3">
-                      {groupedFAQs[category].map(faq => (
-                        <FAQItem
-                          key={faq.id}
-                          faq={faq}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                        />
-                      ))}
-                    </div>
+          {loading ? (
+            <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">Loading FAQs...</div>
+          ) : selectedCategory === 'All' ? (
+            FAQ_CATEGORIES.map(category => (
+              groupedFAQs[category].length > 0 && (
+                <div key={category} className="mb-8">
+                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 pb-2 border-b-2 border-brand-500">
+                    {category}
+                  </h2>
+                  <div className="space-y-3">
+                    {groupedFAQs[category].map(faq => (
+                      <FAQItem
+                        key={faq.id}
+                        faq={faq}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
                   </div>
                 )
               ))
@@ -217,7 +216,6 @@ const FAQs = () => {
                 )}
               </div>
             )}
-          </div>
         </div>
       </div>
 

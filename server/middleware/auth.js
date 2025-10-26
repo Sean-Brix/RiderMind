@@ -16,3 +16,29 @@ export function authenticate(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
+
+/**
+ * Optional authentication - populates req.user if token is present,
+ * but allows request to continue even without authentication
+ */
+export function optionalAuthenticate(req, res, next) {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    const parts = authHeader.split(' ');
+    
+    // If no auth header or invalid format, just continue without user
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      req.user = null;
+      return next();
+    }
+    
+    const token = parts[1];
+    const decoded = verifyToken(token);
+    req.user = decoded; // { id, role, email, name }
+    return next();
+  } catch (err) {
+    // Token is invalid/expired, but we still allow the request
+    req.user = null;
+    return next();
+  }
+}

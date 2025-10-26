@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
  * - Smooth animations for transitions
  * - Responsive design
  */
-export default function QuizModal({ isOpen, onClose, quiz, onSubmit }) {
+export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizComplete }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [direction, setDirection] = useState('next');
@@ -23,24 +23,40 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit }) {
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [imageError, setImageError] = useState(null);
   const [hasStarted, setHasStarted] = useState(false);
+  const [quizResult, setQuizResult] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize quiz
   useEffect(() => {
     if (isOpen && quiz) {
       console.log('QuizModal opened, quiz:', quiz);
+      // Only reset if we don't have results showing
+      // This prevents clearing results when modal stays open
+      if (!quizResult) {
+        setCurrentQuestion(0);
+        setAnswers({});
+        setDirection('next');
+        setImageError(null);
+        setShowConfirmSubmit(false);
+        setHasStarted(false);
+        setIsSubmitting(false);
+        
+        // Initialize time limit
+        if (quiz.timeLimit) {
+          setTimeRemaining(quiz.timeLimit); // in seconds
+        } else {
+          setTimeRemaining(null);
+        }
+      }
+    }
+    
+    // Reset everything when modal closes
+    if (!isOpen) {
+      setQuizResult(null);
       setCurrentQuestion(0);
       setAnswers({});
-      setDirection('next');
-      setImageError(null);
-      setShowConfirmSubmit(false);
       setHasStarted(false);
-      
-      // Initialize time limit
-      if (quiz.timeLimit) {
-        setTimeRemaining(quiz.timeLimit); // in seconds
-      } else {
-        setTimeRemaining(null);
-      }
+      setIsSubmitting(false);
     }
   }, [isOpen, quiz]);
 
@@ -153,7 +169,10 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit }) {
     });
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
+    setIsSubmitting(true);
+    console.log('🚀 Starting quiz submission...');
+    
     // Format answers for submission
     const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => {
       const question = quiz.questions.find(q => q.id === parseInt(questionId));
@@ -183,13 +202,66 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit }) {
 
     const timeSpent = quiz.timeLimit ? quiz.timeLimit - (timeRemaining || 0) : 0;
 
-    onSubmit({
-      quizId: quiz.id,
-      answers: formattedAnswers,
-      timeSpent
-    });
+    try {
+      console.log('📤 Calling onSubmit with data:', {
+        quizId: quiz.id,
+        answersCount: formattedAnswers.length,
+        timeSpent
+      });
+      
+      // Call onSubmit which returns the result
+      const result = await onSubmit({
+        quizId: quiz.id,
+        answers: formattedAnswers,
+        timeSpent
+      });
 
+      console.log('📊 Quiz result received in QuizModal:', result);
+      console.log('📊 Result properties:', {
+        hasResult: !!result,
+        score: result?.score,
+        passed: result?.passed,
+        resultType: typeof result,
+        resultKeys: result ? Object.keys(result) : []
+      });
+      
+      // Show results inside the modal
+      if (result) {
+        setQuizResult(result);
+        console.log('✅ Quiz result state set successfully');
+      } else {
+        console.error('❌ Result is null or undefined!');
+      }
+      
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('❌ Error submitting quiz:', error);
+      setIsSubmitting(false);
+      alert('Failed to submit quiz. Please try again.');
+    }
+  };
+
+  const handleCloseResults = () => {
+    // Close the entire modal after viewing results
+    const passed = quizResult?.passed || false;
+    setQuizResult(null);
     onClose();
+    
+    // Call parent's onQuizComplete if provided
+    if (onQuizComplete) {
+      onQuizComplete(passed);
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    // Reset quiz state for retake
+    setQuizResult(null);
+    setCurrentQuestion(0);
+    setAnswers({});
+    setHasStarted(false);
+    if (quiz.timeLimit) {
+      setTimeRemaining(quiz.timeLimit);
+    }
   };
 
   const formatTime = (seconds) => {
@@ -205,6 +277,186 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit }) {
   const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
   const answeredCount = Object.keys(answers).length;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
+
+  // Debug logging for quiz result
+  console.log('🔍 QuizModal render - quizResult:', quizResult);
+  console.log('🔍 Has quizResult?', !!quizResult);
+
+  // Results screen - Show results inside the quiz modal
+  if (quizResult) {
+    console.log('✅ Rendering results view with:', quizResult);
+    return (
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className={`relative w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 ${
+            isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Animated Background Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className={`absolute inset-0 ${quizResult.passed ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-rose-600'}`}></div>
+          </div>
+
+          {/* Content */}
+          <div className="relative p-8 text-center">
+            {/* Animated Icon */}
+            <div className={`w-32 h-32 mx-auto mb-6 rounded-full flex items-center justify-center transform transition-all duration-700 ${
+              quizResult.passed 
+                ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 scale-100 rotate-0' 
+                : 'bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 scale-100 rotate-0'
+            } animate-bounce-in`}>
+              {quizResult.passed ? (
+                <svg className="w-16 h-16 text-green-600 dark:text-green-400 animate-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-16 h-16 text-red-600 dark:text-red-400 animate-x" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
+
+            {/* Title */}
+            <h3 className={`text-4xl font-black mb-4 animate-slide-up ${
+              quizResult.passed 
+                ? 'text-green-600 dark:text-green-400' 
+                : 'text-red-600 dark:text-red-400'
+            }`}>
+              {quizResult.passed ? '🎉 Congratulations!' : '📚 Keep Learning!'}
+            </h3>
+
+            {/* Status Message */}
+            <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-8 animate-slide-up animation-delay-100">
+              {quizResult.passed 
+                ? 'You passed the quiz!' 
+                : `You need ${quiz.passingScore}% to pass. Try again!`}
+            </p>
+
+            {/* Score Display */}
+            <div className="mb-8 p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl animate-slide-up animation-delay-200">
+              <div className="text-6xl font-black mb-2 bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent animate-number-count">
+                {Math.round(quizResult.score)}%
+              </div>
+              <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                Your Score
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mt-4 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                    quizResult.passed 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                      : 'bg-gradient-to-r from-red-500 to-rose-500'
+                  }`}
+                  style={{ width: `${quizResult.score}%` }}
+                ></div>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400">Passing Score</div>
+                  <div className="text-lg font-bold text-neutral-700 dark:text-neutral-300">{quiz.passingScore}%</div>
+                </div>
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400">Attempts</div>
+                  <div className="text-lg font-bold text-neutral-700 dark:text-neutral-300">{quizResult.attempts || 1}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up animation-delay-300">
+              {quizResult.passed ? (
+                <button
+                  onClick={handleCloseResults}
+                  className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  Continue Learning
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleRetakeQuiz}
+                    className="px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    Retake Quiz
+                  </button>
+                  <button
+                    onClick={handleCloseResults}
+                    className="px-8 py-4 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    Review Module
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Add animations */}
+        <style jsx>{`
+          @keyframes bounce-in {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          }
+          @keyframes slide-up {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes check {
+            0% { stroke-dashoffset: 100; }
+            100% { stroke-dashoffset: 0; }
+          }
+          @keyframes x {
+            0% { stroke-dashoffset: 100; }
+            100% { stroke-dashoffset: 0; }
+          }
+          @keyframes number-count {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-bounce-in {
+            animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          }
+          .animate-slide-up {
+            animation: slide-up 0.5s ease-out forwards;
+          }
+          .animation-delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+          }
+          .animation-delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+          }
+          .animation-delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+          }
+          .animate-check {
+            stroke-dasharray: 100;
+            animation: check 0.6s ease-out 0.3s forwards;
+          }
+          .animate-x {
+            stroke-dasharray: 100;
+            animation: x 0.6s ease-out 0.3s forwards;
+          }
+          .animate-number-count {
+            animation: number-count 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.4s forwards;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   // Start screen
   if (!hasStarted) {
@@ -770,5 +1022,6 @@ QuizModal.propTypes = {
       })
     ).isRequired
   }),
-  onSubmit: PropTypes.func.isRequired
+  onSubmit: PropTypes.func.isRequired,
+  onQuizComplete: PropTypes.func // Optional callback when quiz is completed
 };

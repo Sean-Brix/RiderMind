@@ -54,6 +54,7 @@ model User {
 
   // Relations
   quizAttempts QuizAttempt[]
+  studentModules StudentModule[]
 }
 
 enum Role {
@@ -94,6 +95,7 @@ model Module {
   objectives       ModuleObjective[]
   slides           ModuleSlide[]
   categoryModules  ModuleCategoryModule[]
+  studentModules   StudentModule[]
   quizzes          Quiz[]
 
   @@index([position])
@@ -113,7 +115,8 @@ model ModuleCategory {
   createdBy   Int?
   updatedBy   Int?
 
-  modules ModuleCategoryModule[]
+  modules        ModuleCategoryModule[]
+  studentModules StudentModule[]
 
   @@index([isActive])
   @@index([isDefault])
@@ -135,6 +138,44 @@ model ModuleCategoryModule {
   @@index([moduleId])
   @@index([position])
   @@map("module_category_modules")
+}
+
+model StudentModule {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  categoryId      Int
+  moduleId        Int
+  position        Int      @default(0)
+  
+  // Progress tracking
+  progress        Float    @default(0) // Percentage 0.0 - 100.0
+  currentSlideId  Int?     // Track which slide the student is currently on
+  isCompleted     Boolean  @default(false)
+  
+  // Quiz tracking
+  quizScore       Float?   // Quiz score percentage (null if not taken)
+  quizAttempts    Int      @default(0) // Number of quiz attempts
+  quizPassed      Boolean  @default(false) // Whether student passed the quiz
+  lastQuizAttemptId Int?   // Reference to last quiz attempt
+  
+  // Timestamps
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category ModuleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, moduleId])
+  @@index([userId])
+  @@index([categoryId])
+  @@index([moduleId])
+  @@index([position])
+  @@index([isCompleted])
+  @@index([quizPassed])
+  @@map("student_modules")
 }
 
 model ModuleObjective {

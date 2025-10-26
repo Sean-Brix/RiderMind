@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import QuizModal from './QuizModal';
+import { submitQuizAttempt } from '../services/studentModuleService';
 
 /**
  * LessonModal - Dynamic component for displaying module lessons with slides
  * 
  * Features:
- * - Supports multiple slide types: video, image, animation
+ * - Supports multiple slide types: video, image, text
  * - Right sidebar with lesson details
  * - Navigation: next/prev buttons, keyboard arrows, page indicators
+ * - Quiz integration after slides
+ * - Progress tracking and module completion
  * - Smooth animations: modal open/close, slide transitions
  * - Responsive design
  */
@@ -16,15 +20,33 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
   const [direction, setDirection] = useState('next'); // 'next' or 'prev' for animation
   const [isAnimating, setIsAnimating] = useState(false);
   const [imageError, setImageError] = useState(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizResult, setQuizResult] = useState(null);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // Reset to first slide when modal opens
   useEffect(() => {
     if (isOpen) {
       console.log('LessonModal opened, lesson:', lesson);
       console.log('Lesson slides:', lesson?.slides);
-      setCurrentSlide(0);
+      console.log('Skip to quiz:', lesson?.skipToQuiz);
+      
+      // Check if we should skip directly to quiz
+      if (lesson?.skipToQuiz && lesson?.quiz) {
+        setShowQuiz(true);
+        setCurrentSlide(0);
+      } else if (lesson?.startAtQuiz && lesson?.quiz) {
+        setShowQuiz(true);
+        setCurrentSlide(0);
+      } else {
+        setShowQuiz(false);
+        setCurrentSlide(0);
+      }
+      
       setDirection('next');
       setImageError(null);
+      setQuizCompleted(false);
     }
   }, [isOpen, lesson]);
 
@@ -65,8 +87,17 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
       setIsAnimating(true);
       setImageError(null); // Reset error when changing slides
       setTimeout(() => {
-        setCurrentSlide((prev) => prev + 1);
+        const nextSlide = currentSlide + 1;
+        setCurrentSlide(nextSlide);
         setIsAnimating(false);
+        
+        // Update progress - cap at 90% until quiz is passed
+        if (lesson.onProgressUpdate && lesson.moduleId && lesson.slides[nextSlide]) {
+          const slideProgress = ((nextSlide + 1) / lesson.slides.length) * 100;
+          // Cap progress at 90% - the remaining 10% comes from passing the quiz
+          const progressPercent = Math.min(90, Math.round(slideProgress));
+          lesson.onProgressUpdate(lesson.moduleId, lesson.slides[nextSlide].id, progressPercent);
+        }
       }, 300);
     }
   };
@@ -91,7 +122,101 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
     setTimeout(() => {
       setCurrentSlide(index);
       setIsAnimating(false);
+      
+      // Update progress when jumping to a slide - cap at 90% until quiz is passed
+      if (lesson.onProgressUpdate && lesson.moduleId && lesson.slides[index]) {
+        const slideProgress = ((index + 1) / lesson.slides.length) * 100;
+        // Cap progress at 90% - the remaining 10% comes from passing the quiz
+        const progressPercent = Math.min(90, Math.round(slideProgress));
+        lesson.onProgressUpdate(lesson.moduleId, lesson.slides[index].id, progressPercent);
+      }
     }, 300);
+  };
+
+  const handleMarkAsDone = async () => {
+    if (!lesson?.quiz) {
+      // No quiz, just close
+      onClose();
+      return;
+    }
+    
+    // Show quiz
+    setShowQuiz(true);
+  };
+
+  const handleQuizSubmit = async (quizData) => {
+    try {
+      setIsCompleting(true);
+      
+      console.log('Quiz submitted:', quizData);
+      
+      // Submit to backend for scoring
+      const result = await submitQuizAttempt(lesson.moduleId, {
+        categoryId: lesson.categoryId,
+        quizId: lesson.quiz.id,
+        answers: quizData.answers,
+        timeSpent: quizData.timeSpent || 0
+      });
+      
+      console.log('📊 Quiz result from backend:', result);
+      
+      if (result.success) {
+        // Return the result so QuizModal can display it
+        setIsCompleting(false);
+        return result.data;
+      }
+      
+      setIsCompleting(false);
+      return null;
+      
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      setIsCompleting(false);
+      throw error; // Let QuizModal handle the error
+    }
+  };
+
+  const handleQuizComplete = async (quizResult) => {
+    try {
+      setIsCompleting(true);
+      
+      // Record quiz attempt
+      if (lesson.moduleId && lesson.categoryId) {
+        await recordQuizAttempt(lesson.moduleId, {
+          categoryId: lesson.categoryId,
+          quizScore: quizResult.score,
+          quizAttemptId: quizResult.attemptId || null,
+          passed: quizResult.passed
+        });
+        
+        // If passed, complete the module
+        if (quizResult.passed) {
+          await completeModule(lesson.moduleId, {
+            categoryId: lesson.categoryId,
+            quizScore: quizResult.score,
+            quizAttemptId: quizResult.attemptId || null
+          });
+        }
+      }
+      
+      setQuizCompleted(true);
+      setShowQuiz(false);
+      
+      // Call the parent's quiz complete handler
+      if (lesson.onQuizComplete) {
+        lesson.onQuizComplete(quizResult);
+      } else {
+        // Default: just close the modal
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error completing quiz:', error);
+      alert('Failed to save quiz results. Please try again.');
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   if (!isOpen || !lesson) return null;
@@ -99,6 +224,9 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
   const currentSlideData = lesson.slides?.[currentSlide];
   const totalSlides = lesson.slides?.length || 0;
   const progress = totalSlides > 0 ? ((currentSlide + 1) / totalSlides) * 100 : 0;
+  
+  // If we're showing quiz or quiz results, hide the main lesson modal
+  const hideMainModal = (showQuiz || quizResult) && totalSlides === 0;
 
   return (
     <div
@@ -107,13 +235,14 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
       }`}
       onClick={onClose}
     >
-      {/* Modal Container */}
-      <div
-        className={`relative w-full max-w-7xl h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 ${
-          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      {/* Modal Container - Hide when showing quiz/results with no slides */}
+      {!hideMainModal && (
+        <div
+          className={`relative w-full max-w-7xl h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 ${
+            isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -153,6 +282,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
             </div>
 
             {/* Slide Content with Animation */}
+            <>
             <div className="flex-1 relative overflow-hidden">
               <div
                 className={`absolute inset-0 transition-all duration-500 ease-in-out ${
@@ -236,7 +366,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                             {currentSlideData.title}
                           </h3>
                           <div className="prose prose-lg dark:prose-invert">
-                            <p className="text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                            <p className="text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
                               {currentSlideData.content}
                             </p>
                           </div>
@@ -248,7 +378,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
               </div>
             </div>
 
-            {/* Navigation Controls */}
+            {/* Navigation Controls - Only show when viewing slides */}
             <div className="p-6 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center justify-between gap-4">
                 {/* Previous Button */}
@@ -280,19 +410,33 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                   ))}
                 </div>
 
-                {/* Next Button */}
-                <button
-                  onClick={handleNextSlide}
-                  disabled={currentSlide === totalSlides - 1 || isAnimating}
-                  className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  Next
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                {/* Next Button or Mark as Done */}
+                {currentSlide === totalSlides - 1 ? (
+                  <button 
+                    onClick={handleMarkAsDone}
+                    disabled={isCompleting}
+                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {lesson.quiz ? 'Take Quiz' : 'Mark as Done'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleNextSlide}
+                    disabled={isAnimating}
+                    className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    Next
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
+            </>
           </div>
 
           {/* Right Sidebar - Lesson Details (30%) */}
@@ -445,20 +589,29 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                   </div>
                 </div>
               )}
-
-              {/* Complete Button */}
-              {currentSlide === totalSlides - 1 && (
-                <button className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Mark as Complete
-                </button>
-              )}
             </div>
           </div>
         </div>
       </div>
+      )}
+      
+      {/* Quiz Modal - Separate modal for quiz */}
+      {lesson?.quiz && (
+        <QuizModal
+          isOpen={showQuiz}
+          onClose={() => setShowQuiz(false)}
+          quiz={lesson.quiz}
+          onSubmit={handleQuizSubmit}
+          onQuizComplete={(passed) => {
+            setShowQuiz(false);
+            onClose();
+            // Call the parent's onQuizComplete if it exists
+            if (lesson?.onQuizComplete) {
+              lesson.onQuizComplete(passed);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -468,17 +621,25 @@ LessonModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   lesson: PropTypes.shape({
     moduleId: PropTypes.number,
+    studentModuleId: PropTypes.number,
+    categoryId: PropTypes.number,
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
     objectives: PropTypes.arrayOf(PropTypes.string),
     slides: PropTypes.arrayOf(
       PropTypes.shape({
+        id: PropTypes.number,
         type: PropTypes.oneOf(['video', 'image', 'text']).isRequired,
         title: PropTypes.string.isRequired,
         content: PropTypes.string.isRequired,
         description: PropTypes.string,
       })
-    ).isRequired,
+    ),
+    quiz: PropTypes.object,
+    startAtQuiz: PropTypes.bool,
+    progress: PropTypes.number,
+    onProgressUpdate: PropTypes.func,
+    onQuizComplete: PropTypes.func,
     resources: PropTypes.arrayOf(
       PropTypes.shape({
         title: PropTypes.string.isRequired,

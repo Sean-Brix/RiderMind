@@ -92,14 +92,18 @@ export default async function createQuiz(req, res) {
 
           // Add options if provided
           if (q.options && Array.isArray(q.options)) {
+            console.log(`Question "${q.question}" options:`, q.options);
             questionData.options = {
-              create: q.options.map((opt, optIndex) => ({
-                optionText: opt.optionText,
-                isCorrect: opt.isCorrect || false,
-                position: opt.position || optIndex + 1,
-                imageData: opt.imageData || null,
-                imageMime: opt.imageMime || null
-              }))
+              create: q.options.map((opt, optIndex) => {
+                console.log(`  Option ${optIndex}: "${opt.optionText}" - isCorrect: ${opt.isCorrect} (type: ${typeof opt.isCorrect})`);
+                return {
+                  optionText: opt.optionText,
+                  isCorrect: opt.isCorrect === true, // Explicit boolean check
+                  position: opt.position || optIndex + 1,
+                  imageData: opt.imageData || null,
+                  imageMime: opt.imageMime || null
+                };
+              })
             };
           }
 

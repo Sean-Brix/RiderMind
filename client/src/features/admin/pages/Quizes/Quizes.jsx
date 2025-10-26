@@ -81,6 +81,17 @@ export default function Quizes() {
     }
   }, [selectedQuiz, activeTab]);
 
+  // Debug: Log quizForm state changes
+  useEffect(() => {
+    if (quizForm.questions.length > 0) {
+      console.log('🔄 quizForm updated:', {
+        questionsCount: quizForm.questions.length,
+        firstQuestion: quizForm.questions[0],
+        firstQuestionOptions: quizForm.questions[0]?.options
+      });
+    }
+  }, [quizForm]);
+
   async function loadModules() {
     try {
       setLoading(true);
@@ -133,6 +144,14 @@ export default function Quizes() {
         const response = await quizService.getQuizById(module.quizzes[0].id, {
           includeCorrectAnswers: true
         });
+        
+        console.log('📚 Loaded quiz from backend:', response.data);
+        console.log('📝 Questions:', response.data.questions);
+        response.data.questions?.forEach((q, i) => {
+          console.log(`Question ${i + 1}:`, q.question);
+          console.log(`  Options:`, q.options);
+        });
+        
         setSelectedQuiz(response.data);
         setQuizForm({
           title: response.data.title,
@@ -253,13 +272,21 @@ export default function Quizes() {
         }))
       };
 
+      console.log('💾 Saving quiz data:', quizData);
+      console.log('📝 Questions being saved:', quizData.questions);
+      quizData.questions?.forEach((q, i) => {
+        console.log(`Question ${i + 1} options:`, q.options);
+      });
+
       if (selectedQuiz) {
         // Update existing quiz
-        await quizService.updateQuiz(selectedQuiz.id, quizData);
+        const response = await quizService.updateQuiz(selectedQuiz.id, quizData);
+        console.log('✅ Quiz update response:', response);
         alert('Quiz updated successfully!');
       } else {
         // Create new quiz
-        await quizService.createQuiz(quizData);
+        const response = await quizService.createQuiz(quizData);
+        console.log('✅ Quiz create response:', response);
         alert('Quiz created successfully!');
       }
 
@@ -319,6 +346,45 @@ export default function Quizes() {
   function handleEditQuestion(index) {
     setEditingQuestionIndex(index);
     const question = quizForm.questions[index];
+    
+    console.log('✏️ ====== EDITING QUESTION ======');
+    console.log('Question index:', index);
+    console.log('Question object:', question);
+    console.log('Question text:', question.question);
+    console.log('Question type:', question.type);
+    console.log('Raw options:', question.options);
+    console.log('Options with isCorrect details:');
+    question.options?.forEach((opt, i) => {
+      console.log(`  [${i}] "${opt.optionText}"`);
+      console.log(`      isCorrect: ${opt.isCorrect}`);
+      console.log(`      type: ${typeof opt.isCorrect}`);
+      console.log(`      === true: ${opt.isCorrect === true}`);
+      console.log(`      truthy: ${!!opt.isCorrect}`);
+    });
+    
+    let mappedOptions;
+    
+    // For IDENTIFICATION/FILL_BLANK, ensure we have at least one option
+    if (['IDENTIFICATION', 'FILL_BLANK'].includes(question.type)) {
+      const correctOption = question.options?.find(opt => opt.isCorrect === true);
+      mappedOptions = [{
+        optionText: correctOption?.optionText || '',
+        isCorrect: true,
+        position: 1
+      }];
+    } else {
+      // For other types, map all options
+      mappedOptions = question.options?.map(opt => ({
+        optionText: opt.optionText,
+        isCorrect: opt.isCorrect === true // Ensure boolean
+      })) || [
+        { optionText: '', isCorrect: false },
+        { optionText: '', isCorrect: false }
+      ];
+    }
+    
+    console.log('Mapped options for questionForm:', mappedOptions);
+    
     setQuestionForm({
       type: question.type,
       question: question.question,
@@ -327,15 +393,39 @@ export default function Quizes() {
       caseSensitive: question.caseSensitive || false,
       shuffleOptions: question.shuffleOptions || false,
       file: null,
-      options: question.options || [
-        { optionText: '', isCorrect: false },
-        { optionText: '', isCorrect: false }
-      ]
+      options: mappedOptions
     });
+    
+    console.log('✏️ ====== END EDITING QUESTION ======');
   }
 
   function handleQuestionFormChange(field, value) {
-    setQuestionForm(prev => ({ ...prev, [field]: value }));
+    if (field === 'type') {
+      // When changing question type, reset options appropriately
+      let newOptions = [];
+      
+      if (value === 'TRUE_FALSE') {
+        newOptions = [
+          { optionText: 'True', isCorrect: false },
+          { optionText: 'False', isCorrect: false }
+        ];
+      } else if (value === 'IDENTIFICATION' || value === 'FILL_BLANK') {
+        // Single correct answer option
+        newOptions = [
+          { optionText: '', isCorrect: true, position: 1 }
+        ];
+      } else {
+        // Multiple choice or multiple answer
+        newOptions = [
+          { optionText: '', isCorrect: false },
+          { optionText: '', isCorrect: false }
+        ];
+      }
+      
+      setQuestionForm(prev => ({ ...prev, type: value, options: newOptions }));
+    } else {
+      setQuestionForm(prev => ({ ...prev, [field]: value }));
+    }
   }
 
   function handleAddOption() {
@@ -372,8 +462,13 @@ export default function Quizes() {
       return;
     }
 
-    const needsOptions = ['MULTIPLE_CHOICE', 'TRUE_FALSE', 'MULTIPLE_ANSWER'].includes(questionForm.type);
-    if (needsOptions) {
+    // Validate based on question type
+    if (['IDENTIFICATION', 'FILL_BLANK'].includes(questionForm.type)) {
+      if (!questionForm.options[0]?.optionText?.trim()) {
+        alert('Please enter the correct answer');
+        return;
+      }
+    } else if (['MULTIPLE_CHOICE', 'TRUE_FALSE', 'MULTIPLE_ANSWER'].includes(questionForm.type)) {
       if (questionForm.options.some(opt => !opt.optionText.trim())) {
         alert('All options must have text');
         return;
@@ -919,13 +1014,55 @@ export default function Quizes() {
                               />
                             </div>
 
+                            {/* Correct Answer (for IDENTIFICATION and FILL_BLANK) */}
+                            {['IDENTIFICATION', 'FILL_BLANK'].includes(questionForm.type) && (
+                              <div>
+                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                  Correct Answer *
+                                </label>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                                  Enter the correct answer (case-insensitive matching)
+                                </p>
+                                <input
+                                  type="text"
+                                  value={questionForm.options[0]?.optionText || ''}
+                                  onChange={(e) => {
+                                    const answer = e.target.value;
+                                    setQuestionForm(prev => ({
+                                      ...prev,
+                                      options: [{
+                                        optionText: answer,
+                                        isCorrect: true,
+                                        position: 1
+                                      }]
+                                    }));
+                                  }}
+                                  placeholder="Enter the correct answer..."
+                                  className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg"
+                                />
+                                {questionForm.caseSensitive && (
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                                    ⚠️ Case-sensitive matching is enabled
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
                             {/* Options (for multiple choice, etc.) */}
                             {['MULTIPLE_CHOICE', 'TRUE_FALSE', 'MULTIPLE_ANSWER'].includes(questionForm.type) && (
                               <div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Options *
-                                  </label>
+                                  <div>
+                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                      Options *
+                                    </label>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                                      {questionForm.type === 'MULTIPLE_ANSWER' 
+                                        ? 'Check all correct answers' 
+                                        : 'Select the correct answer'
+                                      }
+                                    </p>
+                                  </div>
                                   {questionForm.type !== 'TRUE_FALSE' && (
                                     <button
                                       onClick={handleAddOption}
@@ -937,32 +1074,49 @@ export default function Quizes() {
                                 </div>
                                 <div className="space-y-2">
                                   {questionForm.options.map((option, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                      <input
-                                        type={questionForm.type === 'MULTIPLE_ANSWER' ? 'checkbox' : 'radio'}
-                                        checked={option.isCorrect}
-                                        onChange={(e) => {
-                                          if (questionForm.type === 'MULTIPLE_ANSWER') {
-                                            handleOptionChange(index, 'isCorrect', e.target.checked);
-                                          } else {
-                                            // Radio - uncheck all others
-                                            setQuestionForm(prev => ({
-                                              ...prev,
-                                              options: prev.options.map((opt, i) => ({
-                                                ...opt,
-                                                isCorrect: i === index
-                                              }))
-                                            }));
-                                          }
-                                        }}
-                                        className="w-5 h-5 text-brand-600 focus:ring-brand-500"
-                                      />
+                                    <div key={index} className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                                      option.isCorrect 
+                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' 
+                                        : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600'
+                                    }`}>
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type={questionForm.type === 'MULTIPLE_ANSWER' ? 'checkbox' : 'radio'}
+                                          name={questionForm.type === 'MULTIPLE_ANSWER' ? undefined : 'correct-answer'}
+                                          checked={option.isCorrect === true}
+                                          onChange={(e) => {
+                                            console.log(`🔘 Option ${index} "${option.optionText}" isCorrect changed to:`, e.target.checked);
+                                            if (questionForm.type === 'MULTIPLE_ANSWER') {
+                                              handleOptionChange(index, 'isCorrect', e.target.checked);
+                                            } else {
+                                              // Radio - uncheck all others
+                                              setQuestionForm(prev => ({
+                                                ...prev,
+                                                options: prev.options.map((opt, i) => ({
+                                                  ...opt,
+                                                  isCorrect: i === index
+                                                }))
+                                              }));
+                                            }
+                                          }}
+                                          className="w-5 h-5 text-green-600 focus:ring-green-500"
+                                        />
+                                        {option.isCorrect && (
+                                          <span className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider px-2 py-0.5 bg-green-200 dark:bg-green-800 rounded">
+                                            ✓ Correct
+                                          </span>
+                                        )}
+                                      </div>
                                       <input
                                         type="text"
-                                        value={option.optionText}
+                                        value={option.optionText || ''}
                                         onChange={(e) => handleOptionChange(index, 'optionText', e.target.value)}
                                         placeholder={`Option ${index + 1}`}
-                                        className="flex-1 px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg"
+                                        className={`flex-1 px-4 py-2 border rounded-lg ${
+                                          option.isCorrect
+                                            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 font-medium'
+                                            : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600'
+                                        }`}
                                       />
                                       {questionForm.type !== 'TRUE_FALSE' && questionForm.options.length > 2 && (
                                         <button

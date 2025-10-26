@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth.js';
+import { authenticate, optionalAuthenticate } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/roles.js';
 
 // Quiz controllers
@@ -34,9 +34,9 @@ const router = Router();
 // Query params: moduleId, includeQuestions, includeOptions
 router.get('/', getQuizzes);
 
-// Get single quiz by ID (public access for users to take quiz)
+// Get single quiz by ID (public access for students, authenticated admins see correct answers)
 // Query params: includeCorrectAnswers (admin only)
-router.get('/:id', getQuizById);
+router.get('/:id', optionalAuthenticate, getQuizById);
 
 // Create new quiz (ADMIN only)
 router.post('/', authenticate, requireRole('ADMIN'), createQuiz);
