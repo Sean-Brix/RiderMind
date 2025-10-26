@@ -13,6 +13,7 @@ import authRouter from './auth/index.js';
 import modulesRouter from './modules/index.js';
 import categoriesRouter from './categories/index.js';
 import quizzesRouter from './quizzes/index.js';
+import faqsRouter from './faqs/index.js';
 
 router.use('/auth', authRouter);
 router.use('/account', accountRouter);
@@ -20,5 +21,6 @@ router.use('/quiz_form', quizFormRouter);
 router.use('/modules', modulesRouter);
 router.use('/categories', categoriesRouter);
 router.use('/quizzes', quizzesRouter);
+router.use('/faqs', faqsRouter);
 
 export default router;

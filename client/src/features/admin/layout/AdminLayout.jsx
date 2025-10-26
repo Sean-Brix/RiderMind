@@ -9,9 +9,7 @@ export default function AdminLayout() {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 sm:p-6">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
     </div>

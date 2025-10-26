@@ -7,6 +7,7 @@ import seedAccounts from './Seeds/accounts.seed.js';
 import seedModules from './Seeds/modules.seed.js';
 import seedCategories from './Seeds/categories.seed.js';
 import seedQuizzes from './Seeds/quizzes.seed.js';
+import { seedFAQs } from './Seeds/faqs.seed.js';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -54,7 +55,8 @@ async function main() {
       { name: 'User Accounts', fn: seedAccounts, emoji: '👥' },
       { name: 'Learning Modules', fn: seedModules, emoji: '📚' },
       { name: 'Module Categories', fn: seedCategories, emoji: '🏷️' },
-      { name: 'Quizzes', fn: seedQuizzes, emoji: '📝' }
+      { name: 'Quizzes', fn: seedQuizzes, emoji: '📝' },
+      { name: 'FAQs', fn: seedFAQs, emoji: '❓' }
     ];
 
     let totalSuccess = 0;

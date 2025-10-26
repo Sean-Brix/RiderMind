@@ -11,7 +11,27 @@ export default async function createAcc(req, res) {
 		if (!email || !password) {
 			return res.status(400).json({ error: 'email and password are required' });
 		}
-		const normalizedRole = body.role === 'ADMIN' ? 'ADMIN' : 'USER';
+		  // Normalize role to uppercase
+  const normalizedRole = body.role?.toUpperCase();
+  if (!normalizedRole || !['ADMIN', 'USER'].includes(normalizedRole)) {
+    return res.status(400).json({ error: 'Invalid role. Must be either ADMIN or USER.' });
+  }
+
+  // Validate student_type for USER accounts
+  if (normalizedRole === 'USER') {
+    if (!body.student_type) {
+      return res.status(400).json({ error: 'student_type is required for USER accounts.' });
+    }
+    
+    const validStudentTypes = ['A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'BE', 'CE'];
+    const normalizedStudentType = body.student_type.toUpperCase();
+    
+    if (!validStudentTypes.includes(normalizedStudentType)) {
+      return res.status(400).json({ 
+        error: `Invalid student_type. Must be one of: ${validStudentTypes.join(', ')}` 
+      });
+    }
+  }
 		const existing = await prisma.user.findUnique({ where: { email } });
 		if (existing) {
 			return res.status(409).json({ error: 'Email already in use' });
@@ -62,6 +82,11 @@ export default async function createAcc(req, res) {
 			// Vehicle
 			vehicle_categories: vehicle_categories ?? null,
 		};
+
+		// Only add student_type for USER accounts
+		if (normalizedRole === 'USER') {
+			data.student_type = handleEnumField(body.student_type);
+		}
 
 		const created = await prisma.user.create({
 			data,

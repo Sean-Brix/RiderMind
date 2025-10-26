@@ -48,7 +48,8 @@ const accountsData = [
     civil_status: 'Single',
     birthdate: '1995-05-15',
     cellphone_number: '09187654321',
-    email_address: 'user@ridermind.com'
+    email_address: 'user@ridermind.com',
+    student_type: 'B'
   },
   {
     email: 'john.doe@email.com',
@@ -62,7 +63,8 @@ const accountsData = [
     civil_status: 'Married',
     birthdate: '1988-03-20',
     cellphone_number: '09191234567',
-    email_address: 'john.doe@email.com'
+    email_address: 'john.doe@email.com',
+    student_type: 'A'
   },
   {
     email: 'jane.santos@email.com',
@@ -76,7 +78,8 @@ const accountsData = [
     civil_status: 'Single',
     birthdate: '1992-07-12',
     cellphone_number: '09209876543',
-    email_address: 'jane.santos@email.com'
+    email_address: 'jane.santos@email.com',
+    student_type: 'B1'
   }
 ];
 
