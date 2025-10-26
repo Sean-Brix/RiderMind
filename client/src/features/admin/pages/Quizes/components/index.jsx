@@ -259,3 +259,4 @@ export function FileUpload({ type, file, onChange, onRemove }) {
 }
 
 export { ModuleListItem as default };
+export { default as QuizAnalytics } from './QuizAnalytics';

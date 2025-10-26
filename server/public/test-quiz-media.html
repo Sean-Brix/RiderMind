@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Media Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .preview {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+        .preview img, .preview video {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Quiz Media Upload Test</h1>
+    <p>Test the quiz question media upload endpoints</p>
+
+    <div class="section">
+        <h2>Configuration</h2>
+        <label>
+            Question ID:
+            <input type="number" id="questionId" value="1" min="1">
+        </label>
+        <br>
+        <label>
+            Auth Token (Admin):
+            <input type="text" id="authToken" style="width: 400px" placeholder="Paste your admin token here">
+        </label>
+    </div>
+
+    <div class="section">
+        <h2>Upload Video</h2>
+        <input type="file" id="videoFile" accept="video/*">
+        <br>
+        <button onclick="uploadVideo()">Upload Video</button>
+        <div id="videoResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="section">
+        <h2>Upload Image</h2>
+        <input type="file" id="imageFile" accept="image/*">
+        <br>
+        <button onclick="uploadImage()">Upload Image</button>
+        <div id="imageResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="section">
+        <h2>Preview Question Media</h2>
+        <button onclick="loadVideo()">Load Video</button>
+        <button onclick="loadImage()">Load Image</button>
+        <button class="delete-btn" onclick="deleteVideo()">Delete Video</button>
+        <button class="delete-btn" onclick="deleteImage()">Delete Image</button>
+        
+        <div class="preview" id="preview"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        function getQuestionId() {
+            return document.getElementById('questionId').value;
+        }
+
+        function getAuthToken() {
+            return document.getElementById('authToken').value;
+        }
+
+        function showResult(elementId, message, isSuccess = true) {
+            const el = document.getElementById(elementId);
+            el.textContent = typeof message === 'object' 
+                ? JSON.stringify(message, null, 2) 
+                : message;
+            el.className = `result ${isSuccess ? 'success' : 'error'}`;
+            el.style.display = 'block';
+        }
+
+        async function uploadVideo() {
+            const fileInput = document.getElementById('videoFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a video file');
+                return;
+            }
+
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please enter your admin auth token');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            try {
+                showResult('videoResult', 'Uploading video...', true);
+                
+                const response = await fetch(
+                    `${API_BASE}/quizzes/questions/${getQuestionId()}/upload-video`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    }
+                );
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('videoResult', result, true);
+                } else {
+                    showResult('videoResult', result, false);
+                }
+            } catch (error) {
+                showResult('videoResult', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please enter your admin auth token');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                showResult('imageResult', 'Uploading image...', true);
+                
+                const response = await fetch(
+                    `${API_BASE}/quizzes/questions/${getQuestionId()}/upload-image`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    }
+                );
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('imageResult', result, true);
+                } else {
+                    showResult('imageResult', result, false);
+                }
+            } catch (error) {
+                showResult('imageResult', `Error: ${error.message}`, false);
+            }
+        }
+
+        function loadVideo() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `
+                <h3>Video Preview</h3>
+                <video controls style="max-width: 100%;">
+                    <source src="${API_BASE}/quizzes/questions/${getQuestionId()}/video" type="video/mp4">
+                    Your browser does not support video.
+                </video>
+            `;
+        }
+
+        function loadImage() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `
+                <h3>Image Preview</h3>
+                <img 
+                    src="${API_BASE}/quizzes/questions/${getQuestionId()}/image" 
+                    alt="Question Image"
+                    onerror="this.alt='Image not found or failed to load'"
+                >
+            `;
+        }
+
+        async function deleteVideo() {
+            if (!confirm('Delete video from this question?')) return;
+
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please enter your admin auth token');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/quizzes/questions/${getQuestionId()}/video`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+
+                const result = await response.json();
+                alert(response.ok ? 'Video deleted!' : `Error: ${result.error}`);
+                
+                if (response.ok) {
+                    document.getElementById('preview').innerHTML = '';
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function deleteImage() {
+            if (!confirm('Delete image from this question?')) return;
+
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please enter your admin auth token');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/quizzes/questions/${getQuestionId()}/image`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+
+                const result = await response.json();
+                alert(response.ok ? 'Image deleted!' : `Error: ${result.error}`);
+                
+                if (response.ok) {
+                    document.getElementById('preview').innerHTML = '';
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

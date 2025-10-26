@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import QuizModal from '../../../../components/QuizModal';
-import { ModuleListItem, SortableQuestionItem, QuestionTypeSelector, FileUpload } from './components';
+import { ModuleListItem, SortableQuestionItem, QuestionTypeSelector, FileUpload, QuizAnalytics } from './components';
 import * as quizService from '../../../../services/quizService';
 import * as moduleService from '../../../../services/moduleService';
 
@@ -44,6 +44,8 @@ export default function Quizes() {
   
   // Question editor state
   const [editingQuestionIndex, setEditingQuestionIndex] = useState(null);
+  const [pendingMediaUploads, setPendingMediaUploads] = useState([]); // Track media to upload after save
+  const [showMediaSection, setShowMediaSection] = useState(false); // Toggle media upload section
   const [questionForm, setQuestionForm] = useState({
     type: 'MULTIPLE_CHOICE',
     question: '',
@@ -51,7 +53,10 @@ export default function Quizes() {
     points: 1,
     caseSensitive: false,
     shuffleOptions: false,
-    file: null,
+    videoFile: null,
+    imageFile: null,
+    hasExistingVideo: false,
+    hasExistingImage: false,
     options: [
       { optionText: '', isCorrect: false },
       { optionText: '', isCorrect: false }
@@ -278,17 +283,40 @@ export default function Quizes() {
         console.log(`Question ${i + 1} options:`, q.options);
       });
 
+      let savedQuiz;
       if (selectedQuiz) {
         // Update existing quiz
-        const response = await quizService.updateQuiz(selectedQuiz.id, quizData);
-        console.log('✅ Quiz update response:', response);
-        alert('Quiz updated successfully!');
+        savedQuiz = await quizService.updateQuiz(selectedQuiz.id, quizData);
+        console.log('✅ Quiz update response:', savedQuiz);
       } else {
         // Create new quiz
-        const response = await quizService.createQuiz(quizData);
-        console.log('✅ Quiz create response:', response);
-        alert('Quiz created successfully!');
+        savedQuiz = await quizService.createQuiz(quizData);
+        console.log('✅ Quiz create response:', savedQuiz);
       }
+
+      // Upload pending media files
+      if (pendingMediaUploads.length > 0 && savedQuiz?.questions) {
+        console.log('📤 Uploading media for', pendingMediaUploads.length, 'questions...');
+        
+        for (const upload of pendingMediaUploads) {
+          const question = savedQuiz.questions[upload.questionIndex];
+          if (question?.id) {
+            try {
+              await uploadQuestionMedia(question.id, upload.videoFile, upload.imageFile);
+              console.log(`✅ Media uploaded for question ${upload.questionIndex + 1}`);
+            } catch (error) {
+              console.error(`Failed to upload media for question ${upload.questionIndex + 1}:`, error);
+              alert(`Warning: Failed to upload media for question ${upload.questionIndex + 1}`);
+            }
+          }
+        }
+        
+        // Clear pending uploads
+        setPendingMediaUploads([]);
+        console.log('✅ All media uploads completed');
+      }
+
+      alert(selectedQuiz ? 'Quiz updated successfully!' : 'Quiz created successfully!');
 
       // Reload modules and select current module
       await loadModules();
@@ -335,7 +363,10 @@ export default function Quizes() {
       points: 1,
       caseSensitive: false,
       shuffleOptions: false,
-      file: null,
+      videoFile: null,
+      imageFile: null,
+      hasExistingVideo: false,
+      hasExistingImage: false,
       options: [
         { optionText: '', isCorrect: false },
         { optionText: '', isCorrect: false }
@@ -392,7 +423,11 @@ export default function Quizes() {
       points: question.points,
       caseSensitive: question.caseSensitive || false,
       shuffleOptions: question.shuffleOptions || false,
-      file: null,
+      videoFile: null,
+      imageFile: null,
+      hasExistingVideo: !!question.videoPath,
+      hasExistingImage: !!question.hasImage || !!question.imageMime,
+      questionId: question.id, // Store the question ID for media uploads
       options: mappedOptions
     });
     
@@ -400,6 +435,11 @@ export default function Quizes() {
   }
 
   function handleQuestionFormChange(field, value) {
+    // Log media file changes
+    if (field === 'videoFile' || field === 'imageFile') {
+      console.log(`📎 Media file ${field} changed:`, value?.name || 'removed');
+    }
+    
     if (field === 'type') {
       // When changing question type, reset options appropriately
       let newOptions = [];
@@ -480,15 +520,57 @@ export default function Quizes() {
     }
 
     const newQuestions = [...quizForm.questions];
+    const questionData = {
+      ...questionForm,
+      videoFile: undefined, // Don't store file objects in questions array
+      imageFile: undefined,
+      hasExistingVideo: questionForm.hasExistingVideo,
+      hasExistingImage: questionForm.hasExistingImage
+    };
+    
     if (editingQuestionIndex === quizForm.questions.length) {
       // Adding new
-      newQuestions.push(questionForm);
+      newQuestions.push(questionData);
     } else {
       // Editing existing
-      newQuestions[editingQuestionIndex] = questionForm;
+      newQuestions[editingQuestionIndex] = questionData;
     }
 
     setQuizForm(prev => ({ ...prev, questions: newQuestions }));
+    
+    // Handle media uploads
+    if (questionForm.videoFile || questionForm.imageFile) {
+      const questionIndex = editingQuestionIndex === quizForm.questions.length 
+        ? newQuestions.length - 1 
+        : editingQuestionIndex;
+      
+      // If editing existing quiz and question has ID, upload immediately
+      if (selectedQuiz && questionForm.questionId) {
+        console.log('📤 Uploading media immediately for existing question:', questionForm.questionId);
+        uploadQuestionMedia(questionForm.questionId, questionForm.videoFile, questionForm.imageFile)
+          .then(() => {
+            console.log('✅ Media uploaded successfully');
+            // Reload quiz to show updated media flags
+            handleSelectModule(selectedModuleId);
+          })
+          .catch(error => {
+            console.error('Failed to upload media:', error);
+            alert('Failed to upload media: ' + error.message);
+          });
+      } else {
+        // For new quizzes, queue uploads for after save
+        setPendingMediaUploads(prev => {
+          const filtered = prev.filter(upload => upload.questionIndex !== questionIndex);
+          return [...filtered, {
+            questionIndex,
+            videoFile: questionForm.videoFile,
+            imageFile: questionForm.imageFile
+          }];
+        });
+        console.log('📤 Media queued for upload at question index:', questionIndex);
+      }
+    }
+    
     setEditingQuestionIndex(null);
     setQuestionForm({
       type: 'MULTIPLE_CHOICE',
@@ -497,12 +579,78 @@ export default function Quizes() {
       points: 1,
       caseSensitive: false,
       shuffleOptions: false,
-      file: null,
+      videoFile: null,
+      imageFile: null,
+      hasExistingVideo: false,
+      hasExistingImage: false,
       options: [
         { optionText: '', isCorrect: false },
         { optionText: '', isCorrect: false }
       ]
     });
+  }
+
+  async function uploadQuestionMedia(questionId, videoFile, imageFile) {
+    const token = localStorage.getItem('token');
+    
+    console.log('🎬 uploadQuestionMedia called:', {
+      questionId,
+      hasVideo: !!videoFile,
+      hasImage: !!imageFile,
+      videoName: videoFile?.name,
+      imageName: imageFile?.name
+    });
+    
+    try {
+      // Upload video if provided
+      if (videoFile) {
+        console.log('📤 Uploading video file:', videoFile.name, videoFile.size, 'bytes');
+        const formData = new FormData();
+        formData.append('video', videoFile);
+        
+        const response = await fetch(`/api/quizzes/questions/${questionId}/upload-video`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        const responseData = await response.json();
+        console.log('📹 Video upload response:', response.status, responseData);
+        
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Failed to upload video');
+        }
+        console.log('✅ Video uploaded successfully');
+      }
+      
+      // Upload image if provided
+      if (imageFile) {
+        console.log('📤 Uploading image file:', imageFile.name, imageFile.size, 'bytes');
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        
+        const response = await fetch(`/api/quizzes/questions/${questionId}/upload-image`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        const responseData = await response.json();
+        console.log('🖼️ Image upload response:', response.status, responseData);
+        
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Failed to upload image');
+        }
+        console.log('✅ Image uploaded successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error uploading media:', error);
+      throw error;
+    }
   }
 
   function handleCancelQuestionEdit() {
@@ -514,7 +662,10 @@ export default function Quizes() {
       points: 1,
       caseSensitive: false,
       shuffleOptions: false,
-      file: null,
+      videoFile: null,
+      imageFile: null,
+      hasExistingVideo: false,
+      hasExistingImage: false,
       options: [
         { optionText: '', isCorrect: false },
         { optionText: '', isCorrect: false }
@@ -1014,6 +1165,147 @@ export default function Quizes() {
                               />
                             </div>
 
+                            {/* Media Attachments - Collapsible */}
+                            <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => setShowMediaSection(!showMediaSection)}
+                                className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-750 flex items-center justify-between transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    Media Attachments (Optional)
+                                  </span>
+                                  {(questionForm.hasExistingVideo || questionForm.hasExistingImage || questionForm.videoFile || questionForm.imageFile) && (
+                                    <span className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full">
+                                      {[questionForm.hasExistingVideo || questionForm.videoFile, questionForm.hasExistingImage || questionForm.imageFile].filter(Boolean).length} attached
+                                    </span>
+                                  )}
+                                </div>
+                                <svg 
+                                  className={`w-5 h-5 text-neutral-600 dark:text-neutral-400 transition-transform ${showMediaSection ? 'rotate-180' : ''}`} 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+
+                              {showMediaSection && (
+                                <div className="p-4 space-y-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700">
+                                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    Attach an image or video to this question to enhance learning
+                                  </p>
+
+                                  {/* Video Upload */}
+                                  <div>
+                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                      Video
+                                    </label>
+                                    {questionForm.hasExistingVideo && !questionForm.videoFile && questionForm.questionId && (
+                                      <div className="mb-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                          <span className="text-sm text-green-800 dark:text-green-200">
+                                            Video attached
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (confirm('Remove video from this question?')) {
+                                              try {
+                                                const token = localStorage.getItem('token');
+                                                const response = await fetch(`/api/quizzes/questions/${questionForm.questionId}/video`, {
+                                                  method: 'DELETE',
+                                                  headers: { 'Authorization': `Bearer ${token}` }
+                                                });
+                                                if (response.ok) {
+                                                  setQuestionForm(prev => ({ ...prev, hasExistingVideo: false }));
+                                                  alert('Video removed');
+                                                }
+                                              } catch (error) {
+                                                alert('Failed to remove video');
+                                              }
+                                            }
+                                          }}
+                                          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    )}
+                                    <FileUpload
+                                      type="video"
+                                      file={questionForm.videoFile}
+                                      onChange={(file) => handleQuestionFormChange('videoFile', file)}
+                                      onRemove={() => handleQuestionFormChange('videoFile', null)}
+                                    />
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                      MP4, WebM, or OGG up to 100MB
+                                    </p>
+                                  </div>
+
+                                  {/* Image Upload */}
+                                  <div>
+                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                      Image
+                                    </label>
+                                    {questionForm.hasExistingImage && !questionForm.imageFile && questionForm.questionId && (
+                                      <div className="mb-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          </svg>
+                                          <span className="text-sm text-green-800 dark:text-green-200">
+                                            Image attached
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (confirm('Remove image from this question?')) {
+                                              try {
+                                                const token = localStorage.getItem('token');
+                                                const response = await fetch(`/api/quizzes/questions/${questionForm.questionId}/image`, {
+                                                  method: 'DELETE',
+                                                  headers: { 'Authorization': `Bearer ${token}` }
+                                                });
+                                                if (response.ok) {
+                                                  setQuestionForm(prev => ({ ...prev, hasExistingImage: false }));
+                                                  alert('Image removed');
+                                                }
+                                              } catch (error) {
+                                                alert('Failed to remove image');
+                                              }
+                                            }
+                                          }}
+                                          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    )}
+                                    <FileUpload
+                                      type="image"
+                                      file={questionForm.imageFile}
+                                      onChange={(file) => handleQuestionFormChange('imageFile', file)}
+                                      onRemove={() => handleQuestionFormChange('imageFile', null)}
+                                    />
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                      JPEG, PNG, GIF, or WebP up to 10MB
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
                             {/* Correct Answer (for IDENTIFICATION and FILL_BLANK) */}
                             {['IDENTIFICATION', 'FILL_BLANK'].includes(questionForm.type) && (
                               <div>
@@ -1154,82 +1446,7 @@ export default function Quizes() {
                 </div>
               </div>
             ) : (
-              // Statistics Tab
-              <div>
-                {!selectedQuiz ? (
-                  <div className="text-center py-20">
-                    <p className="text-neutral-600 dark:text-neutral-400">
-                      Select a quiz to view statistics
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          Total Attempts
-                        </h3>
-                      </div>
-                      <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {statistics?.totalAttempts || 0}
-                      </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          Pass Rate
-                        </h3>
-                      </div>
-                      <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {statistics?.passRate ? `${statistics.passRate.toFixed(1)}%` : '0%'}
-                      </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                          </svg>
-                        </div>
-                        <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          Average Score
-                        </h3>
-                      </div>
-                      <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {statistics?.averageScore ? `${statistics.averageScore.toFixed(1)}%` : '0%'}
-                      </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          Avg. Time
-                        </h3>
-                      </div>
-                      <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {statistics?.averageTime ? `${Math.floor(statistics.averageTime / 60)}m` : '0m'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <QuizAnalytics statistics={statistics} />
             )}
           </div>
         </div>

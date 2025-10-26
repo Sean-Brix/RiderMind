@@ -49,7 +49,7 @@ export default async function getQuizById(req, res) {
             shuffleOptions: true,
             videoPath: true,
             imageMime: true,
-            imageData: false,
+            imageData: false, // Don't send binary data
             options: {
               orderBy: { position: 'asc' },
               select: {
@@ -82,6 +82,9 @@ export default async function getQuizById(req, res) {
       if (question.shuffleOptions && !showAnswers) {
         question.options = question.options.sort(() => Math.random() - 0.5);
       }
+      
+      // Add hasImage flag (since we don't send binary imageData)
+      question.hasImage = !!question.imageMime;
       
       console.log(`Processing question: "${question.question}"`);
       console.log(`  showAnswers: ${showAnswers}`);

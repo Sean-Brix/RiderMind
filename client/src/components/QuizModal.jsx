@@ -678,7 +678,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                         key={currentQuestion}
                         className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
                         controls
-                        src={currentQuestionData.videoPath}
+                        src={`/api/quizzes/questions/${currentQuestionData.id}/video`}
                       >
                         Your browser does not support the video tag.
                       </video>

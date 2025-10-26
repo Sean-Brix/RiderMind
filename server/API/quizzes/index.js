@@ -14,6 +14,14 @@ import addQuestion from '../../Controller/quizzes/addQuestion.js';
 import updateQuestion from '../../Controller/quizzes/updateQuestion.js';
 import deleteQuestion from '../../Controller/quizzes/deleteQuestion.js';
 
+// Question media controllers
+import uploadQuestionVideoController, { uploadQuizVideo } from '../../Controller/quizzes/uploadQuestionVideo.js';
+import uploadQuestionImageController, { uploadQuizImage } from '../../Controller/quizzes/uploadQuestionImage.js';
+import deleteQuestionVideo from '../../Controller/quizzes/deleteQuestionVideo.js';
+import deleteQuestionImage from '../../Controller/quizzes/deleteQuestionImage.js';
+import getQuestionImage from '../../Controller/quizzes/getQuestionImage.js';
+import streamQuestionVideo from '../../Controller/quizzes/streamQuestionVideo.js';
+
 // Option controllers
 import addOption from '../../Controller/quizzes/addOption.js';
 import updateOption from '../../Controller/quizzes/updateOption.js';
@@ -59,6 +67,38 @@ router.put('/questions/:questionId', authenticate, requireRole('ADMIN'), updateQ
 
 // Delete question (ADMIN only)
 router.delete('/questions/:questionId', authenticate, requireRole('ADMIN'), deleteQuestion);
+
+/**
+ * QUESTION MEDIA ROUTES
+ */
+
+// Upload video to question (ADMIN only)
+router.put('/questions/:questionId/upload-video', 
+  authenticate, 
+  requireRole('ADMIN'), 
+  uploadQuizVideo.single('video'),
+  uploadQuestionVideoController
+);
+
+// Upload image to question (ADMIN only)
+router.put('/questions/:questionId/upload-image', 
+  authenticate, 
+  requireRole('ADMIN'), 
+  uploadQuizImage.single('image'),
+  uploadQuestionImageController
+);
+
+// Stream question video (public access for students taking quiz)
+router.get('/questions/:questionId/video', streamQuestionVideo);
+
+// Get question image (public access for students taking quiz)
+router.get('/questions/:questionId/image', getQuestionImage);
+
+// Delete question video (ADMIN only)
+router.delete('/questions/:questionId/video', authenticate, requireRole('ADMIN'), deleteQuestionVideo);
+
+// Delete question image (ADMIN only)
+router.delete('/questions/:questionId/image', authenticate, requireRole('ADMIN'), deleteQuestionImage);
 
 /**
  * OPTION ROUTES
