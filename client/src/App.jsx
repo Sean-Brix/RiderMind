@@ -6,6 +6,7 @@ import Settings from './features/client/pages/Settings';
 import Profile from './features/client/pages/Profile';
 import About from './features/client/pages/About';
 import ModulesPage from './features/client/pages/Modules';
+import Progress from './features/client/pages/Progress';
 import Leaderboard from './features/client/pages/Leaderboard';
 import AdminLayout from './features/admin/layout/AdminLayout.jsx';
 import Analytics from './features/admin/pages/Analytics';
@@ -42,6 +43,7 @@ function App() {
       <Route path="/" element={<Protected><Landing /></Protected>} />
       <Route path="/about" element={<Protected><About /></Protected>} />
       <Route path="/modules" element={<Protected><ModulesPage /></Protected>} />
+      <Route path="/progress" element={<Protected><Progress /></Protected>} />
       <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/profile" element={<Protected><Profile /></Protected>} />

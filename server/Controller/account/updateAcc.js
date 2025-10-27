@@ -38,9 +38,8 @@ export default async function updateAcc(req, res) {
 		if (body.civil_status !== undefined) {
 			data.civil_status = (!body.civil_status || body.civil_status === '' || body.civil_status === 'null') ? undefined : body.civil_status;
 		}
-
-		if (Array.isArray(body.vehicle_categories)) {
-			data.vehicle_categories = body.vehicle_categories.join(',');
+		if (body.student_type !== undefined) {
+			data.student_type = (!body.student_type || body.student_type === '' || body.student_type === 'null') ? undefined : body.student_type;
 		}
 
 		// Role guard - only ADMIN or USER allowed values
@@ -60,11 +59,11 @@ export default async function updateAcc(req, res) {
 				last_name: true,
 				name_extension: true,
 				updatedAt: true,
-				vehicle_categories: true,
+				student_type: true,
 			},
 		});
 		const displayName = [updated.first_name, updated.last_name, updated.name_extension].filter(Boolean).join(' ') || updated.email;
-		return res.json({ user: { ...updated, displayName, vehicle_categories: (updated.vehicle_categories || '').split(',').filter(Boolean) } });
+		return res.json({ user: { ...updated, displayName } });
 	} catch (err) {
 		console.error('Update account error', err);
 		return res.status(500).json({ error: 'Internal server error' });

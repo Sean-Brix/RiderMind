@@ -38,10 +38,6 @@ export default async function createAcc(req, res) {
 		}
 		const passwordHash = await bcrypt.hash(password, 10);
 
-		// Normalize vehicle categories (accept array or comma string)
-		let vehicle_categories = body.vehicle_categories;
-		if (Array.isArray(vehicle_categories)) vehicle_categories = vehicle_categories.join(',');
-
 		// Helper function to handle enum fields (convert empty strings to null)
 		const handleEnumField = (value) => {
 			if (!value || value === '' || value === 'null' || value === 'undefined') return undefined;
@@ -79,8 +75,6 @@ export default async function createAcc(req, res) {
 			emergency_contact_name: body.emergency_contact_name ?? null,
 			emergency_contact_relationship: body.emergency_contact_relationship ?? null,
 			emergency_contact_number: body.emergency_contact_number ?? null,
-			// Vehicle
-			vehicle_categories: vehicle_categories ?? null,
 		};
 
 		// Only add student_type for USER accounts
