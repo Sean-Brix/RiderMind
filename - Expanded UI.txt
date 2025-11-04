@@ -1,6 +1,6 @@
 - Expanded UI /
-- Student Classification (Bigger UI)
-- Terms and Condition
+- Student Classification (Bigger UI) /
+- Terms and Condition 
 - Skill Level per Slide
 - Image & Videos (Quizes)
 - Lesson Modal, Different sidebar Tabs

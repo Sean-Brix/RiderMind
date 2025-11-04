@@ -33,6 +33,7 @@ export default async function getModules(req, res) {
           content: true,
           description: true,
           position: true,
+          skillLevel: true,
           videoPath: true,
           imageMime: true,
           // Don't include imageData in list view (too large)

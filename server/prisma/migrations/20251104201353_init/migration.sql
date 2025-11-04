@@ -1,19 +1,63 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `passwordHash` VARCHAR(191) NOT NULL,
+    `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `last_name` VARCHAR(191) NULL,
+    `first_name` VARCHAR(191) NULL,
+    `middle_name` VARCHAR(191) NULL,
+    `name_extension` VARCHAR(191) NULL,
+    `birthdate` DATETIME(3) NULL,
+    `sex` VARCHAR(191) NULL,
+    `nationality` ENUM('Filipino', 'American', 'Chinese', 'Japanese', 'Korean', 'Other') NULL,
+    `civil_status` ENUM('Single', 'Married', 'Widowed', 'Divorced', 'Separated') NULL,
+    `weight` DOUBLE NULL,
+    `height` DOUBLE NULL,
+    `blood_type` VARCHAR(191) NULL,
+    `eye_color` VARCHAR(191) NULL,
+    `address_house_no` VARCHAR(191) NULL,
+    `address_street` VARCHAR(191) NULL,
+    `address_barangay` VARCHAR(191) NULL,
+    `address_city_municipality` VARCHAR(191) NULL,
+    `address_province` VARCHAR(191) NULL,
+    `telephone_number` VARCHAR(191) NULL,
+    `cellphone_number` VARCHAR(191) NULL,
+    `email_address` VARCHAR(191) NULL,
+    `emergency_contact_name` VARCHAR(191) NULL,
+    `emergency_contact_relationship` VARCHAR(191) NULL,
+    `emergency_contact_number` VARCHAR(191) NULL,
+    `student_type` ENUM('A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'BE', 'CE') NULL,
 
-  - You are about to drop the column `vehicle_categories` on the `user` table. All the data in the column will be lost.
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-*/
--- AlterTable
-ALTER TABLE `user` DROP COLUMN `vehicle_categories`,
-    ADD COLUMN `student_type` ENUM('A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'BE', 'CE') NULL;
+-- CreateTable
+CREATE TABLE `modules` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(255) NOT NULL,
+    `description` TEXT NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT false,
+    `position` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdBy` INTEGER NULL,
+    `updatedBy` INTEGER NULL,
+
+    INDEX `modules_position_idx`(`position`),
+    INDEX `modules_isActive_idx`(`isActive`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `module_categories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
-    `studentType` ENUM('A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'BE', 'CE') NULL,
+    `vehicleType` ENUM('MOTORCYCLE', 'CAR') NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `isDefault` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -23,6 +67,7 @@ CREATE TABLE `module_categories` (
 
     INDEX `module_categories_isActive_idx`(`isActive`),
     INDEX `module_categories_isDefault_idx`(`isDefault`),
+    INDEX `module_categories_vehicleType_idx`(`vehicleType`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -48,8 +93,14 @@ CREATE TABLE `student_modules` (
     `categoryId` INTEGER NOT NULL,
     `moduleId` INTEGER NOT NULL,
     `position` INTEGER NOT NULL DEFAULT 0,
+    `skillLevel` ENUM('Beginner', 'Intermediate', 'Expert') NOT NULL DEFAULT 'Beginner',
     `progress` DOUBLE NOT NULL DEFAULT 0,
+    `currentSlideId` INTEGER NULL,
     `isCompleted` BOOLEAN NOT NULL DEFAULT false,
+    `quizScore` DOUBLE NULL,
+    `quizAttempts` INTEGER NOT NULL DEFAULT 0,
+    `quizPassed` BOOLEAN NOT NULL DEFAULT false,
+    `lastQuizAttemptId` INTEGER NULL,
     `startedAt` DATETIME(3) NULL,
     `completedAt` DATETIME(3) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -60,7 +111,43 @@ CREATE TABLE `student_modules` (
     INDEX `student_modules_moduleId_idx`(`moduleId`),
     INDEX `student_modules_position_idx`(`position`),
     INDEX `student_modules_isCompleted_idx`(`isCompleted`),
+    INDEX `student_modules_quizPassed_idx`(`quizPassed`),
+    INDEX `student_modules_skillLevel_idx`(`skillLevel`),
     UNIQUE INDEX `student_modules_userId_categoryId_moduleId_key`(`userId`, `categoryId`, `moduleId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `module_objectives` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `moduleId` INTEGER NOT NULL,
+    `objective` VARCHAR(500) NOT NULL,
+    `position` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `module_objectives_moduleId_idx`(`moduleId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `module_slides` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `moduleId` INTEGER NOT NULL,
+    `type` ENUM('text', 'image', 'video') NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `content` TEXT NOT NULL,
+    `description` VARCHAR(500) NULL,
+    `position` INTEGER NOT NULL DEFAULT 0,
+    `skillLevel` ENUM('Beginner', 'Intermediate', 'Expert') NOT NULL DEFAULT 'Beginner',
+    `imageData` LONGBLOB NULL,
+    `imageMime` VARCHAR(50) NULL,
+    `videoPath` VARCHAR(500) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `module_slides_moduleId_idx`(`moduleId`),
+    INDEX `module_slides_position_idx`(`position`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -192,6 +279,12 @@ ALTER TABLE `student_modules` ADD CONSTRAINT `student_modules_categoryId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `student_modules` ADD CONSTRAINT `student_modules_moduleId_fkey` FOREIGN KEY (`moduleId`) REFERENCES `modules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `module_objectives` ADD CONSTRAINT `module_objectives_moduleId_fkey` FOREIGN KEY (`moduleId`) REFERENCES `modules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `module_slides` ADD CONSTRAINT `module_slides_moduleId_fkey` FOREIGN KEY (`moduleId`) REFERENCES `modules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `quizzes` ADD CONSTRAINT `quizzes_moduleId_fkey` FOREIGN KEY (`moduleId`) REFERENCES `modules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

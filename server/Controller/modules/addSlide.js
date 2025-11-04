@@ -5,13 +5,13 @@ const prisma = new PrismaClient();
 /**
  * Add slide to a module
  * Params: moduleId
- * Body: { type, title, content, description, position, videoPath }
+ * Body: { type, title, content, description, position, skillLevel, videoPath }
  * Note: Use POST /slides/:slideId/image for image uploads (FormData) after creating the slide
  */
 export default async function addSlide(req, res) {
   try {
     const { moduleId } = req.params;
-    const { type, title, content, description, position, videoPath } = req.body;
+    const { type, title, content, description, position, skillLevel, videoPath } = req.body;
 
     // Validation
     if (!type || !['text', 'image', 'video'].includes(type)) {
@@ -42,6 +42,7 @@ export default async function addSlide(req, res) {
         content: content || '',
         description: description || null,
         position: position || 0,
+        skillLevel: skillLevel || 'Beginner', // Default to Beginner if not provided
         videoPath: videoPath || null
       },
       select: {
@@ -51,6 +52,7 @@ export default async function addSlide(req, res) {
         content: true,
         description: true,
         position: true,
+        skillLevel: true,
         videoPath: true,
         imageMime: true,
         imageData: false,

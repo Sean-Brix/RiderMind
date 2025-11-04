@@ -25,6 +25,7 @@ export default async function getModuleById(req, res) {
             content: true,
             description: true,
             position: true,
+            skillLevel: true,
             videoPath: true,
             imageMime: true,
             // Don't include imageData by default

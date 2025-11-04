@@ -68,9 +68,21 @@ function SortableSlideItem({ slide, index, isEditingModule, onEdit, onDelete }) 
         <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
           {slide.title || 'Untitled Slide'}
         </h4>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
-          {slide.type}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="capitalize">{slide.type}</span>
+          {slide.skillLevel && (
+            <>
+              <span>•</span>
+              <span className={`px-2 py-0.5 rounded-full font-medium ${
+                slide.skillLevel === 'Beginner' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                slide.skillLevel === 'Intermediate' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+              }`}>
+                {slide.skillLevel}
+              </span>
+            </>
+          )}
+        </div>
       </div>
       {isEditingModule && (
         <div className="flex items-center gap-2">
@@ -110,7 +122,7 @@ export default function Modules() {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryStudentType, setNewCategoryStudentType] = useState('BOTH');
+  const [newCategoryVehicleType, setNewCategoryVehicleType] = useState('MOTORCYCLE');
   
   // All modules data
   const [allModules, setAllModules] = useState([]);
@@ -132,6 +144,7 @@ export default function Modules() {
     title: '',
     content: '',
     description: '',
+    skillLevel: 'Beginner', // Skill level for the slide
     file: null, // For file uploads
   });
   
@@ -223,14 +236,14 @@ export default function Modules() {
     try {
       const response = await categoryService.createCategory({
         name: newCategoryName.trim(),
-        studentType: newCategoryStudentType,
+        vehicleType: newCategoryVehicleType,
         isActive: true
       });
       
       setCategories([...categories, response.data]);
       setSelectedCategoryId(response.data.id);
       setNewCategoryName('');
-      setNewCategoryStudentType('BOTH');
+      setNewCategoryVehicleType('MOTORCYCLE');
       setIsCreatingCategory(false);
       setActiveModules([]);
       setSavedModules([]);
@@ -374,6 +387,7 @@ export default function Modules() {
       title: '',
       content: '',
       description: '',
+      skillLevel: 'Beginner',
       file: null,
     });
   }
@@ -418,6 +432,7 @@ export default function Modules() {
       title: '',
       content: '',
       description: '',
+      skillLevel: 'Beginner',
       file: null,
     });
   }
@@ -720,7 +735,7 @@ export default function Modules() {
                           <option value="">Select a category</option>
                           {categories.map((cat) => (
                             <option key={cat.id} value={cat.id}>
-                              {cat.name} {cat.isDefault ? '★' : ''} ({cat.studentType})
+                              {cat.name} {cat.isDefault ? '★' : ''} ({cat.vehicleType})
                             </option>
                           ))}
                           <option value="create-new">+ Create New Category</option>
@@ -738,13 +753,12 @@ export default function Modules() {
                             className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
                           />
                           <select
-                            value={newCategoryStudentType}
-                            onChange={(e) => setNewCategoryStudentType(e.target.value)}
+                            value={newCategoryVehicleType}
+                            onChange={(e) => setNewCategoryVehicleType(e.target.value)}
                             className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
                           >
-                            <option value="CAR">Car</option>
                             <option value="MOTORCYCLE">Motorcycle</option>
-                            <option value="BOTH">Both</option>
+                            <option value="CAR">Car</option>
                           </select>
                           <div className="flex gap-2">
                             <button
@@ -758,7 +772,7 @@ export default function Modules() {
                               onClick={() => {
                                 setIsCreatingCategory(false);
                                 setNewCategoryName('');
-                                setNewCategoryStudentType('CAR');
+                                setNewCategoryVehicleType('MOTORCYCLE');
                               }}
                               className="flex-1 px-3 py-1.5 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded text-xs font-medium"
                             >
@@ -1258,6 +1272,25 @@ export default function Modules() {
                               <option value="image">Image</option>
                               <option value="video">Video</option>
                             </select>
+                          </div>
+
+                          {/* Skill Level */}
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Skill Level *
+                            </label>
+                            <select
+                              value={slideForm.skillLevel}
+                              onChange={(e) => handleSlideFormChange('skillLevel', e.target.value)}
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            >
+                              <option value="Beginner">Beginner</option>
+                              <option value="Intermediate">Intermediate</option>
+                              <option value="Expert">Expert</option>
+                            </select>
+                            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                              Select the difficulty level for this slide
+                            </p>
                           </div>
 
                           {/* Title */}

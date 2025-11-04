@@ -3,32 +3,42 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Get student's modules for a specific category (or default category A)
+ * Get student's modules for a specific category
  * GET /api/student-modules/my-modules
- * Query params: categoryId (optional, defaults to type A category)
+ * Query params: categoryId (optional, defaults to MOTORCYCLE category)
  */
 export default async function getMyModules(req, res) {
   try {
     const userId = req.user.id; // From auth middleware
     let { categoryId } = req.query;
 
-    // If no categoryId provided, get the category for student type A
+    // If no categoryId provided, get the default motorcycle category or first active category
     if (!categoryId) {
-      const categoryA = await prisma.moduleCategory.findFirst({
+      const defaultCategory = await prisma.moduleCategory.findFirst({
         where: { 
-          studentType: 'A',
+          isDefault: true,
           isActive: true
         }
       });
 
-      if (!categoryA) {
-        return res.status(404).json({
-          success: false,
-          error: 'No active category found for student type A'
+      if (!defaultCategory) {
+        // If no default, get first active category
+        const firstCategory = await prisma.moduleCategory.findFirst({
+          where: { isActive: true },
+          orderBy: { id: 'asc' }
         });
-      }
 
-      categoryId = categoryA.id;
+        if (!firstCategory) {
+          return res.status(404).json({
+            success: false,
+            error: 'No active categories found'
+          });
+        }
+
+        categoryId = firstCategory.id;
+      } else {
+        categoryId = defaultCategory.id;
+      }
     }
 
     // Check if student is enrolled in this category

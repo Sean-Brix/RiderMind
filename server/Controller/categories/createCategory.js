@@ -4,17 +4,25 @@ const prisma = new PrismaClient();
 
 /**
  * Create a new module category
- * Body: { name, description, studentType, isActive, isDefault }
+ * Body: { name, description, vehicleType, isActive, isDefault }
  */
 export default async function createCategory(req, res) {
   try {
-    const { name, description, studentType, isActive, isDefault } = req.body;
+    const { name, description, vehicleType, isActive, isDefault } = req.body;
 
     // Validation
     if (!name || name.trim() === '') {
       return res.status(400).json({
         success: false,
         error: 'Category name is required'
+      });
+    }
+
+    // Validate vehicleType
+    if (!vehicleType || !['MOTORCYCLE', 'CAR'].includes(vehicleType)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vehicle type must be either MOTORCYCLE or CAR'
       });
     }
 
@@ -43,7 +51,7 @@ export default async function createCategory(req, res) {
       data: {
         name: name.trim(),
         description: description?.trim() || null,
-        studentType: studentType || null,
+        vehicleType: vehicleType,
         isActive: isActive !== undefined ? isActive : true,
         isDefault: isDefault || false,
         createdBy: req.user?.id || null,

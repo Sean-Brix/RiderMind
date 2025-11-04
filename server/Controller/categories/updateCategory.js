@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 /**
  * Update a module category
  * Params: id
- * Body: { name, description, studentType, isActive, isDefault }
+ * Body: { name, description, vehicleType, isActive, isDefault }
  */
 export default async function updateCategory(req, res) {
   try {
     const { id } = req.params;
-    const { name, description, studentType, isActive, isDefault } = req.body;
+    const { name, description, vehicleType, isActive, isDefault } = req.body;
 
     // Check if category exists
     const existing = await prisma.moduleCategory.findUnique({
@@ -59,7 +59,16 @@ export default async function updateCategory(req, res) {
 
     if (name !== undefined) updateData.name = name.trim();
     if (description !== undefined) updateData.description = description?.trim() || null;
-    if (studentType !== undefined) updateData.studentType = studentType;
+    if (vehicleType !== undefined) {
+      // Validate vehicleType
+      if (!['MOTORCYCLE', 'CAR'].includes(vehicleType)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Vehicle type must be either MOTORCYCLE or CAR'
+        });
+      }
+      updateData.vehicleType = vehicleType;
+    }
     if (isActive !== undefined) updateData.isActive = isActive;
     if (isDefault !== undefined) updateData.isDefault = isDefault;
 

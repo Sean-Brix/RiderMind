@@ -107,7 +107,7 @@ model ModuleCategory {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(255)
   description String?  @db.Text
-  studentType StudentType?
+  vehicleType VehicleType
   isActive    Boolean  @default(true)
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -120,6 +120,7 @@ model ModuleCategory {
 
   @@index([isActive])
   @@index([isDefault])
+  @@index([vehicleType])
   @@map("module_categories")
 }
 
@@ -146,6 +147,9 @@ model StudentModule {
   categoryId      Int
   moduleId        Int
   position        Int      @default(0)
+  
+  // Skill level - determines which slides are shown
+  skillLevel      SkillLevel @default(Beginner)
   
   // Progress tracking
   progress        Float    @default(0) // Percentage 0.0 - 100.0
@@ -175,6 +179,7 @@ model StudentModule {
   @@index([position])
   @@index([isCompleted])
   @@index([quizPassed])
+  @@index([skillLevel])
   @@map("student_modules")
 }
 
@@ -200,6 +205,7 @@ model ModuleSlide {
   content     String     @db.Text
   description String?    @db.VarChar(500)
   position    Int        @default(0)
+  skillLevel  SkillLevel @default(Beginner)
   
   imageData   Bytes?
   imageMime   String?    @db.VarChar(50)
@@ -221,6 +227,12 @@ enum SlideType {
   video
 }
 
+enum SkillLevel {
+  Beginner
+  Intermediate
+  Expert
+}
+
 enum StudentType {
   A
   A1
@@ -231,6 +243,11 @@ enum StudentType {
   D
   BE
   CE
+}
+
+enum VehicleType {
+  MOTORCYCLE
+  CAR
 }
 
 // ==================== QUIZ SYSTEM ====================

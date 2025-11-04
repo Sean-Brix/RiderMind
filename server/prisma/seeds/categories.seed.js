@@ -21,44 +21,16 @@ async function animateProgress(message, duration = 600) {
 
 const categoriesData = [
   {
-    name: 'Motorcycle (Basic)',
-    description: 'Basic training modules for motorcycle riders',
-    studentType: 'A',
+    name: 'Motorcycle Training',
+    description: 'Complete training modules for motorcycle riders',
+    vehicleType: 'MOTORCYCLE',
     isDefault: true,
     isActive: true
   },
   {
-    name: 'Motorcycle (Advanced)',
-    description: 'Advanced training modules for experienced motorcycle riders',
-    studentType: 'A1',
-    isDefault: false,
-    isActive: true
-  },
-  {
-    name: 'Car & SUV',
-    description: 'Standard training modules for car and SUV drivers',
-    studentType: 'B',
-    isDefault: false,
-    isActive: true
-  },
-  {
-    name: 'Light Trucks',
-    description: 'Training modules for light truck drivers',
-    studentType: 'B1',
-    isDefault: false,
-    isActive: true
-  },
-  {
-    name: 'Heavy Trucks',
-    description: 'Training modules for heavy truck operators',
-    studentType: 'B2',
-    isDefault: false,
-    isActive: true
-  },
-  {
-    name: 'Professional Driver',
-    description: 'Comprehensive modules for professional drivers',
-    studentType: 'C',
+    name: 'Car Training',
+    description: 'Complete training modules for car drivers',
+    vehicleType: 'CAR',
     isDefault: false,
     isActive: true
   }
@@ -95,32 +67,11 @@ export async function seedCategories() {
       }
 
       // Animate category creation
-      const createMessage = `Creating: ${categoryData.name} (${categoryData.studentType})`;
+      const createMessage = `Creating: ${categoryData.name} (${categoryData.vehicleType})`;
       await animateProgress(createMessage, 500);
 
-      // Assign different modules based on student type
-      let modulesToAssign = [];
-      
-      switch (categoryData.studentType) {
-        case 'A':
-        case 'A1':
-          // Motorcycles get modules 1-8
-          modulesToAssign = modules.slice(0, 8);
-          break;
-        case 'B':
-        case 'B1':
-          // Cars and light trucks get modules 1-11 (all)
-          modulesToAssign = modules;
-          break;
-        case 'B2':
-        case 'C':
-          // Heavy trucks and professional get all modules
-          modulesToAssign = modules;
-          break;
-        default:
-          // Default: assign all modules
-          modulesToAssign = modules;
-      }
+      // All categories get all modules for now
+      const modulesToAssign = modules;
 
       // Create category with module assignments
       await prisma.moduleCategory.create({

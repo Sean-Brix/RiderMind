@@ -44,6 +44,7 @@ async function enrollStudentInCategory(userId, categoryId) {
       categoryId,
       moduleId: cm.moduleId,
       position: cm.position, // Freeze the order at enrollment time
+      skillLevel: 'Beginner', // Default skill level for new enrollments
       isCompleted: false
     }));
 
@@ -61,13 +62,54 @@ async function enrollStudentInCategory(userId, categoryId) {
         module: {
           include: {
             objectives: true,
-            slides: { orderBy: { position: 'asc' } }
+            slides: { 
+              orderBy: { position: 'asc' },
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                content: true,
+                description: true,
+                position: true,
+                skillLevel: true,
+                videoPath: true,
+                imageMime: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            }
           }
         }
       }
     });
 
-    return createdModules;
+    // Filter slides based on student's skill level
+    const filteredModules = createdModules.map(sm => {
+      const studentSkillLevel = sm.skillLevel;
+      
+      const skillLevelRank = {
+        'Beginner': 1,
+        'Intermediate': 2,
+        'Expert': 3
+      };
+      
+      const studentRank = skillLevelRank[studentSkillLevel];
+      
+      const filteredSlides = sm.module.slides.filter(slide => {
+        const slideRank = skillLevelRank[slide.skillLevel];
+        return slideRank <= studentRank;
+      });
+      
+      return {
+        ...sm,
+        module: {
+          ...sm.module,
+          slides: filteredSlides
+        }
+      };
+    });
+
+    return filteredModules;
   } catch (error) {
     throw new Error(`Failed to enroll student in category: ${error.message}`);
   }
@@ -76,6 +118,7 @@ async function enrollStudentInCategory(userId, categoryId) {
 /**
  * Gets all modules for a student in a specific category
  * Returns modules in the order assigned to this student
+ * Filters slides based on student's skill level
  * @param {number} userId - The student's user ID
  * @param {number} categoryId - The module category ID
  * @returns {Promise<Array>} Student's modules with progress
@@ -96,7 +139,8 @@ async function getStudentModules(userId, categoryId) {
                 type: true,
                 title: true,
                 description: true,
-                position: true
+                position: true,
+                skillLevel: true
               }
             }
           }
@@ -105,7 +149,35 @@ async function getStudentModules(userId, categoryId) {
       }
     });
 
-    return studentModules;
+    // Filter slides based on student's skill level for each module
+    const filteredModules = studentModules.map(sm => {
+      const studentSkillLevel = sm.skillLevel; // Student's skill level
+      
+      // Map skill levels to hierarchy: Beginner = 1, Intermediate = 2, Expert = 3
+      const skillLevelRank = {
+        'Beginner': 1,
+        'Intermediate': 2,
+        'Expert': 3
+      };
+      
+      const studentRank = skillLevelRank[studentSkillLevel];
+      
+      // Filter slides: show slides at or below student's skill level
+      const filteredSlides = sm.module.slides.filter(slide => {
+        const slideRank = skillLevelRank[slide.skillLevel];
+        return slideRank <= studentRank;
+      });
+      
+      return {
+        ...sm,
+        module: {
+          ...sm.module,
+          slides: filteredSlides
+        }
+      };
+    });
+
+    return filteredModules;
   } catch (error) {
     throw new Error(`Failed to get student modules: ${error.message}`);
   }
@@ -113,6 +185,7 @@ async function getStudentModules(userId, categoryId) {
 
 /**
  * Gets a specific module for a student
+ * Filters slides based on student's skill level
  * @param {number} userId - The student's user ID
  * @param {number} categoryId - The module category ID
  * @param {number} moduleId - The module ID
@@ -126,7 +199,22 @@ async function getStudentModule(userId, categoryId, moduleId) {
         module: {
           include: {
             objectives: { orderBy: { position: 'asc' } },
-            slides: { orderBy: { position: 'asc' } }
+            slides: { 
+              orderBy: { position: 'asc' },
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                content: true,
+                description: true,
+                position: true,
+                skillLevel: true,
+                videoPath: true,
+                imageMime: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            }
           }
         },
         category: true
@@ -137,7 +225,30 @@ async function getStudentModule(userId, categoryId, moduleId) {
       throw new Error('Module not found in student enrollment');
     }
 
-    return studentModule;
+    // Filter slides based on student's skill level
+    const studentSkillLevel = studentModule.skillLevel;
+    
+    const skillLevelRank = {
+      'Beginner': 1,
+      'Intermediate': 2,
+      'Expert': 3
+    };
+    
+    const studentRank = skillLevelRank[studentSkillLevel];
+    
+    // Filter slides: show slides at or below student's skill level
+    const filteredSlides = studentModule.module.slides.filter(slide => {
+      const slideRank = skillLevelRank[slide.skillLevel];
+      return slideRank <= studentRank;
+    });
+    
+    return {
+      ...studentModule,
+      module: {
+        ...studentModule.module,
+        slides: filteredSlides
+      }
+    };
   } catch (error) {
     throw new Error(`Failed to get student module: ${error.message}`);
   }
@@ -291,7 +402,7 @@ async function getOverallProgress(userId) {
         const progress = await getStudentProgress(userId, categoryId);
         const category = await prisma.moduleCategory.findUnique({
           where: { id: categoryId },
-          select: { id: true, name: true, description: true, studentType: true }
+          select: { id: true, name: true, description: true, vehicleType: true }
         });
         
         return {
