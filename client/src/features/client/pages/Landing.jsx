@@ -1,8 +1,38 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../../../components/Navbar.jsx';
+import Navbar from '../../../components/Navbar';
+import { getMyModules } from '../../../services/studentModuleService';
 
 export default function Landing() {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const user = JSON.parse(localStorage.getItem('user'));
+  const [hasModules, setHasModules] = useState(true); // Default to true to show "Continue Learning" initially
+  const [loadingModules, setLoadingModules] = useState(true);
+
+  useEffect(() => {
+    const checkForModules = async () => {
+      if (!user) {
+        setLoadingModules(false);
+        return;
+      }
+
+      try {
+        // Use checkOnly=true to avoid auto-enrolling when just checking
+        const response = await getMyModules(null, true);
+        if (response.success && response.data.modules) {
+          // User has modules if any exist in the response
+          setHasModules(response.data.modules.length > 0);
+        }
+      } catch (error) {
+        console.error('Failed to check for modules:', error);
+        // On error, default to true to avoid breaking existing functionality
+        setHasModules(true);
+      } finally {
+        setLoadingModules(false);
+      }
+    };
+
+    checkForModules();
+  }, [user]);
   
   const features = [
     {
@@ -74,7 +104,19 @@ export default function Landing() {
             {user ? (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/modules" className="btn btn-primary text-lg px-8 py-3">
-                  Continue Learning
+                  {loadingModules ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : hasModules ? (
+                    'Continue Learning'
+                  ) : (
+                    'Start Course'
+                  )}
                 </Link>
                 <Link to="/progress" className="btn btn-secondary text-lg px-8 py-3">
                   View Progress

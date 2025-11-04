@@ -8,34 +8,71 @@ function getAuthToken() {
 }
 
 /**
- * Get student's modules for a category (or default category A)
- * @param {number} categoryId - Optional category ID (defaults to type A)
+ * Get student's modules for a category (or default category)
+ * @param {number} categoryId - Optional category ID
+ * @param {boolean} checkOnly - If true, don't auto-enroll, just check if modules exist
  */
-export async function getMyModules(categoryId = null) {
+export async function getMyModules(categoryId = null, checkOnly = false) {
   const queryParams = new URLSearchParams();
   
   if (categoryId) {
     queryParams.append('categoryId', categoryId);
+  }
+  
+  if (checkOnly) {
+    queryParams.append('checkOnly', 'true');
   }
 
   const url = queryParams.toString() 
     ? `${API_BASE}/my-modules?${queryParams}` 
     : `${API_BASE}/my-modules`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${getAuthToken()}`
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      // If 404, return empty modules instead of throwing
+      if (response.status === 404) {
+        return {
+          success: true,
+          data: {
+            modules: [],
+            category: null,
+            progress: { total: 0, completed: 0, completionPercentage: 0 }
+          }
+        };
+      }
+      
+      // For other errors, try to get error message
+      try {
+        const error = await response.json();
+        throw new Error(error.error || error.message || 'Failed to fetch modules');
+      } catch {
+        throw new Error('Failed to fetch modules');
+      }
     }
-  });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch modules');
+    return await response.json();
+  } catch (error) {
+    // If it's a network error or server unreachable, return empty modules
+    if (error.message.includes('fetch')) {
+      return {
+        success: true,
+        data: {
+          modules: [],
+          category: null,
+          progress: { total: 0, completed: 0, completionPercentage: 0 }
+        }
+      };
+    }
+    throw error;
   }
-
-  return await response.json();
 }
 
 /**

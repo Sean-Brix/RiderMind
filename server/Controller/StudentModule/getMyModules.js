@@ -5,39 +5,54 @@ const prisma = new PrismaClient();
 /**
  * Get student's modules for a specific category
  * GET /api/student-modules/my-modules
- * Query params: categoryId (optional, defaults to MOTORCYCLE category)
+ * Query params: 
+ *  - categoryId (optional, defaults to default category)
+ *  - checkOnly (optional, if true, don't auto-enroll - just check if modules exist)
  */
 export default async function getMyModules(req, res) {
   try {
     const userId = req.user.id; // From auth middleware
-    let { categoryId } = req.query;
+    let { categoryId, checkOnly } = req.query;
+    const shouldCheckOnly = checkOnly === 'true';
 
-    // If no categoryId provided, get the default motorcycle category or first active category
+    // If no categoryId provided, check if user has modules in ANY category first
     if (!categoryId) {
-      const defaultCategory = await prisma.moduleCategory.findFirst({
-        where: { 
-          isDefault: true,
-          isActive: true
-        }
+      const anyEnrollment = await prisma.studentModule.findFirst({
+        where: { userId },
+        include: { category: true }
       });
 
-      if (!defaultCategory) {
-        // If no default, get first active category
-        const firstCategory = await prisma.moduleCategory.findFirst({
-          where: { isActive: true },
-          orderBy: { id: 'asc' }
+      if (anyEnrollment) {
+        // User is enrolled somewhere, use that category
+        categoryId = anyEnrollment.categoryId;
+        console.log(`📚 User ${userId} has enrollment in category ${categoryId}`);
+      } else {
+        // User has no enrollments, use default category for checking
+        const defaultCategory = await prisma.moduleCategory.findFirst({
+          where: { 
+            isDefault: true,
+            isActive: true
+          }
         });
 
-        if (!firstCategory) {
-          return res.status(404).json({
-            success: false,
-            error: 'No active categories found'
+        if (!defaultCategory) {
+          // If no default, get first active category
+          const firstCategory = await prisma.moduleCategory.findFirst({
+            where: { isActive: true },
+            orderBy: { id: 'asc' }
           });
-        }
 
-        categoryId = firstCategory.id;
-      } else {
-        categoryId = defaultCategory.id;
+          if (!firstCategory) {
+            return res.status(404).json({
+              success: false,
+              error: 'No active categories found'
+            });
+          }
+
+          categoryId = firstCategory.id;
+        } else {
+          categoryId = defaultCategory.id;
+        }
       }
     }
 
@@ -61,6 +76,7 @@ export default async function getMyModules(req, res) {
                 content: true,
                 description: true,
                 position: true,
+                skillLevel: true, // Added for filtering
                 videoPath: true,
                 imageMime: true,
                 // imageData excluded from list
@@ -90,13 +106,42 @@ export default async function getMyModules(req, res) {
       }
     });
 
-    // If not enrolled yet, auto-enroll the student
+    // If not enrolled yet, auto-enroll the student (unless checkOnly mode)
     if (studentModules.length === 0) {
-      const categoryModules = await prisma.moduleCategoryModule.findMany({
+      // If just checking, return empty result without enrolling
+      if (shouldCheckOnly) {
+        return res.json({
+          success: true,
+          data: {
+            modules: [],
+            category: null,
+            progress: { total: 0, completed: 0, completionPercentage: 0 }
+          }
+        });
+      }
+
+      // DYNAMIC APPROACH: Try moduleCategoryModule first, fallback to all active modules
+      let categoryModules = await prisma.moduleCategoryModule.findMany({
         where: { categoryId: parseInt(categoryId) },
         orderBy: { position: 'asc' },
         include: { module: true }
       });
+
+      // FALLBACK: If no junction records, get all active modules
+      if (categoryModules.length === 0) {
+        console.log('⚠️ No moduleCategoryModule records. Using all active modules.');
+        
+        const allModules = await prisma.module.findMany({
+          where: { isActive: true },
+          orderBy: { position: 'asc' }
+        });
+
+        categoryModules = allModules.map((module, index) => ({
+          moduleId: module.id,
+          position: index + 1,
+          module: module
+        }));
+      }
 
       if (categoryModules.length === 0) {
         return res.status(404).json({
@@ -138,6 +183,7 @@ export default async function getMyModules(req, res) {
                   content: true,
                   description: true,
                   position: true,
+                  skillLevel: true, // Added for filtering
                   videoPath: true,
                   imageMime: true,
                 }
@@ -172,11 +218,38 @@ export default async function getMyModules(req, res) {
     const completed = studentModules.filter(m => m.isCompleted).length;
     const completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+    // Filter slides based on student's skill level
+    const skillLevelRank = {
+      'Beginner': 1,
+      'Intermediate': 2,
+      'Expert': 3
+    };
+
+    const filteredModules = studentModules.map(sm => {
+      const studentRank = skillLevelRank[sm.skillLevel] || 1; // Default to Beginner if not set
+      
+      const filteredSlides = sm.module.slides.filter(slide => {
+        const slideRank = skillLevelRank[slide.skillLevel] || 1;
+        // Beginner (1): only Beginner slides
+        // Intermediate (2): Beginner + Intermediate slides
+        // Expert (3): all slides
+        return slideRank <= studentRank;
+      });
+      
+      return {
+        ...sm,
+        module: {
+          ...sm.module,
+          slides: filteredSlides
+        }
+      };
+    });
+
     res.status(200).json({
       success: true,
       data: {
         category: studentModules[0]?.category || null,
-        modules: studentModules,
+        modules: filteredModules,
         progress: {
           total,
           completed,

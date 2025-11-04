@@ -12,7 +12,10 @@
     "seed": "node prisma/seed.js",
     "fill": "node prisma/seed.js",
     "reset": "node prisma/reset.js",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "create-accounts": "node prisma/create-accounts.js",
+    "blank": "node prisma/blank-seed.js",
+    "clear-modules": "node prisma/clear-student-modules.js"
   },
   "dependencies": {
     "@prisma/client": "^6.18.0",
@@ -22,6 +25,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "framer-motion": "^12.23.24",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "sharp": "^0.34.4"

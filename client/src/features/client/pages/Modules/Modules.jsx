@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../../../../components/Navbar';
 import LessonModal from '../../../../components/LessonModal';
+import CourseSelection from './CourseSelection';
 import { getMyModules, updateModuleProgress } from '../../../../services/studentModuleService';
 
 export default function Modules() {
@@ -11,6 +12,7 @@ export default function Modules() {
   const [error, setError] = useState(null);
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
+  const [showCourseSelection, setShowCourseSelection] = useState(false);
   
   // Calculate XP and level
   const totalXP = modules.reduce((sum, m) => sum + (m.isCompleted ? 100 : Math.floor(m.progress)), 0);
@@ -22,17 +24,37 @@ export default function Modules() {
     loadModules();
   }, []);
 
-  const loadModules = async () => {
+  const loadModules = async (skipCheck = false) => {
     try {
       setLoading(true);
-      const response = await getMyModules();
+      setError(null); // Clear any previous errors
+      
+      // After enrollment, we want to load the actual modules (skipCheck=true means don't use checkOnly)
+      // On initial load, we use checkOnly=true to prevent auto-enrollment
+      const response = await getMyModules(null, !skipCheck); // Pass checkOnly based on skipCheck parameter
+      
       if (response.success) {
-        setModules(response.data.modules);
-        setCategoryInfo(response.data.category);
-        setProgress(response.data.progress);
+        // Check if user has any modules
+        if (!response.data.modules || response.data.modules.length === 0) {
+          setShowCourseSelection(true);
+        } else {
+          setModules(response.data.modules);
+          setCategoryInfo(response.data.category);
+          setProgress(response.data.progress);
+          setShowCourseSelection(false);
+        }
       }
     } catch (err) {
-      setError(err.message);
+      console.error('Error loading modules:', err);
+      
+      // Check if it's a network error (server not running)
+      if (err.message.includes('Failed to fetch') || err.message.includes('Network')) {
+        setError('Unable to connect to server. Please make sure the server is running.');
+      } else {
+        // For other errors (like 404, no auth), assume no modules and show course selection
+        setShowCourseSelection(true);
+        setError(null); // Don't show error, just show course selection
+      }
     } finally {
       setLoading(false);
     }
@@ -194,6 +216,16 @@ export default function Modules() {
             </button>
           </div>
         </div>
+      </>
+    );
+  }
+
+  // Show course selection if user has no modules
+  if (showCourseSelection) {
+    return (
+      <>
+        <Navbar />
+        <CourseSelection onComplete={() => loadModules(true)} />
       </>
     );
   }

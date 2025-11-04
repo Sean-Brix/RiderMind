@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
@@ -11,21 +11,36 @@ const prisma = new PrismaClient();
  * Creates a snapshot of the current module arrangement for this student
  * @param {number} userId - The student's user ID
  * @param {number} categoryId - The module category ID
+ * @param {string} skillLevel - Optional skill level (Beginner, Intermediate, Expert). Defaults to 'Beginner'
  * @returns {Promise<Array>} Created student module records
  */
-async function enrollStudentInCategory(userId, categoryId) {
+async function enrollStudentInCategory(userId, categoryId, skillLevel = 'Beginner') {
   try {
+    console.log('🔍 SERVICE: Starting enrollment for user', userId, 'in category', categoryId);
+    
     // 1. Check if student is already enrolled in this category
     const existingEnrollment = await prisma.studentModule.findFirst({
       where: { userId, categoryId }
     });
 
+    console.log('🔍 SERVICE: Existing enrollment?', existingEnrollment ? 'YES' : 'NO');
+    
+    // Check for ANY existing records
+    const allExisting = await prisma.studentModule.findMany({
+      where: { userId, categoryId }
+    });
+    console.log('🔍 SERVICE: Found', allExisting.length, 'existing StudentModule records for this user+category');
+    if (allExisting.length > 0) {
+      console.log('🔍 SERVICE: Existing module IDs:', allExisting.map(sm => sm.moduleId));
+    }
+
     if (existingEnrollment) {
       throw new Error('Student is already enrolled in this category');
     }
 
-    // 2. Get all active modules for this category with their current order
-    const categoryModules = await prisma.moduleCategoryModule.findMany({
+    // 2. Get all modules for this category
+    // DYNAMIC APPROACH: Query moduleCategoryModule OR fall back to all active modules
+    let categoryModules = await prisma.moduleCategoryModule.findMany({
       where: { categoryId },
       orderBy: { position: 'asc' },
       include: { 
@@ -33,6 +48,43 @@ async function enrollStudentInCategory(userId, categoryId) {
         category: true
       }
     });
+
+    console.log('🔍 SERVICE: Found', categoryModules.length, 'modules via moduleCategoryModule');
+
+    // FALLBACK: If no junction records exist, get all active modules
+    if (categoryModules.length === 0) {
+      console.log('⚠️ SERVICE: No moduleCategoryModule records found. Using all active modules as fallback.');
+      
+      const allModules = await prisma.module.findMany({
+        where: { isActive: true },
+        orderBy: { position: 'asc' },
+        include: {
+          category: {
+            where: { id: categoryId }
+          }
+        }
+      });
+
+      const category = await prisma.moduleCategory.findUnique({
+        where: { id: categoryId }
+      });
+
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
+      // Transform to match expected structure
+      categoryModules = allModules.map((module, index) => ({
+        moduleId: module.id,
+        position: index + 1,
+        module: module,
+        category: category
+      }));
+      
+      console.log('🔍 SERVICE: Fallback found', categoryModules.length, 'active modules');
+    }
+
+    console.log('🔍 SERVICE: Module IDs:', categoryModules.map(cm => cm.moduleId));
 
     if (categoryModules.length === 0) {
       throw new Error('No modules found in this category');
@@ -44,15 +96,20 @@ async function enrollStudentInCategory(userId, categoryId) {
       categoryId,
       moduleId: cm.moduleId,
       position: cm.position, // Freeze the order at enrollment time
-      skillLevel: 'Beginner', // Default skill level for new enrollments
+      skillLevel: skillLevel, // Use provided skill level or default to Beginner
       isCompleted: false
     }));
 
+    console.log('🔍 SERVICE: Prepared', studentModules.length, 'student modules to insert');
+    console.log('🔍 SERVICE: Sample data:', studentModules[0]);
+
     // 4. Insert all records
-    await prisma.studentModule.createMany({
-      data: studentModules,
-      skipDuplicates: true
+    const insertResult = await prisma.studentModule.createMany({
+      data: studentModules
+      // Removed skipDuplicates to see actual errors
     });
+
+    console.log('🔍 SERVICE: Insert result:', insertResult);
 
     // 5. Return the created records
     const createdModules = await prisma.studentModule.findMany({
@@ -82,6 +139,9 @@ async function enrollStudentInCategory(userId, categoryId) {
         }
       }
     });
+
+    console.log('🔍 SERVICE: Retrieved', createdModules.length, 'created modules from DB');
+    console.log('🔍 SERVICE: Returning filtered modules');
 
     // Filter slides based on student's skill level
     const filteredModules = createdModules.map(sm => {
@@ -480,7 +540,7 @@ async function getEnrolledStudents(categoryId) {
   }
 }
 
-module.exports = {
+export {
   enrollStudentInCategory,
   getStudentModules,
   getStudentModule,

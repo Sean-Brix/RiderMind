@@ -8,6 +8,7 @@ import completeModule from '../../Controller/StudentModule/completeModule.js';
 import recordQuizAttempt from '../../Controller/StudentModule/recordQuizAttempt.js';
 import submitQuizAttempt from '../../Controller/StudentModule/submitQuizAttempt.js';
 import updateSkillLevel from '../../Controller/StudentModule/updateSkillLevel.js';
+import enrollInCategory from '../../Controller/StudentModule/enrollInCategory.js';
 
 const router = express.Router();
 
@@ -18,6 +19,9 @@ const router = express.Router();
 
 // Get student's modules (auto-enrolls if not enrolled)
 router.get('/my-modules', authenticate, getMyModules);
+
+// Manually enroll in a category with skill level selection
+router.post('/enroll', authenticate, enrollInCategory);
 
 // Update student's skill level (affects which slides are shown)
 router.put('/skill-level', authenticate, updateSkillLevel);
