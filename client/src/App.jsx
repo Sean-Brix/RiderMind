@@ -13,7 +13,6 @@ import Analytics from './features/admin/pages/Analytics';
 import Modules from './features/admin/pages/Modules';
 import Quizes from './features/admin/pages/Quizes';
 import FAQs from './features/admin/pages/FAQs/FAQs';
-import Feedback from './features/admin/pages/Feedback';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
 
@@ -55,7 +54,6 @@ function App() {
         <Route path="modules" element={<Modules />} />
         <Route path="quizes" element={<Quizes />} />
         <Route path="faqs" element={<FAQs />} />
-        <Route path="feedback" element={<Feedback />} />
       </Route>
       <Route path="*" element={<Navigate to={user ? (user.role === 'ADMIN' ? '/admin' : '/') : '/login'} replace />} />
     </Routes>

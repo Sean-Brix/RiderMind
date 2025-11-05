@@ -25,6 +25,8 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
   const [hasStarted, setHasStarted] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEndQuizConfirm, setShowEndQuizConfirm] = useState(false);
+  const [questionReactions, setQuestionReactions] = useState({}); // { questionId: { isLike: boolean } }
 
   // Initialize quiz
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
         setDirection('next');
         setImageError(null);
         setShowConfirmSubmit(false);
+        setShowEndQuizConfirm(false);
         setHasStarted(false);
         setIsSubmitting(false);
         
@@ -47,6 +50,9 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
         } else {
           setTimeRemaining(null);
         }
+
+        // Load user's existing reactions for all questions
+        loadQuestionReactions();
       }
     }
     
@@ -57,6 +63,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
       setAnswers({});
       setHasStarted(false);
       setIsSubmitting(false);
+      setQuestionReactions({});
     }
   }, [isOpen, quiz]);
 
@@ -110,6 +117,92 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
   const handleStartQuiz = () => {
     setHasStarted(true);
+  };
+
+  const loadQuestionReactions = async () => {
+    if (!quiz?.id) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/quizzes/${quiz.id}/reactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data?.questions) {
+          // Convert to { questionId: { isLike: boolean } } format
+          const reactionsMap = {};
+          result.data.questions.forEach(q => {
+            if (q.userReaction) {
+              reactionsMap[q.questionId] = {
+                isLike: q.userReaction === 'like'
+              };
+            }
+          });
+          setQuestionReactions(reactionsMap);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading question reactions:', error);
+    }
+  };
+
+  const handleReactionToggle = async (questionId, isLike) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to react to questions');
+        return;
+      }
+
+      // Optimistic update
+      const currentReaction = questionReactions[questionId];
+      const newReactions = { ...questionReactions };
+      
+      // If clicking the same reaction, remove it
+      if (currentReaction && currentReaction.isLike === isLike) {
+        delete newReactions[questionId];
+      } else {
+        // Otherwise, set new reaction
+        newReactions[questionId] = { isLike };
+      }
+      
+      setQuestionReactions(newReactions);
+
+      // Send to API
+      const response = await fetch(`/api/quiz-questions/${questionId}/reaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isLike })
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        setQuestionReactions(questionReactions);
+        console.error('Failed to toggle reaction');
+      }
+    } catch (error) {
+      // Revert on error
+      setQuestionReactions(questionReactions);
+      console.error('Error toggling reaction:', error);
+    }
+  };
+
+  const handleEndQuizEarly = () => {
+    setShowEndQuizConfirm(true);
+  };
+
+  const confirmEndQuizEarly = () => {
+    setShowEndQuizConfirm(false);
+    onClose();
   };
 
   const handleNextQuestion = () => {
@@ -259,9 +352,12 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
     setCurrentQuestion(0);
     setAnswers({});
     setHasStarted(false);
+    setQuestionReactions({});
     if (quiz.timeLimit) {
       setTimeRemaining(quiz.timeLimit);
     }
+    // Reload reactions
+    loadQuestionReactions();
   };
 
   const formatTime = (seconds) => {
@@ -623,6 +719,18 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
               <div className="text-sm text-neutral-600 dark:text-neutral-400">
                 {answeredCount} / {totalQuestions} answered
               </div>
+
+              {/* End Quiz Early Button */}
+              <button
+                onClick={handleEndQuizEarly}
+                className="px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg font-semibold text-sm transition-all flex items-center gap-2"
+                title="End quiz and exit"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                End Quiz
+              </button>
             </div>
           </div>
         </div>
@@ -701,6 +809,39 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                           {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
                         </span>
                       )}
+                      
+                      {/* Like/Dislike Reactions */}
+                      <div className="flex items-center justify-center gap-2 mt-6">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">Rate this question:</span>
+                        <button
+                          onClick={() => handleReactionToggle(currentQuestionData.id, true)}
+                          className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                            questionReactions[currentQuestionData.id]?.isLike === true
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
+                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50 dark:hover:bg-green-900/20 border-2 border-transparent'
+                          }`}
+                          title="Like this question"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                          </svg>
+                          <span className="text-sm font-medium">Like</span>
+                        </button>
+                        <button
+                          onClick={() => handleReactionToggle(currentQuestionData.id, false)}
+                          className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                            questionReactions[currentQuestionData.id]?.isLike === false
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-500'
+                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent'
+                          }`}
+                          title="Dislike this question"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                          </svg>
+                          <span className="text-sm font-medium">Dislike</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -721,6 +862,39 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                             {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
                           </span>
                         )}
+                        
+                        {/* Like/Dislike Reactions */}
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Rate this question:</span>
+                          <button
+                            onClick={() => handleReactionToggle(currentQuestionData.id, true)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
+                              questionReactions[currentQuestionData.id]?.isLike === true
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50 dark:hover:bg-green-900/20 border-2 border-transparent'
+                            }`}
+                            title="Like this question"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                            </svg>
+                            <span className="text-xs font-medium">Like</span>
+                          </button>
+                          <button
+                            onClick={() => handleReactionToggle(currentQuestionData.id, false)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
+                              questionReactions[currentQuestionData.id]?.isLike === false
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-500'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent'
+                            }`}
+                            title="Dislike this question"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                            </svg>
+                            <span className="text-xs font-medium">Dislike</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -976,6 +1150,42 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                 className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all"
               >
                 Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Quiz Early Confirmation Modal */}
+      {showEndQuizConfirm && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl p-8 max-w-md mx-4">
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 text-center">
+              End Quiz Early?
+            </h3>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-2 text-center">
+              Are you sure you want to exit this quiz?
+            </p>
+            <p className="text-red-600 dark:text-red-400 text-sm mb-6 text-center font-medium">
+              Your progress will be lost and won't be submitted.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndQuizConfirm(false)}
+                className="flex-1 px-6 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg font-semibold transition-all"
+              >
+                Continue Quiz
+              </button>
+              <button
+                onClick={confirmEndQuizEarly}
+                className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all"
+              >
+                End Quiz
               </button>
             </div>
           </div>

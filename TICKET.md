@@ -2,7 +2,9 @@
 
 - Modules: pa Proportion yung text kasi mas malaki yung picture/animation/text sa slider
 
-- Text: Header must be proportion too
+- # Text: Header must be proportion too
+
+- # Module Comments and feedback
 
 - # Analytics in (admin panel) - may makikitang graph, number of users, active, inactive, leaderboards, ilagay sa analytics yung Statistics of Quizzes
 
@@ -12,7 +14,7 @@
 
 - Lagyan daw ng limitation yung items 20 per questions tas 5 modules kase 20×5 = 100 questions (allowed parin magdagdag si admin ng questions sa modules, since may drag and drop naman) ishu shuffle naman daw yung questions per modules. Tapos 2 lang daw yung categories (motorcycle and cars)
 
--  User Feedback every questions, okey daw yung like and dislike tas isali na raw sa analytic ng user panel
+- # User Feedback every questions, okey daw yung like and dislike tas isali na raw sa analytic ng user panel
 
 - User-access - Admin, Employee/Staff, Admin
 

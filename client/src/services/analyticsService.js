@@ -105,6 +105,81 @@ export async function getQuizPerformance() {
 }
 
 /**
+ * Get module feedback analytics
+ */
+export async function getModuleFeedbackAnalytics() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/feedback/modules`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch module feedback analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching module feedback analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get quiz reaction analytics
+ */
+export async function getQuizReactionAnalytics() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/feedback/quizzes`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch quiz reaction analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching quiz reaction analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get reactions for a specific quiz
+ */
+export async function getQuizReactions(quizId) {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/quizzes/${quizId}/reactions`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch quiz reactions');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching quiz reactions:', error);
+    throw error;
+  }
+}
+
+/**
  * Fetch aggregated data from existing endpoints as fallback
  */
 export async function getAggregatedAnalytics() {
