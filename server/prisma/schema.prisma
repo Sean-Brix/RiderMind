@@ -55,6 +55,8 @@ model User {
   // Relations
   quizAttempts QuizAttempt[]
   studentModules StudentModule[]
+  moduleFeedbacks ModuleFeedback[]
+  quizQuestionReactions QuizQuestionReaction[]
 }
 
 enum Role {
@@ -97,6 +99,7 @@ model Module {
   categoryModules  ModuleCategoryModule[]
   studentModules   StudentModule[]
   quizzes          Quiz[]
+  feedbacks        ModuleFeedback[]
 
   @@index([position])
   @@index([isActive])
@@ -304,6 +307,7 @@ model QuizQuestion {
   quiz    Quiz               @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options QuizQuestionOption[]
   answers QuizAnswer[]
+  reactions QuizQuestionReaction[]
 
   @@index([quizId])
   @@index([position])
@@ -404,4 +408,47 @@ enum FAQCategory {
   System
   Module
   Quiz
+}
+
+// ==================== FEEDBACK SYSTEM ====================
+
+// Module Feedback - Ratings and Comments for Modules
+model ModuleFeedback {
+  id          Int      @id @default(autoincrement())
+  moduleId    Int
+  userId      Int
+  rating      Int      // 1-5 stars
+  comment     String   @db.Text
+  isLike      Boolean  // true = like, false = dislike
+  isActive    Boolean  @default(true) // For soft delete
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId]) // One feedback per user per module
+  @@index([moduleId])
+  @@index([userId])
+  @@index([rating])
+  @@index([isActive])
+  @@map("module_feedbacks")
+}
+
+// Quiz Question Reactions - Likes/Dislikes for Quiz Questions
+model QuizQuestionReaction {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  userId     Int
+  isLike     Boolean  // true = like, false = dislike
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId]) // One reaction per user per question
+  @@index([questionId])
+  @@index([userId])
+  @@map("quiz_question_reactions")
 }

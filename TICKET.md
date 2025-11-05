@@ -4,7 +4,7 @@
 
 - Text: Header must be proportion too
 
-- Analytics in (admin panel) - may makikitang graph, number of users, active, inactive, leaderboards, ilagay sa analytics yung Statistics of Quizzes
+- # Analytics in (admin panel) - may makikitang graph, number of users, active, inactive, leaderboards, ilagay sa analytics yung Statistics of Quizzes
 
 - # Remove the header in admin 
 
@@ -47,10 +47,10 @@
 
 - Image & Videos (Quizes)
 
-- Lesson Modal, Different sidebar Tabs 
+- # Lesson Modal, Different sidebar Tabs 
 
 - Require 10 Modules per classification
 
 - Add 1 medal badge per module
 
-- feedback statistics per quiz
+- # feedback statistics per quiz

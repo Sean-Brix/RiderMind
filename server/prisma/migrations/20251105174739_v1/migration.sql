@@ -265,6 +265,41 @@ CREATE TABLE `faqs` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `module_feedbacks` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `moduleId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `rating` INTEGER NOT NULL,
+    `comment` TEXT NOT NULL,
+    `isLike` BOOLEAN NOT NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `module_feedbacks_moduleId_idx`(`moduleId`),
+    INDEX `module_feedbacks_userId_idx`(`userId`),
+    INDEX `module_feedbacks_rating_idx`(`rating`),
+    INDEX `module_feedbacks_isActive_idx`(`isActive`),
+    UNIQUE INDEX `module_feedbacks_userId_moduleId_key`(`userId`, `moduleId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `quiz_question_reactions` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `questionId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `isLike` BOOLEAN NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `quiz_question_reactions_questionId_idx`(`questionId`),
+    INDEX `quiz_question_reactions_userId_idx`(`userId`),
+    UNIQUE INDEX `quiz_question_reactions_userId_questionId_key`(`userId`, `questionId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `module_category_modules` ADD CONSTRAINT `module_category_modules_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `module_categories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -309,3 +344,15 @@ ALTER TABLE `quiz_answers` ADD CONSTRAINT `quiz_answers_questionId_fkey` FOREIGN
 
 -- AddForeignKey
 ALTER TABLE `quiz_answers` ADD CONSTRAINT `quiz_answers_selectedOptionId_fkey` FOREIGN KEY (`selectedOptionId`) REFERENCES `quiz_question_options`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `module_feedbacks` ADD CONSTRAINT `module_feedbacks_moduleId_fkey` FOREIGN KEY (`moduleId`) REFERENCES `modules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `module_feedbacks` ADD CONSTRAINT `module_feedbacks_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `quiz_question_reactions` ADD CONSTRAINT `quiz_question_reactions_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `quiz_questions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `quiz_question_reactions` ADD CONSTRAINT `quiz_question_reactions_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

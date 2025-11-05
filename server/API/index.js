@@ -15,6 +15,8 @@ import categoriesRouter from './categories/index.js';
 import quizzesRouter from './quizzes/index.js';
 import faqsRouter from './faqs/index.js';
 import studentModulesRouter from './student-modules/index.js';
+import moduleFeedbackRouter from './module-feedback/index.js';
+import quizReactionsRouter from './quiz-reactions/index.js';
 
 router.use('/auth', authRouter);
 router.use('/account', accountRouter);
@@ -24,5 +26,7 @@ router.use('/categories', categoriesRouter);
 router.use('/quizzes', quizzesRouter);
 router.use('/faqs', faqsRouter);
 router.use('/student-modules', studentModulesRouter);
+router.use('/modules', moduleFeedbackRouter);
+router.use('/quiz-questions', quizReactionsRouter);
 
 export default router;
