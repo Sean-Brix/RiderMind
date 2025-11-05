@@ -50,6 +50,19 @@ export default function Login() {
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        
+        {/* Registration Link */}
+        <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700 text-center">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Don't have an account?{' '}
+            <button
+              onClick={() => navigate('/register')}
+              className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium transition-colors"
+            >
+              Register here
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

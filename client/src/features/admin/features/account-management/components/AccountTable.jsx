@@ -1,6 +1,4 @@
-import { Link } from 'react-router-dom';
-
-export default function AccountTable({ users = [] }) {
+export default function AccountTable({ users = [], onEdit }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -88,15 +86,15 @@ export default function AccountTable({ users = [] }) {
 
                 {/* Actions */}
                 <td className="px-6 py-4 text-right">
-                  <Link 
-                    to={`/admin/accounts/${u.id}/edit`} 
+                  <button
+                    onClick={() => onEdit(u)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 dark:hover:bg-brand-900/30 rounded-lg transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Edit
-                  </Link>
+                  </button>
                 </td>
               </tr>
             );

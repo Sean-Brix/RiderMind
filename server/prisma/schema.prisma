@@ -57,6 +57,71 @@ model User {
   studentModules StudentModule[]
   moduleFeedbacks ModuleFeedback[]
   quizQuestionReactions QuizQuestionReaction[]
+  reviewedRegistrations RegistrationRequest[] @relation("ReviewedBy")
+}
+
+// ==================== REGISTRATION SYSTEM ====================
+
+model RegistrationRequest {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  
+  // Personal Information
+  last_name      String?
+  first_name     String?
+  middle_name    String?
+  name_extension String?
+  birthdate      DateTime?
+  sex            String?
+  nationality    Nationality?
+  civil_status   CivilStatus?
+  weight         Float?
+  height         Float?
+  blood_type     String?
+  eye_color      String?
+
+  // Address Information
+  address_house_no           String?
+  address_street             String?
+  address_barangay           String?
+  address_city_municipality  String?
+  address_province           String?
+
+  // Contact Information
+  telephone_number  String?
+  cellphone_number  String?
+  email_address     String?
+
+  // Emergency Contact
+  emergency_contact_name         String?
+  emergency_contact_relationship String?
+  emergency_contact_number       String?
+
+  // Student Type
+  student_type StudentType?
+
+  // Request Status
+  status        RegistrationStatus @default(PENDING)
+  requestedAt   DateTime           @default(now())
+  reviewedAt    DateTime?
+  reviewedBy    Int?               // Admin who approved/rejected
+  rejectionReason String?          @db.Text
+
+  // Relations
+  reviewer User? @relation("ReviewedBy", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([status])
+  @@index([requestedAt])
+  @@index([reviewedBy])
+  @@map("registration_requests")
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Role {

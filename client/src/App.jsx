@@ -15,6 +15,7 @@ import Quizes from './features/admin/pages/Quizes';
 import FAQs from './features/admin/pages/FAQs/FAQs';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
+import Register from './features/auth/pages/Register.jsx';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -39,6 +40,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/" element={<Protected><Landing /></Protected>} />
       <Route path="/about" element={<Protected><About /></Protected>} />
       <Route path="/modules" element={<Protected><ModulesPage /></Protected>} />

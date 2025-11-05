@@ -1,6 +1,6 @@
 - # Since Motorcycle & Cars, motorcycle and cars lang yung categories
 
-- Modules: pa Proportion yung text kasi mas malaki yung picture/animation/text sa slider
+- # Modules: pa Proportion yung text kasi mas malaki yung picture/animation/text sa slider
 
 - # Text: Header must be proportion too
 

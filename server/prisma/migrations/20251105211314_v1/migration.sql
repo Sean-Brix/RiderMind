@@ -36,6 +36,49 @@ CREATE TABLE `User` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `registration_requests` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `passwordHash` VARCHAR(191) NOT NULL,
+    `last_name` VARCHAR(191) NULL,
+    `first_name` VARCHAR(191) NULL,
+    `middle_name` VARCHAR(191) NULL,
+    `name_extension` VARCHAR(191) NULL,
+    `birthdate` DATETIME(3) NULL,
+    `sex` VARCHAR(191) NULL,
+    `nationality` ENUM('Filipino', 'American', 'Chinese', 'Japanese', 'Korean', 'Other') NULL,
+    `civil_status` ENUM('Single', 'Married', 'Widowed', 'Divorced', 'Separated') NULL,
+    `weight` DOUBLE NULL,
+    `height` DOUBLE NULL,
+    `blood_type` VARCHAR(191) NULL,
+    `eye_color` VARCHAR(191) NULL,
+    `address_house_no` VARCHAR(191) NULL,
+    `address_street` VARCHAR(191) NULL,
+    `address_barangay` VARCHAR(191) NULL,
+    `address_city_municipality` VARCHAR(191) NULL,
+    `address_province` VARCHAR(191) NULL,
+    `telephone_number` VARCHAR(191) NULL,
+    `cellphone_number` VARCHAR(191) NULL,
+    `email_address` VARCHAR(191) NULL,
+    `emergency_contact_name` VARCHAR(191) NULL,
+    `emergency_contact_relationship` VARCHAR(191) NULL,
+    `emergency_contact_number` VARCHAR(191) NULL,
+    `student_type` ENUM('A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'BE', 'CE') NULL,
+    `status` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `requestedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `reviewedAt` DATETIME(3) NULL,
+    `reviewedBy` INTEGER NULL,
+    `rejectionReason` TEXT NULL,
+
+    UNIQUE INDEX `registration_requests_email_key`(`email`),
+    INDEX `registration_requests_email_idx`(`email`),
+    INDEX `registration_requests_status_idx`(`status`),
+    INDEX `registration_requests_requestedAt_idx`(`requestedAt`),
+    INDEX `registration_requests_reviewedBy_idx`(`reviewedBy`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `modules` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(255) NOT NULL,
@@ -299,6 +342,9 @@ CREATE TABLE `quiz_question_reactions` (
     UNIQUE INDEX `quiz_question_reactions_userId_questionId_key`(`userId`, `questionId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `registration_requests` ADD CONSTRAINT `registration_requests_reviewedBy_fkey` FOREIGN KEY (`reviewedBy`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `module_category_modules` ADD CONSTRAINT `module_category_modules_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `module_categories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
