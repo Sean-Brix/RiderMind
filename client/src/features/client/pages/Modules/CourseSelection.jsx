@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CourseSelection({ onComplete }) {
-  const [step, setStep] = useState('category'); // 'category' or 'skillLevel'
+  const [step, setStep] = useState('category'); // 'category' or 'skillLevel' or 'terms'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSkillLevel, setSelectedSkillLevel] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -35,8 +37,19 @@ export default function CourseSelection({ onComplete }) {
     }, 600);
   };
 
-  const handleSkillLevelSelect = async (skillLevel) => {
+  const handleSkillLevelSelect = (skillLevel) => {
     setSelectedSkillLevel(skillLevel);
+    // Show terms and conditions modal instead of enrolling immediately
+    setShowTermsModal(true);
+  };
+
+  const handleAcceptTerms = async () => {
+    if (!termsAccepted) {
+      alert('Please accept the terms and conditions to continue.');
+      return;
+    }
+
+    setShowTermsModal(false);
     setIsCreating(true);
 
     try {
@@ -46,7 +59,7 @@ export default function CourseSelection({ onComplete }) {
       console.log('🚀 Sending enrollment request:', {
         categoryId: selectedCategory.id,
         categoryName: selectedCategory.name,
-        skillLevel: skillLevel
+        skillLevel: selectedSkillLevel
       });
       
       // Enroll in the selected category with the chosen skill level
@@ -58,7 +71,7 @@ export default function CourseSelection({ onComplete }) {
         },
         body: JSON.stringify({
           categoryId: selectedCategory.id,
-          skillLevel: skillLevel
+          skillLevel: selectedSkillLevel
         })
       });
 
@@ -414,6 +427,147 @@ export default function CourseSelection({ onComplete }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <AnimatePresence>
+        {showTermsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => {
+              if (!isCreating) {
+                setShowTermsModal(false);
+                setTermsAccepted(false);
+              }
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="text-4xl">📜</div>
+                  <div>
+                    <h3 className="text-2xl font-bold">Terms and Conditions</h3>
+                    <p className="text-blue-100 text-sm">Please read and accept to continue</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 overflow-y-auto max-h-[50vh] space-y-4 text-gray-700 dark:text-gray-300">
+                <div className="space-y-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">1. Course Enrollment</h4>
+                  <p className="text-sm leading-relaxed">
+                    By enrolling in this course, you agree to complete the training modules in the order presented. 
+                    You acknowledge that safe driving practices are essential and commit to applying the knowledge 
+                    gained from this program responsibly.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">2. Learning Commitment</h4>
+                  <p className="text-sm leading-relaxed">
+                    You are responsible for completing all required modules, quizzes, and assessments. 
+                    Progress tracking is provided to help you monitor your learning journey. Completion 
+                    certificates will only be issued upon successful completion of all course requirements.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">3. Content Usage</h4>
+                  <p className="text-sm leading-relaxed">
+                    All course materials, videos, and content are proprietary to RiderMind. You may access 
+                    these materials for personal educational use only. Redistribution, sharing, or commercial 
+                    use of course content is strictly prohibited.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">4. Safety Disclaimer</h4>
+                  <p className="text-sm leading-relaxed">
+                    While this course provides comprehensive training, it does not replace hands-on practical 
+                    training or official licensing requirements. Always follow local traffic laws and regulations. 
+                    RiderMind is not liable for any incidents that occur during or after training.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">5. Privacy and Data</h4>
+                  <p className="text-sm leading-relaxed">
+                    Your learning progress, quiz results, and personal information will be stored securely. 
+                    We respect your privacy and will not share your data with third parties without your consent.
+                  </p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-start gap-3 mb-4">
+                  <input
+                    type="checkbox"
+                    id="acceptTerms"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    disabled={isCreating}
+                  />
+                  <label 
+                    htmlFor="acceptTerms" 
+                    className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    I have read and agree to the Terms and Conditions. I understand my responsibilities 
+                    as a learner and commit to safe driving practices.
+                  </label>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowTermsModal(false);
+                      setTermsAccepted(false);
+                    }}
+                    disabled={isCreating}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAcceptTerms}
+                    disabled={!termsAccepted || isCreating}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isCreating ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                        <span>Enrolling...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Accept & Continue</span>
+                        <span>→</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+

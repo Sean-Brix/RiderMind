@@ -5,11 +5,7 @@ const linkActive = 'bg-brand-100 text-brand-800 dark:bg-neutral-800 dark:text-br
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 h-full">
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="text-lg font-bold text-brand-700 dark:text-brand-400">Dashboard</div>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Manage your system</p>
-      </div>
+    <aside className="w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
       <nav className="p-3 space-y-1">
         <NavLink to="/admin/analytics" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ''}`}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

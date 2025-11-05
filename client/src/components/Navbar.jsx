@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 function getUser() {
   try {
@@ -19,7 +19,11 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getUser();
+  
+  // Check if we're in the admin panel
+  const isAdminPanel = location.pathname.startsWith('/admin');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,51 +44,53 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className={isAdminPanel ? "flex items-center justify-between h-16" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
+        <div className="flex items-center justify-between h-16 flex-1">
           {/* Logo/Brand */}
-          <div className="flex items-center">
+          <div className={`flex items-center ${isAdminPanel ? 'w-64 px-4 border-r border-neutral-200 dark:border-neutral-800' : ''}`}>
             <Link to="/" className="text-xl font-bold text-brand-700 dark:text-brand-400">
               RiderMind
             </Link>
           </div>
 
           {/* Center Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              to="/"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              to="/about"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              About
-            </Link>
-            <Link
-              to="/modules"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Modules
-            </Link>
-            <Link
-              to="/progress"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Progress
-            </Link>
-            <Link
-              to="/leaderboard"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              Leaderboard
-            </Link>
-          </div>
+          {!isAdminPanel && (
+            <div className="hidden md:flex items-center space-x-8">
+              <Link
+                to="/"
+                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                to="/about"
+                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                About
+              </Link>
+              <Link
+                to="/modules"
+                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Modules
+              </Link>
+              <Link
+                to="/progress"
+                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Progress
+              </Link>
+              <Link
+                to="/leaderboard"
+                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Leaderboard
+              </Link>
+            </div>
+          )}
 
           {/* Profile Dropdown */}
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-3 ${isAdminPanel ? 'px-4' : ''}`}>
             <button
               onClick={toggleDark}
               className="p-2 rounded-md text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -163,16 +169,22 @@ export default function Navbar() {
 
                       {user.role === 'ADMIN' && (
                         <Link
-                          to="/admin"
+                          to={isAdminPanel ? "/" : "/admin"}
                           onClick={() => setDropdownOpen(false)}
                           className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                         >
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              {isAdminPanel ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              ) : (
+                                <>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </>
+                              )}
                             </svg>
-                            Admin Panel
+                            {isAdminPanel ? 'Landing Page' : 'Admin Panel'}
                           </div>
                         </Link>
                       )}

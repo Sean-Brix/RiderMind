@@ -1,0 +1,133 @@
+{
+  "accounts": {
+    "total": 1247,
+    "active": 892,
+    "inactive": 355,
+    "admins": 12,
+    "users": 1235,
+    "newThisMonth": 145,
+    "growth": [
+      { "month": "Jan", "users": 750, "active": 620 },
+      { "month": "Feb", "users": 820, "active": 680 },
+      { "month": "Mar", "users": 910, "active": 750 },
+      { "month": "Apr", "users": 1050, "active": 820 },
+      { "month": "May", "users": 1150, "active": 860 },
+      { "month": "Jun", "users": 1247, "active": 892 }
+    ],
+    "roleDistribution": [
+      { "role": "Users", "count": 1235, "percentage": 99 },
+      { "role": "Admins", "count": 12, "percentage": 1 }
+    ],
+    "statusDistribution": [
+      { "status": "Active", "count": 892, "percentage": 71.5 },
+      { "status": "Inactive", "count": 355, "percentage": 28.5 }
+    ]
+  },
+  "leaderboard": [
+    { "rank": 1, "name": "Juan Dela Cruz", "score": 9850, "level": 12, "modules": 45, "quizzes": 89, "avgScore": 95.2 },
+    { "rank": 2, "name": "Maria Santos", "score": 9720, "level": 11, "modules": 43, "quizzes": 86, "avgScore": 94.8 },
+    { "rank": 3, "name": "Pedro Reyes", "score": 9580, "level": 11, "modules": 42, "quizzes": 84, "avgScore": 93.5 },
+    { "rank": 4, "name": "Ana Garcia", "score": 9450, "level": 10, "modules": 40, "quizzes": 82, "avgScore": 92.8 },
+    { "rank": 5, "name": "Carlos Torres", "score": 9320, "level": 10, "modules": 39, "quizzes": 80, "avgScore": 92.1 },
+    { "rank": 6, "name": "Sofia Martinez", "score": 9180, "level": 10, "modules": 38, "quizzes": 78, "avgScore": 91.5 },
+    { "rank": 7, "name": "Miguel Ramos", "score": 9050, "level": 9, "modules": 37, "quizzes": 76, "avgScore": 90.8 },
+    { "rank": 8, "name": "Isabella Cruz", "score": 8920, "level": 9, "modules": 36, "quizzes": 74, "avgScore": 90.2 },
+    { "rank": 9, "name": "Diego Lopez", "score": 8780, "level": 9, "modules": 35, "quizzes": 72, "avgScore": 89.5 },
+    { "rank": 10, "name": "Carmen Flores", "score": 8650, "level": 8, "modules": 34, "quizzes": 70, "avgScore": 88.9 }
+  ],
+  "quizzes": {
+    "totalQuizzes": 156,
+    "totalAttempts": 12450,
+    "avgScore": 78.5,
+    "passRate": 72.3,
+    "topPerformingQuiz": "Basic Traffic Rules",
+    "lowestPerformingQuiz": "Advanced Parking Techniques",
+    "scoreDistribution": [
+      { "range": "0-20", "count": 245, "percentage": 2 },
+      { "range": "21-40", "count": 498, "percentage": 4 },
+      { "range": "41-60", "count": 1868, "percentage": 15 },
+      { "range": "61-80", "count": 4980, "percentage": 40 },
+      { "range": "81-100", "count": 4859, "percentage": 39 }
+    ],
+    "attemptsOverTime": [
+      { "week": "Week 1", "attempts": 1850, "passed": 1350 },
+      { "week": "Week 2", "attempts": 2100, "passed": 1520 },
+      { "week": "Week 3", "attempts": 2250, "passed": 1630 },
+      { "week": "Week 4", "attempts": 2050, "passed": 1480 },
+      { "week": "Week 5", "attempts": 2200, "passed": 1590 },
+      { "week": "Week 6", "attempts": 2000, "passed": 1450 }
+    ],
+    "categoryPerformance": [
+      { "category": "Motorcycle", "avgScore": 82.3, "attempts": 7200, "passRate": 75.8 },
+      { "category": "Car", "avgScore": 74.7, "attempts": 5250, "passRate": 68.9 }
+    ],
+    "topQuizzes": [
+      { "name": "Basic Traffic Rules", "attempts": 1250, "avgScore": 88.5, "passRate": 85.2 },
+      { "name": "Road Signs Recognition", "attempts": 1180, "avgScore": 86.3, "passRate": 82.4 },
+      { "name": "Safe Driving Practices", "attempts": 1120, "avgScore": 84.7, "passRate": 80.1 },
+      { "name": "Motorcycle Maintenance", "attempts": 980, "avgScore": 81.2, "passRate": 76.5 },
+      { "name": "Emergency Procedures", "attempts": 920, "avgScore": 79.8, "passRate": 74.3 }
+    ]
+  },
+  "feedback": {
+    "totalFeedback": 3425,
+    "positive": 2580,
+    "neutral": 520,
+    "negative": 325,
+    "avgRating": 4.2,
+    "responseRate": 68.5,
+    "sentimentTrend": [
+      { "month": "Jan", "positive": 380, "neutral": 75, "negative": 45 },
+      { "month": "Feb", "positive": 420, "neutral": 82, "negative": 48 },
+      { "month": "Mar", "positive": 445, "neutral": 88, "negative": 52 },
+      { "month": "Apr", "positive": 460, "neutral": 90, "negative": 55 },
+      { "month": "May", "positive": 435, "neutral": 85, "negative": 60 },
+      { "month": "Jun", "positive": 440, "neutral": 100, "negative": 65 }
+    ],
+    "categoryBreakdown": [
+      { "category": "Content Quality", "count": 1250, "avgRating": 4.5 },
+      { "category": "Technical Issues", "count": 890, "avgRating": 3.2 },
+      { "category": "User Experience", "count": 750, "avgRating": 4.3 },
+      { "category": "Feature Request", "count": 535, "avgRating": 4.0 }
+    ],
+    "ratingDistribution": [
+      { "stars": 5, "count": 1850, "percentage": 54 },
+      { "stars": 4, "count": 730, "percentage": 21.3 },
+      { "stars": 3, "count": 520, "percentage": 15.2 },
+      { "stars": 2, "count": 205, "percentage": 6 },
+      { "stars": 1, "count": 120, "percentage": 3.5 }
+    ]
+  },
+  "modules": {
+    "totalModules": 45,
+    "totalEnrollments": 8920,
+    "avgCompletionRate": 68.5,
+    "avgTimeToComplete": "4.5 hours",
+    "mostPopular": "Introduction to Safe Driving",
+    "leastPopular": "Advanced Defensive Driving",
+    "completionByCategory": [
+      { "category": "Motorcycle", "total": 25, "avgCompletion": 72.3 },
+      { "category": "Car", "total": 20, "avgCompletion": 64.2 }
+    ],
+    "enrollmentTrend": [
+      { "month": "Jan", "enrollments": 1200, "completions": 820 },
+      { "month": "Feb", "enrollments": 1350, "completions": 920 },
+      { "month": "Mar", "enrollments": 1480, "completions": 1010 },
+      { "month": "Apr", "enrollments": 1560, "completions": 1080 },
+      { "month": "May", "enrollments": 1650, "completions": 1130 },
+      { "month": "Jun", "enrollments": 1680, "completions": 1150 }
+    ],
+    "topModules": [
+      { "name": "Introduction to Safe Driving", "enrollments": 1420, "completionRate": 85.3, "avgScore": 88.5 },
+      { "name": "Basic Traffic Rules", "enrollments": 1380, "completionRate": 82.1, "avgScore": 86.2 },
+      { "name": "Road Signs and Markings", "enrollments": 1320, "completionRate": 79.8, "avgScore": 84.7 },
+      { "name": "Motorcycle Basics", "enrollments": 980, "completionRate": 76.5, "avgScore": 82.3 },
+      { "name": "Vehicle Maintenance 101", "enrollments": 920, "completionRate": 74.2, "avgScore": 80.8 }
+    ],
+    "skillLevelDistribution": [
+      { "level": "Beginner", "modules": 20, "enrollments": 5450 },
+      { "level": "Intermediate", "modules": 15, "enrollments": 2380 },
+      { "level": "Expert", "modules": 10, "enrollments": 1090 }
+    ]
+  }
+}

@@ -95,23 +95,6 @@ export default function AccountList() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Account Management</h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Manage user accounts and permissions.</p>
-        </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Create Account
-        </button>
-      </div>
-
       {/* Simplified Statistics Bar */}
       <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
         <div className="flex items-center justify-between gap-6">
@@ -139,6 +122,19 @@ export default function AccountList() {
               <span className="text-sm text-neutral-600 dark:text-neutral-400">This Week:</span>
               <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{stats.recentlyAdded}</span>
             </div>
+          </div>
+
+          {/* Create Button */}
+          <div className="flex justify-end">
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+              >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Account
+            </button>
           </div>
         </div>
       </div>

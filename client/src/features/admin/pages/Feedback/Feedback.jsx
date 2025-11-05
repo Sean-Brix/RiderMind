@@ -150,37 +150,30 @@ export default function Feedback() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Feedback Management</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-1">View and manage student feedback and reviews</p>
+      {/* Compact Stats */}
+      <div className="flex items-center gap-6">
+        <div className="text-right">
+          <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.total}</div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">Total</div>
         </div>
-        
-        {/* Compact Stats */}
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{stats.total}</div>
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">Total</div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.avgRating.toFixed(1)}</div>
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">Avg Rating</div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pending}</div>
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">Pending</div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-            <span className="inline-flex items-center gap-1">
-              <span className="text-green-600 dark:text-green-400 font-medium">{stats.positive}</span> 👍
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="text-yellow-600 dark:text-yellow-400 font-medium">{stats.neutral}</span> 😐
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="text-red-600 dark:text-red-400 font-medium">{stats.negative}</span> 👎
-            </span>
-          </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.avgRating.toFixed(1)}</div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">Avg Rating</div>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pending}</div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">Pending</div>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="inline-flex items-center gap-1">
+            <span className="text-green-600 dark:text-green-400 font-medium">{stats.positive}</span> 👍
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="text-yellow-600 dark:text-yellow-400 font-medium">{stats.neutral}</span> 😐
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="text-red-600 dark:text-red-400 font-medium">{stats.negative}</span> 👎
+          </span>
         </div>
       </div>
 

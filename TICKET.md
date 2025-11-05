@@ -1,4 +1,4 @@
-- Since Motorcycle & Cars, motorcycle and cars lang yung categories
+- # Since Motorcycle & Cars, motorcycle and cars lang yung categories
 
 - Modules: pa Proportion yung text kasi mas malaki yung picture/animation/text sa slider
 
@@ -6,7 +6,7 @@
 
 - Analytics in (admin panel) - may makikitang graph, number of users, active, inactive, leaderboards, ilagay sa analytics yung Statistics of Quizzes
 
-- Remove the header in admin 
+- # Remove the header in admin 
 
 - Registration: Kahit hindi na si admin yung gumawa ng account ni Users, bali Confirmation of Admin nalang. Para raw iwas sa spamming, kapag daw inaccept ni Admin yung Registration ni User don makakaaccess si Users
 
@@ -34,3 +34,23 @@
 - tapos maglagay daw message box ng "Successfuly save" kapag nags save
 
 - tapos yung password daw make sure na — Complex by mixing uppercase and lowercase letters, numbers, and special characters
+
+- # Expanded UI
+
+- # Student Classification (Bigger UI)
+
+- # Terms and Condition
+
+- # Skill Level per Slide
+
+- # Double Scroll bar dashboard pages
+
+- Image & Videos (Quizes)
+
+- Lesson Modal, Different sidebar Tabs 
+
+- Require 10 Modules per classification
+
+- Add 1 medal badge per module
+
+- feedback statistics per quiz

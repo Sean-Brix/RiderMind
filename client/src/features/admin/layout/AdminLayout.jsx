@@ -4,11 +4,11 @@ import { Outlet } from 'react-router-dom';
 
 export default function AdminLayout() {
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
       <Navbar />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1">
           <Outlet />
         </main>
       </div>

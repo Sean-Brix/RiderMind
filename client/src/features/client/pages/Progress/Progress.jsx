@@ -16,7 +16,7 @@ export default function Progress() {
   const loadModules = async () => {
     try {
       setLoading(true);
-      const response = await getMyModules();
+      const response = await getMyModules(null, true); // checkOnly=true to prevent auto-enrollment
       if (response.success) {
         setModules(response.data.modules);
         setCategoryInfo(response.data.category);

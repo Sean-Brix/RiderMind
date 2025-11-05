@@ -635,15 +635,7 @@ export default function Modules() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Module Management</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Organize and manage learning modules for students
-        </p>
-      </div>
-
+    <div className="p-6">
       {/* Loading State */}
       {loading && (
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700 p-12 text-center">

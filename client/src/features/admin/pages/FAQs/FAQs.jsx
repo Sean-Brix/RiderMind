@@ -117,38 +117,23 @@ const FAQs = () => {
   }, {});
 
   return (
-    <div className="h-full flex flex-col">
-      <PageHeader 
-        title="FAQ Management" 
-        description="Manage frequently asked questions"
-        action={
-          <button
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-            }}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors font-medium"
+    <div className="p-6 space-y-6">
+      
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex justify-between items-center">
+          <span>{error}</span>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xl leading-none"
           >
-            + Add New FAQ
+            ×
           </button>
-        }
-      />
+        </div>
+      )}
 
-      <div className="flex-1 overflow-y-auto">
-        {error && (
-          <div className="mx-6 mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex justify-between items-center">
-            <span>{error}</span>
-            <button 
-              onClick={() => setError(null)}
-              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xl leading-none"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Category Filter */}
-        <div className="px-6 py-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+      {/* Category Filter */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setSelectedCategory('All')}
@@ -173,11 +158,27 @@ const FAQs = () => {
                 {category}
               </button>
             ))}
-          </div>
-        </div>
 
-        {/* FAQ List */}
-        <div className="p-6">
+            {/* Add FAQ Button */}
+            <div className="justify-self-end ml-auto">
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add New FAQ
+              </button>
+            </div>
+          </div>
+      </div>
+
+      {/* FAQ List */}
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
           {loading ? (
             <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">Loading FAQs...</div>
           ) : selectedCategory === 'All' ? (
@@ -217,7 +218,6 @@ const FAQs = () => {
               </div>
             )}
         </div>
-      </div>
 
       {/* FAQ Form Modal */}
       {showForm && (
