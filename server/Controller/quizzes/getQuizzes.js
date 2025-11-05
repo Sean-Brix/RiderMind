@@ -62,6 +62,13 @@ export default async function getQuizzes(req, res) {
       }
     };
 
+    // Always include question count for analytics
+    include._count = {
+      select: {
+        questions: true
+      }
+    };
+
     const quizzes = await prisma.quiz.findMany({
       where,
       include,

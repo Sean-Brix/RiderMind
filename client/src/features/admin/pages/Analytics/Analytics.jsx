@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import mockData from '../../../../data/mockAnalytics.json';
-import { getModuleFeedbackAnalytics, getQuizReactions } from '../../../../services/analyticsService';
+import { getModuleFeedbackAnalytics, getQuizReactions, getAllQuizzes } from '../../../../services/analyticsService';
 
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState('accounts');
@@ -224,28 +224,75 @@ function LeaderboardAnalytics({ data }) {
 
 // Quizzes Analytics Component
 function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
+  const [quizzes, setQuizzes] = useState([]);
   const [quizReactions, setQuizReactions] = useState(null);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(true);
   const [loadingReactions, setLoadingReactions] = useState(false);
-  
-  const selectedQuiz = data.topQuizzes.find(q => q.name === selectedQuizId);
+  const [error, setError] = useState(null);
+
+  // Fetch all quizzes on mount
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      setLoadingQuizzes(true);
+      setError(null);
+      try {
+        const result = await getAllQuizzes();
+        setQuizzes(result);
+      } catch (err) {
+        console.error('Error fetching quizzes:', err);
+        setError('Failed to load quizzes');
+      } finally {
+        setLoadingQuizzes(false);
+      }
+    };
+
+    fetchQuizzes();
+  }, []);
+
+  // Find selected quiz from real data
+  const selectedQuiz = quizzes.find(q => q.id === selectedQuizId);
 
   // Fetch quiz reactions when a quiz is selected
   useEffect(() => {
     const fetchQuizReactions = async () => {
-      if (!selectedQuizId || !selectedQuiz) {
+      if (!selectedQuizId) {
         setQuizReactions(null);
         return;
       }
 
-      // For now, we need the quiz ID, but the mock data only has names
-      // In production, we'd pass quiz.id instead of quiz.name
-      // This is a temporary solution - skipping API call until we have real quiz IDs
-      setLoadingReactions(false);
-      setQuizReactions(null);
+      setLoadingReactions(true);
+      try {
+        const result = await getQuizReactions(selectedQuizId);
+        setQuizReactions(result);
+      } catch (err) {
+        console.error('Error fetching quiz reactions:', err);
+        setQuizReactions(null);
+      } finally {
+        setLoadingReactions(false);
+      }
     };
 
     fetchQuizReactions();
-  }, [selectedQuizId, selectedQuiz]);
+  }, [selectedQuizId]);
+
+  if (loadingQuizzes) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-3"></div>
+          <p className="text-xs text-neutral-600 dark:text-neutral-400">Loading quizzes...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      </div>
+    );
+  }
   
   return (
     <div className="flex gap-4">
@@ -270,22 +317,28 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
               📊 All Quizzes Overview
             </button>
             
-            {data.topQuizzes.map((quiz, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedQuizId(quiz.name)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
-                  selectedQuizId === quiz.name
-                    ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 font-medium'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-                }`}
-              >
-                <div className="font-medium truncate">{quiz.name}</div>
-                <div className="text-[10px] text-neutral-500 dark:text-neutral-500 mt-0.5">
-                  {quiz.attempts} attempts • {quiz.avgScore}% avg
-                </div>
-              </button>
-            ))}
+            {quizzes.length > 0 ? (
+              quizzes.map((quiz) => (
+                <button
+                  key={quiz.id}
+                  onClick={() => setSelectedQuizId(quiz.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
+                    selectedQuizId === quiz.id
+                      ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 font-medium'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                  }`}
+                >
+                  <div className="font-medium truncate">{quiz.title || quiz.name}</div>
+                  <div className="text-[10px] text-neutral-500 dark:text-neutral-500 mt-0.5">
+                    {quiz.passingScore || 70}% passing • {quiz._count?.questions || 0} questions
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="text-center py-4 text-neutral-500 dark:text-neutral-400 text-xs">
+                No quizzes found
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -360,56 +413,16 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
           // Individual Quiz Stats
           <div className="space-y-4">
             <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
-              <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 mb-1">{selectedQuiz.name}</h2>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">Detailed Statistics</p>
+              <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 mb-1">{selectedQuiz?.title || selectedQuiz?.name}</h2>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                {selectedQuiz?._count?.questions || 0} questions • {selectedQuiz?.passingScore || 70}% passing score
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <StatCard title="Attempts" value={selectedQuiz.attempts} icon="🎯" color="blue" />
-              <StatCard title="Avg Score" value={`${selectedQuiz.avgScore}%`} icon="📊" color="green" />
-              <StatCard title="Pass Rate" value={`${selectedQuiz.passRate}%`} icon="✅" color="orange" />
-            </div>
-
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Performance Breakdown</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🏆</span>
-                    <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100">Excellent (90-100%)</span>
-                  </div>
-                  <span className="text-xs font-bold text-green-600 dark:text-green-400">
-                    {Math.floor(selectedQuiz.attempts * (selectedQuiz.avgScore / 100 * 0.3))}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">👍</span>
-                    <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100">Good (75-89%)</span>
-                  </div>
-                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                    {Math.floor(selectedQuiz.attempts * (selectedQuiz.avgScore / 100 * 0.4))}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">😐</span>
-                    <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100">Average (60-74%)</span>
-                  </div>
-                  <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">
-                    {Math.floor(selectedQuiz.attempts * (selectedQuiz.avgScore / 100 * 0.2))}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📉</span>
-                    <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100">Poor (&lt;60%)</span>
-                  </div>
-                  <span className="text-xs font-bold text-red-600 dark:text-red-400">
-                    {Math.floor(selectedQuiz.attempts * (selectedQuiz.avgScore / 100 * 0.1))}
-                  </span>
-                </div>
-              </div>
+              <StatCard title="Questions" value={selectedQuiz?._count?.questions || 0} icon="❓" color="blue" />
+              <StatCard title="Passing Score" value={`${selectedQuiz?.passingScore || 70}%`} icon="📊" color="green" />
+              <StatCard title="Duration" value={`${selectedQuiz?.timeLimit || 'N/A'} min`} icon="⏱️" color="orange" />
             </div>
 
             {/* Question Reactions */}

@@ -32,6 +32,9 @@ import submitQuiz from '../../Controller/quizzes/submitQuiz.js';
 import getAttempts from '../../Controller/quizzes/getAttempts.js';
 import getAttemptResults from '../../Controller/quizzes/getAttemptResults.js';
 
+// Quiz reaction controllers
+import { getQuizReactions } from '../../Controller/Feedback/quizReaction.js';
+
 const router = Router();
 
 /**
@@ -126,5 +129,12 @@ router.get('/attempts/all', authenticate, getAttempts);
 
 // Get specific attempt results (authenticated users, must own attempt or be admin)
 router.get('/attempts/:attemptId', authenticate, getAttemptResults);
+
+/**
+ * QUIZ REACTIONS ROUTES
+ */
+
+// Get all reactions for a quiz's questions (ADMIN only)
+router.get('/:quizId/reactions', authenticate, requireRole('ADMIN'), getQuizReactions);
 
 export default router;

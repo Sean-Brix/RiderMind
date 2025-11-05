@@ -193,6 +193,11 @@ export const getMyQuestionReaction = async (req, res) => {
  * Get All Reactions for a Quiz (All Questions)
  * GET /api/quizzes/:quizId/reactions
  */
+/**
+ * Get Quiz Reactions
+ * GET /api/quizzes/:quizId/reactions
+ * Returns all reactions for questions in a specific quiz
+ */
 export const getQuizReactions = async (req, res) => {
   try {
     const { quizId } = req.params;
@@ -205,7 +210,7 @@ export const getQuizReactions = async (req, res) => {
       },
       select: {
         id: true,
-        questionText: true
+        question: true
       }
     });
 
@@ -242,7 +247,7 @@ export const getQuizReactions = async (req, res) => {
 
       return {
         questionId: question.id,
-        questionText: question.questionText,
+        questionText: question.question,
         totalLikes,
         totalDislikes,
         totalReactions: questionReactions.length,

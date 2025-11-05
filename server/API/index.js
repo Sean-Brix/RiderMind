@@ -29,7 +29,6 @@ router.use('/faqs', faqsRouter);
 router.use('/student-modules', studentModulesRouter);
 router.use('/modules', moduleFeedbackRouter);
 router.use('/quiz-questions', quizReactionsRouter);
-router.use('/quizzes', quizReactionsRouter); // For /quizzes/:quizId/reactions
 router.use('/analytics', analyticsRouter);
 
 export default router;

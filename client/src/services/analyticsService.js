@@ -180,6 +180,31 @@ export async function getQuizReactions(quizId) {
 }
 
 /**
+ * Get all quizzes
+ */
+export async function getAllQuizzes() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/quizzes`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch quizzes');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    throw error;
+  }
+}
+
+/**
  * Fetch aggregated data from existing endpoints as fallback
  */
 export async function getAggregatedAnalytics() {
