@@ -86,7 +86,9 @@ export default async function getQuizById(req, res) {
       // Add hasImage flag (since we don't send binary imageData)
       question.hasImage = !!question.imageMime;
       
-      console.log(`Processing question: "${question.question}"`);
+      console.log(`📋 Question ${question.id}: "${question.question}"`);
+      console.log(`  📷 imageMime: ${question.imageMime || 'NONE'}`);
+      console.log(`  🎬 videoPath: ${question.videoPath || 'NONE'}`);
       console.log(`  showAnswers: ${showAnswers}`);
       console.log(`  Options before filter:`, question.options.map(o => ({text: o.optionText, isCorrect: o.isCorrect})));
       
@@ -108,6 +110,13 @@ export default async function getQuizById(req, res) {
       quizId: quiz?.id,
       title: quiz?.title,
       questionsCount: quiz?.questions?.length,
+      questionIds: quiz?.questions?.map(q => q.id),
+      questionsWithMedia: quiz?.questions?.filter(q => q.imageMime || q.videoPath).map(q => ({
+        id: q.id,
+        question: q.question,
+        imageMime: q.imageMime,
+        videoPath: q.videoPath
+      })),
       firstQuestionOptions: quiz?.questions?.[0]?.options,
       showAnswers
     });

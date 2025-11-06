@@ -10,13 +10,13 @@
 
 - # Remove the header in admin 
 
-- Registration: Kahit hindi na si admin yung gumawa ng account ni Users, bali Confirmation of Admin nalang. Para raw iwas sa spamming, kapag daw inaccept ni Admin yung Registration ni User don makakaaccess si Users
+- # Registration: Kahit hindi na si admin yung gumawa ng account ni Users, bali Confirmation of Admin nalang. Para raw iwas sa spamming, kapag daw inaccept ni Admin yung Registration ni User don makakaaccess si Users
 
 - Lagyan daw ng limitation yung items 20 per questions tas 5 modules kase 20×5 = 100 questions (allowed parin magdagdag si admin ng questions sa modules, since may drag and drop naman) ishu shuffle naman daw yung questions per modules. Tapos 2 lang daw yung categories (motorcycle and cars)
 
 - # User Feedback every questions, okey daw yung like and dislike tas isali na raw sa analytic ng user panel
 
-- User-access - Admin, Employee/Staff, Admin
+- # User-access - Admin, Employee/Staff, Admin
 
 - Report/ Summary - Score Profile
 
@@ -26,16 +26,15 @@
 
 - Auto generate put Primary ID, Logo
 
-- Ilabas yung Registration for User
-(the user allowed to add users and admin) 
+- # Ilabas yung Registration for User (the user allowed to add users and admin) 
 
 - Text-left align
 
 - Set as 100/100km to become level 2
 
-- tapos maglagay daw message box ng "Successfuly save" kapag nags save
+- # tapos maglagay daw message box ng "Successfuly save" kapag nags save
 
-- tapos yung password daw make sure na — Complex by mixing uppercase and lowercase letters, numbers, and special characters
+- # tapos yung password daw make sure na — Complex by mixing uppercase and lowercase letters, numbers, and special characters
 
 - # Expanded UI
 
@@ -47,7 +46,7 @@
 
 - # Double Scroll bar dashboard pages
 
-- Image & Videos (Quizes)
+- # Image & Videos (Quizes)
 
 - # Lesson Modal, Different sidebar Tabs 
 

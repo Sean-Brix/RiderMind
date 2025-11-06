@@ -18,12 +18,27 @@ export default async function uploadQuestionImage(req, res) {
   try {
     const { questionId } = req.params;
 
+    console.log('=== QUIZ IMAGE UPLOAD START ===');
+    console.log('Request params:', req.params);
+    console.log('Has file:', !!req.file);
+    if (req.file) {
+      console.log('File details:', {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        encoding: req.file.encoding,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        bufferLength: req.file.buffer?.length
+      });
+    }
+
     // Validate question exists
     const question = await prisma.quizQuestion.findUnique({
       where: { id: parseInt(questionId) }
     });
 
     if (!question) {
+      console.log('Question not found:', questionId);
       return res.status(404).json({
         success: false,
         error: 'Question not found'
@@ -32,6 +47,7 @@ export default async function uploadQuestionImage(req, res) {
 
     // Check if file was uploaded
     if (!req.file) {
+      console.log('No file in request');
       return res.status(400).json({
         success: false,
         error: 'No image file provided'
@@ -42,7 +58,8 @@ export default async function uploadQuestionImage(req, res) {
       questionId,
       filename: req.file.originalname,
       size: req.file.size,
-      mimetype: req.file.mimetype
+      mimetype: req.file.mimetype,
+      bufferSize: req.file.buffer.length
     });
 
     // Get image buffer from multer (memory storage)
@@ -50,6 +67,12 @@ export default async function uploadQuestionImage(req, res) {
       req.file.buffer,
       req.file.mimetype
     );
+
+    console.log('Processed image for DB:', {
+      imageMime,
+      imageDataLength: imageData.length,
+      isBuffer: Buffer.isBuffer(imageData)
+    });
 
     // Update question with image data
     const updatedQuestion = await prisma.quizQuestion.update({
@@ -65,6 +88,9 @@ export default async function uploadQuestionImage(req, res) {
         }
       }
     });
+
+    console.log('Question updated with image data');
+    console.log('=== QUIZ IMAGE UPLOAD SUCCESS ===');
 
     // Return question without binary data (too large for response)
     const questionResponse = {

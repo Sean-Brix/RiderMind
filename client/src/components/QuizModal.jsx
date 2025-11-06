@@ -32,6 +32,16 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
   useEffect(() => {
     if (isOpen && quiz) {
       console.log('QuizModal opened, quiz:', quiz);
+      console.log('📊 Full quiz data:', JSON.stringify(quiz, null, 2));
+      console.log('📋 Questions with media:', quiz.questions?.map(q => ({
+        id: q.id,
+        question: q.question,
+        hasImageMime: !!q.imageMime,
+        hasVideoPath: !!q.videoPath,
+        imageMime: q.imageMime,
+        videoPath: q.videoPath
+      })));
+      
       // Only reset if we don't have results showing
       // This prevents clearing results when modal stays open
       if (!quizResult) {
@@ -114,6 +124,22 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  // Debug: Log media properties when question changes
+  useEffect(() => {
+    if (isOpen && quiz && quiz.questions?.[currentQuestion]) {
+      const currentQuestionData = quiz.questions[currentQuestion];
+      console.log('📋 Current Question Data:', {
+        id: currentQuestionData.id,
+        question: currentQuestionData.question,
+        hasImageMime: !!currentQuestionData.imageMime,
+        hasVideoPath: !!currentQuestionData.videoPath,
+        imageMime: currentQuestionData.imageMime,
+        videoPath: currentQuestionData.videoPath,
+        allKeys: Object.keys(currentQuestionData)
+      });
+    }
+  }, [isOpen, quiz, currentQuestion]);
 
   const handleStartQuiz = () => {
     setHasStarted(true);
@@ -373,10 +399,6 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
   const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
   const answeredCount = Object.keys(answers).length;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
-
-  // Debug logging for quiz result
-  console.log('🔍 QuizModal render - quizResult:', quizResult);
-  console.log('🔍 Has quizResult?', !!quizResult);
 
   // Results screen - Show results inside the quiz modal
   if (quizResult) {
@@ -736,7 +758,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
         </div>
 
         {/* Question Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-hidden">
           <div
             className={`transition-all duration-500 ease-in-out h-full ${
               isAnimating
@@ -748,213 +770,183 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
           >
             {currentQuestionData && (
               <div className="h-full flex flex-col">
-                {/* Media Content */}
-                <div className="flex-1 bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center p-8">
-                  {/* Image Question */}
-                  {currentQuestionData.imageMime && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      {imageError === currentQuestion ? (
-                        <div className="text-center p-8">
-                          <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
-                            <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                          </div>
-                          <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
-                            Image Not Available
-                          </h3>
-                          <p className="text-red-700 dark:text-red-300">
-                            This question's image could not be loaded.
-                          </p>
-                        </div>
-                      ) : (
-                        <img
-                          src={`/api/quizzes/questions/${currentQuestionData.id}/image`}
-                          alt="Question"
-                          className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                          onError={() => setImageError(currentQuestion)}
-                          onLoad={() => setImageError(null)}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Video Question */}
-                  {currentQuestionData.videoPath && !currentQuestionData.imageMime && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <video
-                        key={currentQuestion}
-                        className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                        controls
-                        src={`/api/quizzes/questions/${currentQuestionData.id}/video`}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
-                  )}
-
-                  {/* Text Question (no media) */}
-                  {!currentQuestionData.imageMime && !currentQuestionData.videoPath && (
-                    <div className="w-full max-w-3xl text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-100 dark:bg-brand-900/30 rounded-full mb-6">
-                        <svg className="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-                        {currentQuestionData.question}
-                      </h3>
-                      {currentQuestionData.points && (
-                        <span className="inline-block px-3 py-1 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-sm font-medium">
-                          {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
-                        </span>
-                      )}
-                      
-                      {/* Like/Dislike Reactions */}
-                      <div className="flex items-center justify-center gap-2 mt-6">
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400">Rate this question:</span>
-                        <button
-                          onClick={() => handleReactionToggle(currentQuestionData.id, true)}
-                          className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-                            questionReactions[currentQuestionData.id]?.isLike === true
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
-                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50 dark:hover:bg-green-900/20 border-2 border-transparent'
-                          }`}
-                          title="Like this question"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                          </svg>
-                          <span className="text-sm font-medium">Like</span>
-                        </button>
-                        <button
-                          onClick={() => handleReactionToggle(currentQuestionData.id, false)}
-                          className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-                            questionReactions[currentQuestionData.id]?.isLike === false
-                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-500'
-                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent'
-                          }`}
-                          title="Dislike this question"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                          </svg>
-                          <span className="text-sm font-medium">Dislike</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Question Text (if there's media) */}
+                {/* Media Section - Only show for questions with media */}
                 {(currentQuestionData.imageMime || currentQuestionData.videoPath) && (
-                  <div className="px-8 py-6 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700">
-                    <div className="flex items-start gap-3 max-w-4xl mx-auto">
-                      <div className="flex-shrink-0 w-8 h-8 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {currentQuestion + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-                          {currentQuestionData.question}
-                        </h3>
-                        {currentQuestionData.points && (
-                          <span className="inline-block px-2 py-1 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded text-xs font-medium">
-                            {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
-                          </span>
+                  <div className="flex-shrink-0 h-[60%] bg-neutral-900 dark:bg-neutral-950 flex items-center justify-center p-4 lg:p-6">
+                    {/* Image Question */}
+                    {currentQuestionData.imageMime && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {imageError === currentQuestion ? (
+                          <div className="text-center p-8">
+                            <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
+                              <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
+                              Image Not Available
+                            </h3>
+                            <p className="text-red-700 dark:text-red-300">
+                              This question's image could not be loaded.
+                            </p>
+                          </div>
+                        ) : (
+                          <img
+                            src={`/api/quizzes/questions/${currentQuestionData.id}/image`}
+                            alt="Question"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            onError={() => setImageError(currentQuestion)}
+                            onLoad={() => setImageError(null)}
+                          />
                         )}
-                        
-                        {/* Like/Dislike Reactions */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Rate this question:</span>
-                          <button
-                            onClick={() => handleReactionToggle(currentQuestionData.id, true)}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
-                              questionReactions[currentQuestionData.id]?.isLike === true
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
-                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50 dark:hover:bg-green-900/20 border-2 border-transparent'
-                            }`}
-                            title="Like this question"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                            </svg>
-                            <span className="text-xs font-medium">Like</span>
-                          </button>
-                          <button
-                            onClick={() => handleReactionToggle(currentQuestionData.id, false)}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${
-                              questionReactions[currentQuestionData.id]?.isLike === false
-                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-500'
-                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent'
-                            }`}
-                            title="Dislike this question"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                            </svg>
-                            <span className="text-xs font-medium">Dislike</span>
-                          </button>
+                      </div>
+                    )}
+
+                    {/* Video Question */}
+                    {currentQuestionData.videoPath && !currentQuestionData.imageMime && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <video
+                          key={currentQuestion}
+                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                          controls
+                          autoPlay
+                          loop
+                          playsInline
+                          src={`/api/quizzes/questions/${currentQuestionData.id}/video`}
+                          onError={(e) => console.error('Video error:', e)}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Question & Answer Section */}
+                <div className={`flex flex-col ${
+                  currentQuestionData.imageMime || currentQuestionData.videoPath 
+                    ? 'flex-1' 
+                    : 'h-full justify-center'
+                }`}>
+                  {/* Question Text - Only show at top if there's media */}
+                  {(currentQuestionData.imageMime || currentQuestionData.videoPath) && (
+                    <div className="flex-shrink-0 px-6 py-4 lg:px-8 lg:py-6 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {currentQuestion + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg lg:text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2 break-words">
+                            {currentQuestionData.question}
+                          </h3>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {currentQuestionData.points && (
+                              <span className="inline-block px-2 py-1 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded text-xs font-medium">
+                                {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
+                              </span>
+                            )}
+                            
+                            {/* Like/Dislike Reactions - Compact */}
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleReactionToggle(currentQuestionData.id, true)}
+                                className={`flex items-center gap-1 px-2 py-1 rounded transition-all ${
+                                  questionReactions[currentQuestionData.id]?.isLike === true
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50'
+                                }`}
+                                title="Like this question"
+                              >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleReactionToggle(currentQuestionData.id, false)}
+                              className={`flex items-center gap-1 px-2 py-1 rounded transition-all ${
+                                questionReactions[currentQuestionData.id]?.isLike === false
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50'
+                              }`}
+                              title="Dislike this question"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Answer Input Section */}
-        <div className="flex-shrink-0 bg-white dark:bg-neutral-900 border-t-2 border-neutral-200 dark:border-neutral-700">
-          <div className="px-8 py-6">
-            <div className="max-w-4xl mx-auto">
-              {currentQuestionData && (
-                <>
-                  {/* Multiple Choice */}
-                  {currentQuestionData.type === 'MULTIPLE_CHOICE' && (
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
-                        Select one answer:
-                      </p>
-                      {currentQuestionData.options?.map((option) => (
-                        <label
-                          key={option.id}
-                          className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                            answers[currentQuestionData.id] === option.id
-                              ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/20'
-                              : 'border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-700'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name={`question-${currentQuestionData.id}`}
-                            value={option.id}
-                            checked={answers[currentQuestionData.id] === option.id}
-                            onChange={() => handleAnswerChange(currentQuestionData.id, option.id)}
-                            className="w-5 h-5 text-brand-600 focus:ring-brand-500"
-                          />
-                          <span className="flex-1 text-neutral-900 dark:text-neutral-100 font-medium">
-                            {option.optionText}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
                   )}
 
-                  {/* True/False */}
-                  {currentQuestionData.type === 'TRUE_FALSE' && (
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
-                        Select True or False:
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
+                  {/* Answer Options Section */}
+                  <div className={`flex-1 overflow-y-auto px-6 py-4 lg:px-8 lg:py-6 space-y-4 ${
+                    currentQuestionData.imageMime || currentQuestionData.videoPath 
+                      ? 'bg-neutral-50 dark:bg-neutral-900' 
+                      : 'bg-white dark:bg-neutral-900 max-w-4xl mx-auto w-full'
+                  }`}>
+                    {/* Text-only question: show full question in answer area */}
+                    {!currentQuestionData.imageMime && !currentQuestionData.videoPath && (
+                      <div className="mb-6 p-6 bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex-shrink-0 w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {currentQuestion + 1}
+                          </div>
+                          <h3 className="flex-1 text-xl lg:text-2xl font-bold text-neutral-900 dark:text-neutral-100 break-words">
+                            {currentQuestionData.question}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {currentQuestionData.points && (
+                            <span className="inline-block px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-sm font-medium">
+                              {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleReactionToggle(currentQuestionData.id, true)}
+                              className={`flex items-center gap-1 px-3 py-1.5 rounded transition-all ${
+                                questionReactions[currentQuestionData.id]?.isLike === true
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : 'bg-white dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-green-50'
+                              }`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleReactionToggle(currentQuestionData.id, false)}
+                              className={`flex items-center gap-1 px-3 py-1.5 rounded transition-all ${
+                                questionReactions[currentQuestionData.id]?.isLike === false
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                  : 'bg-white dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-red-50'
+                              }`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Multiple Choice */}
+                    {currentQuestionData.type === 'MULTIPLE_CHOICE' && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
+                          Select one answer:
+                        </p>
                         {currentQuestionData.options?.map((option) => (
                           <label
                             key={option.id}
-                            className={`flex items-center justify-center gap-3 p-6 rounded-lg border-2 cursor-pointer transition-all ${
+                            className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                               answers[currentQuestionData.id] === option.id
-                                ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/20'
-                                : 'border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-700'
+                                ? 'border-brand-600 bg-white dark:bg-brand-900/20'
+                                : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-brand-300 dark:hover:border-brand-700'
                             }`}
                           >
                             <input
@@ -963,159 +955,192 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                               value={option.id}
                               checked={answers[currentQuestionData.id] === option.id}
                               onChange={() => handleAnswerChange(currentQuestionData.id, option.id)}
-                              className="w-5 h-5 text-brand-600 focus:ring-brand-500"
+                              className="w-5 h-5 text-brand-600 focus:ring-brand-500 flex-shrink-0"
                             />
-                            <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                            <span className="flex-1 text-neutral-900 dark:text-neutral-100 font-medium break-words">
                               {option.optionText}
                             </span>
                           </label>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Multiple Answer */}
-                  {currentQuestionData.type === 'MULTIPLE_ANSWER' && (
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
-                        Select all that apply:
-                      </p>
-                      {currentQuestionData.options?.map((option) => {
-                        const currentAnswers = answers[currentQuestionData.id];
-                        const answerArray = Array.isArray(currentAnswers) ? currentAnswers : [];
-                        const isChecked = answerArray.includes(option.id);
-                        
-                        return (
-                          <label
-                            key={option.id}
-                            className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                              isChecked
-                                ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/20'
-                                : 'border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-700'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handleMultipleAnswerToggle(currentQuestionData.id, option.id)}
-                              className="w-5 h-5 text-brand-600 focus:ring-brand-500 rounded"
-                            />
-                            <span className="flex-1 text-neutral-900 dark:text-neutral-100 font-medium">
-                              {option.optionText}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Identification / Fill in the Blank */}
-                  {(currentQuestionData.type === 'IDENTIFICATION' || currentQuestionData.type === 'FILL_BLANK') && (
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">
-                        Your answer:
-                      </label>
-                      <input
-                        type="text"
-                        value={answers[currentQuestionData.id] || ''}
-                        onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
-                        placeholder="Type your answer here..."
-                        className="w-full px-4 py-3 border-2 border-neutral-200 dark:border-neutral-700 rounded-lg focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 dark:bg-neutral-800 dark:text-neutral-100 transition-all"
-                      />
-                      {currentQuestionData.caseSensitive && (
-                        <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                          </svg>
-                          Case sensitive answer
+                    {/* True/False */}
+                    {currentQuestionData.type === 'TRUE_FALSE' && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
+                          Select True or False:
                         </p>
-                      )}
-                    </div>
-                  )}
+                        <div className="grid grid-cols-2 gap-4">
+                          {currentQuestionData.options?.map((option) => (
+                            <label
+                              key={option.id}
+                              className={`flex items-center justify-center gap-3 p-6 rounded-lg border-2 cursor-pointer transition-all ${
+                                answers[currentQuestionData.id] === option.id
+                                  ? 'border-brand-600 bg-white dark:bg-brand-900/20'
+                                  : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-brand-300 dark:hover:border-brand-700'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`question-${currentQuestionData.id}`}
+                                value={option.id}
+                                checked={answers[currentQuestionData.id] === option.id}
+                                onChange={() => handleAnswerChange(currentQuestionData.id, option.id)}
+                                className="w-5 h-5 text-brand-600 focus:ring-brand-500"
+                              />
+                              <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                                {option.optionText}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Essay */}
-                  {currentQuestionData.type === 'ESSAY' && (
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">
-                        Your answer:
-                      </label>
-                      <textarea
-                        value={answers[currentQuestionData.id] || ''}
-                        onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
-                        placeholder="Type your answer here... Explain in detail."
-                        rows={6}
-                        className="w-full px-4 py-3 border-2 border-neutral-200 dark:border-neutral-700 rounded-lg focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 dark:bg-neutral-800 dark:text-neutral-100 resize-none transition-all"
-                      />
-                      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        This answer will be reviewed manually by an instructor.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+                    {/* Multiple Answer */}
+                    {currentQuestionData.type === 'MULTIPLE_ANSWER' && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-4">
+                          Select all that apply:
+                        </p>
+                        {currentQuestionData.options?.map((option) => {
+                          const currentAnswers = answers[currentQuestionData.id];
+                          const answerArray = Array.isArray(currentAnswers) ? currentAnswers : [];
+                          const isChecked = answerArray.includes(option.id);
+                          
+                          return (
+                            <label
+                              key={option.id}
+                              className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                isChecked
+                                  ? 'border-brand-600 bg-white dark:bg-brand-900/20'
+                                  : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-brand-300 dark:hover:border-brand-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleMultipleAnswerToggle(currentQuestionData.id, option.id)}
+                                className="w-5 h-5 text-brand-600 focus:ring-brand-500 rounded flex-shrink-0"
+                              />
+                              <span className="flex-1 text-neutral-900 dark:text-neutral-100 font-medium break-words">
+                                {option.optionText}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
 
-          {/* Navigation Footer */}
-          <div className="px-8 py-4 bg-neutral-50 dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center justify-between max-w-4xl mx-auto">
-              {/* Previous Button */}
-              <button
-                onClick={handlePrevQuestion}
-                disabled={currentQuestion === 0 || isAnimating}
-                className="px-6 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous
-              </button>
+                    {/* Identification / Fill in the Blank */}
+                    {(currentQuestionData.type === 'IDENTIFICATION' || currentQuestionData.type === 'FILL_BLANK') && (
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">
+                          Your answer:
+                        </label>
+                        <input
+                          type="text"
+                          value={answers[currentQuestionData.id] || ''}
+                          onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
+                          placeholder="Type your answer here..."
+                          className="w-full px-4 py-3 border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 dark:text-neutral-100 transition-all"
+                        />
+                        {currentQuestionData.caseSensitive && (
+                          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                            </svg>
+                            Case sensitive answer
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-              {/* Question Indicators */}
-              <div className="flex items-center gap-2 overflow-x-auto max-w-md">
-                {quiz.questions?.map((q, index) => (
-                  <button
-                    key={q.id}
-                    onClick={() => goToQuestion(index)}
-                    disabled={isAnimating}
-                    className={`flex-shrink-0 w-10 h-10 rounded-lg font-semibold text-sm transition-all ${
-                      index === currentQuestion
-                        ? 'bg-brand-600 text-white'
-                        : answers[q.id]
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
-                        : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
-                    }`}
-                    title={answers[q.id] ? 'Answered' : 'Not answered'}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
+                    {/* Essay */}
+                    {currentQuestionData.type === 'ESSAY' && (
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">
+                          Your answer:
+                        </label>
+                        <textarea
+                          value={answers[currentQuestionData.id] || ''}
+                          onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
+                          placeholder="Type your answer here... Explain in detail."
+                          rows={6}
+                          className="w-full px-4 py-3 border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 dark:text-neutral-100 resize-none transition-all"
+                        />
+                        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          This answer will be reviewed manually by an instructor.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Next/Submit Button */}
-              {isLastQuestion ? (
+        {/* Navigation Footer */}
+        <div className="flex-shrink-0 px-8 py-4 bg-neutral-50 dark:bg-neutral-800 border-t-2 border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            {/* Previous Button */}
+            <button
+              onClick={handlePrevQuestion}
+              disabled={currentQuestion === 0 || isAnimating}
+              className="px-6 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Previous
+            </button>
+
+            {/* Question Indicators */}
+            <div className="flex items-center gap-2 overflow-x-auto max-w-md">
+              {quiz.questions?.map((q, index) => (
                 <button
-                  onClick={() => setShowConfirmSubmit(true)}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
-                >
-                  Submit Quiz
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={handleNextQuestion}
+                  key={q.id}
+                  onClick={() => goToQuestion(index)}
                   disabled={isAnimating}
-                  className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  className={`flex-shrink-0 w-10 h-10 rounded-lg font-semibold text-sm transition-all ${
+                    index === currentQuestion
+                      ? 'bg-brand-600 text-white'
+                      : answers[q.id]
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-2 border-green-500'
+                      : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+                  }`}
+                  title={answers[q.id] ? 'Answered' : 'Not answered'}
                 >
-                  Next
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  {index + 1}
                 </button>
-              )}
+              ))}
             </div>
+
+            {/* Next/Submit Button */}
+            {isLastQuestion ? (
+              <button
+                onClick={() => setShowConfirmSubmit(true)}
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
+              >
+                Submit Quiz
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleNextQuestion}
+                disabled={isAnimating}
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                Next
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>

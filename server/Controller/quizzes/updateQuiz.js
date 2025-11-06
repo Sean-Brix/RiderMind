@@ -76,47 +76,102 @@ export default async function updateQuiz(req, res) {
 
     // Handle questions update if provided
     if (questions && Array.isArray(questions)) {
-      // Delete all existing questions (this will cascade delete options)
-      await prisma.quizQuestion.deleteMany({
-        where: { quizId: parseInt(id) }
+      console.log('🔄 Processing questions update...');
+      
+      // Separate questions into updates and creates
+      const questionsToUpdate = questions.filter(q => q.id);
+      const questionsToCreate = questions.filter(q => !q.id);
+      const questionIdsToKeep = questionsToUpdate.map(q => q.id);
+      
+      console.log('📝 Questions to update:', questionsToUpdate.length);
+      console.log('➕ Questions to create:', questionsToCreate.length);
+      console.log('🔑 IDs to keep:', questionIdsToKeep);
+      
+      // Delete questions that are no longer in the list
+      const deletedQuestions = await prisma.quizQuestion.deleteMany({
+        where: {
+          quizId: parseInt(id),
+          id: { notIn: questionIdsToKeep }
+        }
       });
+      console.log('🗑️ Deleted questions:', deletedQuestions.count);
 
-      // Create new questions with options
-      updateData.questions = {
-        create: questions.map((q, qIndex) => {
-          const questionData = {
+      // Update existing questions
+      for (const q of questionsToUpdate) {
+        console.log(`🔄 Updating question ${q.id}:`, {
+          question: q.question,
+          hasVideoPath: !!q.videoPath,
+          videoPath: q.videoPath,
+          hasImageMime: !!q.imageMime
+        });
+        
+        // First, delete old options
+        await prisma.quizQuestionOption.deleteMany({
+          where: { questionId: q.id }
+        });
+        
+        // Update question with new options
+        await prisma.quizQuestion.update({
+          where: { id: q.id },
+          data: {
             type: q.type,
             question: q.question,
             description: q.description || null,
             points: q.points || 1,
-            position: q.position || qIndex + 1,
+            position: q.position,
             caseSensitive: q.caseSensitive || false,
             shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
             imageData: q.imageData || null,
             imageMime: q.imageMime || null,
-            videoPath: q.videoPath || null
-          };
+            videoPath: q.videoPath || null,
+            options: {
+              create: (q.options || []).map((opt, optIndex) => ({
+                optionText: opt.optionText,
+                isCorrect: opt.isCorrect === true,
+                position: opt.position || optIndex + 1,
+                imageData: opt.imageData || null,
+                imageMime: opt.imageMime || null
+              }))
+            }
+          }
+        });
+        console.log(`✅ Updated question ${q.id}`);
+      }
 
-          // Add options if provided
-          if (q.options && Array.isArray(q.options)) {
-            console.log(`Question "${q.question}" options:`, q.options);
-            questionData.options = {
-              create: q.options.map((opt, optIndex) => {
-                console.log(`  Option ${optIndex}: "${opt.optionText}" - isCorrect: ${opt.isCorrect} (type: ${typeof opt.isCorrect})`);
-                return {
+      // Create new questions
+      if (questionsToCreate.length > 0) {
+        updateData.questions = {
+          create: questionsToCreate.map((q, qIndex) => {
+            const questionData = {
+              type: q.type,
+              question: q.question,
+              description: q.description || null,
+              points: q.points || 1,
+              position: q.position || (questionsToUpdate.length + qIndex + 1),
+              caseSensitive: q.caseSensitive || false,
+              shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
+              imageData: q.imageData || null,
+              imageMime: q.imageMime || null,
+              videoPath: q.videoPath || null
+            };
+
+            // Add options if provided
+            if (q.options && Array.isArray(q.options)) {
+              questionData.options = {
+                create: q.options.map((opt, optIndex) => ({
                   optionText: opt.optionText,
-                  isCorrect: opt.isCorrect === true, // Explicit boolean check
+                  isCorrect: opt.isCorrect === true,
                   position: opt.position || optIndex + 1,
                   imageData: opt.imageData || null,
                   imageMime: opt.imageMime || null
-                };
-              })
-            };
-          }
+                }))
+              };
+            }
 
-          return questionData;
-        })
-      };
+            return questionData;
+          })
+        };
+      }
     }
 
     // Update quiz

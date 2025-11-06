@@ -1,13 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { getQuizImageDataURL } from '../../utils/quizMediaHandler.js';
 
 const prisma = new PrismaClient();
 
 /**
- * Get question image as base64 data URL
+ * Get question image data (BLOB)
  * GET /api/quizzes/questions/:questionId/image
  * 
- * Response: Base64 encoded image data URL
+ * Response: Raw binary image data (same as module slides)
  */
 export default async function getQuestionImage(req, res) {
   try {
@@ -31,23 +30,48 @@ export default async function getQuestionImage(req, res) {
     }
 
     if (!question.imageData || !question.imageMime) {
+      console.log('No image data:', { 
+        questionId, 
+        hasImageData: !!question.imageData,
+        hasImageMime: !!question.imageMime
+      });
       return res.status(404).json({
         success: false,
         error: 'Question has no image'
       });
     }
 
-    // Convert to base64 data URL
-    const imageDataURL = getQuizImageDataURL(question.imageData, question.imageMime);
+    // Convert Prisma BLOB to Buffer
+    // Prisma may return Buffer as: Buffer, {type: 'Buffer', data: [...]}, or Uint8Array
+    let buffer;
+    if (Buffer.isBuffer(question.imageData)) {
+      buffer = question.imageData;
+    } else if (question.imageData && typeof question.imageData === 'object' && question.imageData.type === 'Buffer') {
+      // Prisma returns BLOB as {type: 'Buffer', data: [...]}
+      buffer = Buffer.from(question.imageData.data);
+    } else if (question.imageData instanceof Uint8Array) {
+      buffer = Buffer.from(question.imageData);
+    } else {
+      // Fallback: try to convert whatever we got
+      buffer = Buffer.from(question.imageData);
+    }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        id: question.id,
-        imageUrl: imageDataURL,
-        mimeType: question.imageMime
-      }
+    console.log('Sending quiz question image:', {
+      questionId,
+      imageMime: question.imageMime,
+      bufferLength: buffer.length,
+      isBuffer: Buffer.isBuffer(buffer)
     });
+
+    // Set appropriate headers (same as module slides)
+    res.setHeader('Content-Type', question.imageMime || 'image/jpeg');
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    
+    // Send binary image data
+    res.end(buffer, 'binary');
+    
+    console.log('Image sent successfully for question:', questionId);
 
   } catch (error) {
     console.error('Error getting quiz question image:', error);

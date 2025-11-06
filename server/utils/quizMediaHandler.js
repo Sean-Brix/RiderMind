@@ -34,11 +34,11 @@ const quizVideoStorage = multer.diskStorage({
     cb(null, QUIZ_VIDEO_DIR);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: quiz-question-{questionId}-{timestamp}-{hash}.ext
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
+    // Use question ID as filename for consistency: question-{questionId}.ext
+    // This ensures the same question always has the same filename
     const ext = path.extname(file.originalname);
     const questionId = req.params.questionId || 'new';
-    cb(null, `quiz-question-${questionId}-${uniqueSuffix}${ext}`);
+    cb(null, `question-${questionId}${ext}`);
   }
 });
 

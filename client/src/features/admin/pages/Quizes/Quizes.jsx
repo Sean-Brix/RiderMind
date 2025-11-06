@@ -261,20 +261,40 @@ export default function Quizes() {
         timeLimit: quizForm.timeLimit,
         shuffleQuestions: quizForm.shuffleQuestions,
         showResults: quizForm.showResults,
-        questions: quizForm.questions.map((q, index) => ({
-          type: q.type,
-          question: q.question,
-          description: q.description,
-          points: q.points,
-          position: index + 1,
-          caseSensitive: q.caseSensitive,
-          shuffleOptions: q.shuffleOptions,
-          options: q.options?.map((opt, optIndex) => ({
-            optionText: opt.optionText,
-            isCorrect: opt.isCorrect,
-            position: optIndex + 1
-          })) || []
-        }))
+        questions: quizForm.questions.map((q, index) => {
+          const questionData = {
+            type: q.type,
+            question: q.question,
+            description: q.description,
+            points: q.points,
+            position: index + 1,
+            caseSensitive: q.caseSensitive,
+            shuffleOptions: q.shuffleOptions,
+            options: q.options?.map((opt, optIndex) => ({
+              optionText: opt.optionText,
+              isCorrect: opt.isCorrect,
+              position: optIndex + 1
+            })) || []
+          };
+          
+          // Preserve existing media references if present
+          if (q.id) {
+            questionData.id = q.id;
+          }
+          // Keep videoPath if it exists (don't remove it on edit)
+          if (q.videoPath) {
+            questionData.videoPath = q.videoPath;
+          }
+          // Keep imageMime and imageData if they exist
+          if (q.imageMime) {
+            questionData.imageMime = q.imageMime;
+          }
+          if (q.imageData) {
+            questionData.imageData = q.imageData;
+          }
+          
+          return questionData;
+        })
       };
 
       console.log('💾 Saving quiz data:', quizData);
@@ -522,6 +542,8 @@ export default function Quizes() {
     const newQuestions = [...quizForm.questions];
     const questionData = {
       ...questionForm,
+      id: questionForm.questionId, // Use 'id' for backend, not 'questionId'
+      questionId: undefined, // Remove questionId field
       videoFile: undefined, // Don't store file objects in questions array
       imageFile: undefined,
       hasExistingVideo: questionForm.hasExistingVideo,
@@ -613,6 +635,7 @@ export default function Quizes() {
           headers: {
             'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',  // Include cookies for authentication
           body: formData
         });
         
@@ -636,6 +659,7 @@ export default function Quizes() {
           headers: {
             'Authorization': `Bearer ${token}`
           },
+          credentials: 'include',  // Include cookies for authentication
           body: formData
         });
         
@@ -1450,22 +1474,21 @@ export default function Quizes() {
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
           quiz={{
-            id: selectedQuiz.id,
+            ...selectedQuiz,
+            // Use the latest form values for title/description/settings
             title: quizForm.title,
             description: quizForm.description,
             instructions: quizForm.instructions,
             passingScore: quizForm.passingScore,
             timeLimit: quizForm.timeLimit,
-            questions: quizForm.questions.map((q, idx) => ({
-              id: idx + 1,
-              type: q.type,
-              question: q.question,
-              points: q.points,
-              caseSensitive: q.caseSensitive,
-              options: q.options?.map((opt, optIdx) => ({
-                id: optIdx + 1,
-                optionText: opt.optionText
-              }))
+            // Use selectedQuiz.questions (from API) which includes imageMime and videoPath
+            questions: selectedQuiz.questions.map((q) => ({
+              ...q,
+              // Keep all fields from the API response including imageMime, videoPath, etc.
+              // Override with any form changes if needed
+              question: quizForm.questions.find(fq => fq.id === q.id)?.question || q.question,
+              points: quizForm.questions.find(fq => fq.id === q.id)?.points || q.points,
+              options: q.options
             }))
           }}
           onSubmit={(data) => {
