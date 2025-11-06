@@ -12,13 +12,13 @@
 
 - # Registration: Kahit hindi na si admin yung gumawa ng account ni Users, bali Confirmation of Admin nalang. Para raw iwas sa spamming, kapag daw inaccept ni Admin yung Registration ni User don makakaaccess si Users
 
-- Lagyan daw ng limitation yung items 20 per questions tas 5 modules kase 20×5 = 100 questions (allowed parin magdagdag si admin ng questions sa modules, since may drag and drop naman) ishu shuffle naman daw yung questions per modules. Tapos 2 lang daw yung categories (motorcycle and cars)
+- # Lagyan daw ng limitation yung items 20 per questions tas 5 modules kase 20×5 = 100 questions (allowed parin magdagdag si admin ng questions sa modules, since may drag and drop naman) ishu shuffle naman daw yung questions per modules. Tapos 2 lang daw yung categories (motorcycle and cars)
 
 - # User Feedback every questions, okey daw yung like and dislike tas isali na raw sa analytic ng user panel
 
 - # User-access - Admin, Employee/Staff, Admin
 
-- Report/ Summary - Score Profile
+- Report / Summary - Score Profile
 
 - Paayos ng Frontend ng Forms/ Exam/ Assessment
 
@@ -28,9 +28,7 @@
 
 - # Ilabas yung Registration for User (the user allowed to add users and admin) 
 
-- Text-left align
-
-- Set as 100/100km to become level 2
+- # Set as 100/100km to become level 2
 
 - # tapos maglagay daw message box ng "Successfuly save" kapag nags save
 
@@ -50,7 +48,7 @@
 
 - # Lesson Modal, Different sidebar Tabs 
 
-- Require 10 Modules per classification
+- # Require 10 Modules per classification
 
 - Add 1 medal badge per module
 

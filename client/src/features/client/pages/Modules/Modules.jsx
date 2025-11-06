@@ -16,9 +16,9 @@ export default function Modules() {
   
   // Calculate XP and level
   const totalXP = modules.reduce((sum, m) => sum + (m.isCompleted ? 100 : Math.floor(m.progress)), 0);
-  const level = Math.floor(totalXP / 200) + 1;
-  const xpForNextLevel = level * 200;
-  const xpProgress = ((totalXP % 200) / 200) * 100;
+  const level = Math.floor(totalXP / 100) + 1;
+  const xpForNextLevel = level * 100;
+  const xpProgress = ((totalXP % 100) / 100) * 100;
 
   useEffect(() => {
     loadModules();
@@ -270,7 +270,7 @@ export default function Modules() {
               <div className="bg-neutral-900/30 backdrop-blur-sm rounded-lg p-3 mb-2 border-2 border-white/20">
                 <div className="flex justify-between items-center mb-2 text-sm">
                   <span className="font-bold">Distance Traveled</span>
-                  <span className="text-yellow-300">{totalXP % 200} / 200 km</span>
+                  <span className="text-yellow-300">{totalXP % 100} / 100 km</span>
                 </div>
                 <div className="relative h-6 bg-neutral-800/50 rounded-full overflow-hidden border-2 border-white/10">
                   <div 

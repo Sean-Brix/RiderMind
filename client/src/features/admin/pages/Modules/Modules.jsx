@@ -260,6 +260,12 @@ export default function Modules() {
       return;
     }
 
+    // Validate minimum module count
+    if (activeModules.length < 10) {
+      alert(`Each category must have at least 10 modules. Currently: ${activeModules.length}/10 modules.`);
+      return;
+    }
+
     try {
       const moduleIds = activeModules.map(m => m.id);
       await categoryService.assignModulesToCategory(selectedCategoryId, moduleIds);
@@ -823,8 +829,12 @@ export default function Modules() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-lg text-sm font-medium">
-                        {activeModules.length} active
+                      <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                        activeModules.length < 10 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          : 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400'
+                      }`}>
+                        {activeModules.length}/10 modules
                       </span>
                       {!isEditMode ? (
                         <button 
@@ -846,8 +856,9 @@ export default function Modules() {
                           </button>
                           <button 
                             onClick={handleSaveOrder}
-                            disabled={!hasChanges}
+                            disabled={!hasChanges || activeModules.length < 10}
                             className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={activeModules.length < 10 ? `Need ${10 - activeModules.length} more modules (minimum 10 required)` : ''}
                           >
                             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -858,6 +869,25 @@ export default function Modules() {
                       )}
                     </div>
                   </div>
+
+                  {/* Minimum modules warning */}
+                  {isEditMode && activeModules.length > 0 && activeModules.length < 10 && (
+                    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
+                            Minimum module requirement not met
+                          </h4>
+                          <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                            You need to add {10 - activeModules.length} more module{10 - activeModules.length !== 1 ? 's' : ''} to reach the minimum of 10 modules per category.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <SortableContext
                     items={activeModules.map(m => m.id)}
