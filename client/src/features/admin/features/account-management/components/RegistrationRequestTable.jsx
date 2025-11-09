@@ -1,6 +1,9 @@
 import { formatDistanceToNow } from 'date-fns';
 
 export default function RegistrationRequestTable({ requests, onViewDetails }) {
+  // Helper function to format ID as 8-digit number
+  const formatId = (id) => String(id).padStart(8, '0');
+
   function getStatusBadge(status) {
     const styles = {
       PENDING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
@@ -105,7 +108,7 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                      #{String(request.id).padStart(3, '0')}
+                      #{formatId(request.id)}
                     </span>
                     {request.status === 'PENDING' && (
                       <span className="flex h-2 w-2 flex-shrink-0">
@@ -120,7 +123,7 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
                       {(request.first_name?.[0] || request.email?.[0] || '?').toUpperCase()}
                     </div>
-                    <div>
+                    <div className="flex flex-col">
                       <div className="font-medium text-neutral-900 dark:text-neutral-100">
                         {fullName}
                       </div>
@@ -133,13 +136,17 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-neutral-900 dark:text-neutral-100">{request.email}</div>
-                  {request.cellphone_number && (
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400">{request.cellphone_number}</div>
-                  )}
+                  <div className="flex flex-col">
+                    <div className="text-sm text-neutral-900 dark:text-neutral-100">{request.email}</div>
+                    {request.cellphone_number && (
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">{request.cellphone_number}</div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4">
-                  {getStatusBadge(request.status)}
+                  <div className="flex">
+                    {getStatusBadge(request.status)}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button

@@ -1,5 +1,19 @@
+/**
+ * ProfilePage - Clean, compact profile page with responsive layout
+ * 
+ * Layout breakdown:
+ * - Compact header with matte blue gradient (120px height)
+ * - Avatar overlaps banner by ~50% for modern look
+ * - Two-column layout: main info (left) + contact sidebar (right, sticky on desktop)
+ * - Mobile: single column with centered avatar
+ * - Minimal whitespace: tight padding (py-4, px-6) and margins
+ */
+
 import { useState, useEffect } from 'react';
 import Navbar from '../../../../components/Navbar';
+import AvatarCard from './components/AvatarCard';
+import InfoCard from './components/InfoCard';
+import ContactCard from './components/ContactCard';
 
 function getUser() {
   try {
@@ -99,289 +113,188 @@ export default function Profile() {
     );
   }
 
+  // Build display name
   const displayName = [profile.first_name, profile.middle_name, profile.last_name, profile.name_extension]
     .filter(Boolean)
     .join(' ') || profile.email || 'User';
 
+  // Transform profile data to match component structure
+  const profileData = {
+    name: displayName,
+    email: profile.email,
+    role: currentUser?.role || 'Student',
+    avatarUrl: null,
+    sections: [
+      {
+        title: 'Personal Information',
+        icon: 'user',
+        rows: [
+          { label: 'First Name', value: profile.first_name },
+          { label: 'Middle Name', value: profile.middle_name },
+          { label: 'Last Name', value: profile.last_name },
+          { label: 'Extension', value: profile.name_extension },
+          { label: 'Birthdate', value: profile.birthdate ? new Date(profile.birthdate).toLocaleDateString() : null },
+          { label: 'Sex', value: profile.sex },
+          { label: 'Nationality', value: profile.nationality },
+          { label: 'Civil Status', value: profile.civil_status },
+        ]
+      },
+      {
+        title: 'Address',
+        icon: 'location',
+        rows: [
+          { label: 'House No.', value: profile.address_house_no },
+          { label: 'Street', value: profile.address_street },
+          { label: 'Barangay', value: profile.address_barangay },
+          { label: 'City', value: profile.address_city_municipality },
+          { label: 'Province', value: profile.address_province },
+        ]
+      }
+    ],
+    contact: {
+      phone: profile.cellphone_number,
+      email: profile.email,
+      alternateEmail: profile.email_address
+    }
+  };
+
+  // Quick action handlers
+  const handleCall = () => {
+    if (profileData.contact.phone) {
+      window.location.href = `tel:${profileData.contact.phone}`;
+    }
+  };
+
+  const handleEmail = () => {
+    if (profileData.contact.email) {
+      window.location.href = `mailto:${profileData.contact.email}`;
+    }
+  };
+
+  const contactActions = [
+    {
+      label: 'Call',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+      ),
+      onClick: handleCall
+    },
+    {
+      label: 'Send Email',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+      onClick: handleEmail
+    }
+  ];
+
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">My Profile</h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-1">View and manage your personal information</p>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+        {/* Alerts */}
+        {error && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {success}
-            </div>
-          )}
-
-          {/* Profile Header Card */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 mb-6 overflow-hidden">
-            <div className="bg-gradient-to-r from-brand-600 to-brand-800 h-32" />
-            <div className="px-6 pb-6">
-              <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-16 sm:-mt-12">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white dark:bg-neutral-900 p-1 shadow-xl">
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-4xl font-bold">
-                    {displayName[0].toUpperCase()}
-                  </div>
-                </div>
-                <div className="flex-1 text-center sm:text-left sm:mt-4">
-                  <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{displayName}</h2>
-                  <p className="text-neutral-500 dark:text-neutral-400">{profile.email}</p>
-                  <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-400">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      {currentUser?.role || 'USER'}
-                    </span>
-                  </div>
-                </div>
-                <div className="sm:mt-4">
-                  <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
-                      isEditing
-                        ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
-                        : 'bg-brand-600 text-white hover:bg-brand-700 shadow-lg hover:shadow-xl'
-                    }`}
-                  >
-                    {isEditing ? 'Cancel' : 'Edit Profile'}
-                  </button>
-                </div>
-              </div>
+              <span className="text-sm text-red-700 dark:text-red-400">{error}</span>
             </div>
           </div>
+        )}
 
-          {/* Profile Content Cards */}
-          <div className="space-y-6">
-            {/* Personal Information Card */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        {success && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-3">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-green-700 dark:text-green-400">{success}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Compact header with matte blue gradient - low height, no huge gaps */}
+        <div className="relative h-24"></div>
+
+        {/* Main content container - reduced top padding for avatar overlap */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 pb-8">
+          {/* Avatar and header content - overlaps banner */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <AvatarCard
+              name={profileData.name}
+              avatarUrl={profileData.avatarUrl}
+              role={profileData.role}
+              email={profileData.email}
+            />
+
+            {/* Edit button - small, rounded, with icon */}
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              aria-label="Edit profile"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                isEditing
+                  ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+              }`}
+            >
+              {isEditing ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personal Information</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">First Name</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.first_name || ''} onChange={(e) => update('first_name', e.target.value)} className="input w-full" placeholder="Enter first name" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.first_name || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Middle Name</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.middle_name || ''} onChange={(e) => update('middle_name', e.target.value)} className="input w-full" placeholder="Enter middle name" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.middle_name || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Last Name</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.last_name || ''} onChange={(e) => update('last_name', e.target.value)} className="input w-full" placeholder="Enter last name" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.last_name || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Name Extension</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.name_extension || ''} onChange={(e) => update('name_extension', e.target.value)} className="input w-full" placeholder="Jr., Sr., III" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.name_extension || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Birthdate</label>
-                    {isEditing ? (
-                      <input type="date" value={profile.birthdate ? String(profile.birthdate).substring(0, 10) : ''} onChange={(e) => update('birthdate', e.target.value)} className="input w-full" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.birthdate ? new Date(profile.birthdate).toLocaleDateString() : '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Sex</label>
-                    {isEditing ? (
-                      <select value={profile.sex || ''} onChange={(e) => update('sex', e.target.value)} className="input w-full">
-                        <option value="">Select</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                      </select>
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.sex || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Nationality</label>
-                    {isEditing ? (
-                      <select value={profile.nationality || ''} onChange={(e) => update('nationality', e.target.value)} className="input w-full">
-                        <option value="">Select</option>
-                        <option value="Filipino">Filipino</option>
-                        <option value="American">American</option>
-                        <option value="Chinese">Chinese</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Korean">Korean</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.nationality || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Civil Status</label>
-                    {isEditing ? (
-                      <select value={profile.civil_status || ''} onChange={(e) => update('civil_status', e.target.value)} className="input w-full">
-                        <option value="">Select</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Separated">Separated</option>
-                      </select>
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.civil_status || '—'}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit Profile
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Two-column layout: main content (left) + sidebar (right) */}
+          {/* On mobile (below md), sidebar stacks below main content */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Main content area - 2 columns wide on desktop */}
+            <div className="md:col-span-2">
+              <InfoCard sections={profileData.sections} isEditing={isEditing} profile={profile} update={update} />
             </div>
 
-            {/* Contact Information Card */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Contact Information</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Cellphone Number</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.cellphone_number || ''} onChange={(e) => update('cellphone_number', e.target.value)} className="input w-full" placeholder="+63 XXX XXX XXXX" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.cellphone_number || '—'}</p>
-                    )}
+            {/* Sidebar - 1 column wide on desktop, sticky positioning */}
+            <div className="md:col-span-1">
+              <div className="md:sticky md:top-6">
+                <ContactCard
+                  phone={profileData.contact.phone}
+                  email={profileData.contact.email}
+                  alternateEmail={profileData.contact.alternateEmail}
+                  actions={contactActions}
+                />
+                
+                {/* Save button */}
+                {isEditing && (
+                  <div className="mt-4 space-y-3">
+                    <button
+                      onClick={handleSave}
+                      className="w-full px-5 py-3 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Save Changes
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Email Address</label>
-                    {isEditing ? (
-                      <input type="email" value={profile.email_address || ''} onChange={(e) => update('email_address', e.target.value)} className="input w-full" placeholder="email@example.com" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.email_address || '—'}</p>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
-
-            {/* Address Card */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Address</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">House No.</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.address_house_no || ''} onChange={(e) => update('address_house_no', e.target.value)} className="input w-full" placeholder="House/Lot/Block No." />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.address_house_no || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Street</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.address_street || ''} onChange={(e) => update('address_street', e.target.value)} className="input w-full" placeholder="Street Name" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.address_street || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Barangay</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.address_barangay || ''} onChange={(e) => update('address_barangay', e.target.value)} className="input w-full" placeholder="Barangay" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.address_barangay || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">City/Municipality</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.address_city_municipality || ''} onChange={(e) => update('address_city_municipality', e.target.value)} className="input w-full" placeholder="City/Municipality" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.address_city_municipality || '—'}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Province</label>
-                    {isEditing ? (
-                      <input type="text" value={profile.address_province || ''} onChange={(e) => update('address_province', e.target.value)} className="input w-full" placeholder="Province" />
-                    ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100 py-2 px-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">{profile.address_province || '—'}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Save Button */}
-            {isEditing && (
-              <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 p-6">
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-6 py-2.5 rounded-lg font-medium border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                  >
-                    Cancel Changes
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-6 py-2.5 rounded-lg font-medium bg-brand-600 text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

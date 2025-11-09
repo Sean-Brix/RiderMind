@@ -18,13 +18,13 @@
 
 - # User-access - Admin, Employee/Staff, Admin
 
-- Report / Summary - Score Profile
+- # Report / Summary - Score Profile
 
-- Paayos ng Frontend ng Forms/ Exam/ Assessment
+- # Paayos ng Frontend ng Forms/ Exam/ Assessment
 
-- tapos huwag daw basta login yung unang bukas, make it marketing website na catchy kuno sa gagamit chuchu (nandon dapat yung footer)
+- # tapos huwag daw basta login yung unang bukas, make it marketing website na catchy kuno sa gagamit chuchu (nandon dapat yung footer)
 
-- Auto generate put Primary ID (8 digit id instead), Logo
+- # Auto generate put Primary ID (8 digit id instead), Logo
 
 - # Ilabas yung Registration for User (the user allowed to add users and admin) 
 
