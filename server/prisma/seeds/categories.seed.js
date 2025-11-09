@@ -70,8 +70,8 @@ export async function seedCategories() {
       const createMessage = `Creating: ${categoryData.name} (${categoryData.vehicleType})`;
       await animateProgress(createMessage, 500);
 
-      // All categories get all modules for now
-      const modulesToAssign = modules;
+      // All categories get all modules with randomized positions
+      const modulesToAssign = [...modules].sort(() => Math.random() - 0.5); // Shuffle modules
 
       // Create category with module assignments
       await prisma.moduleCategory.create({
@@ -80,13 +80,13 @@ export async function seedCategories() {
           modules: {
             create: modulesToAssign.map((module, index) => ({
               moduleId: module.id,
-              position: index
+              position: index // Sequential position after shuffle
             }))
           }
         }
       });
 
-      console.log(`   📚 ${modulesToAssign.length} modules assigned`.dim);
+      console.log(`   📚 ${modulesToAssign.length} modules assigned with randomized order`.dim);
       console.log(`   ${categoryData.isDefault ? '⭐ Default category' : '  '}\n`.dim);
       successCount++;
 

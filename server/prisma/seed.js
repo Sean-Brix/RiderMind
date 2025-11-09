@@ -4,10 +4,11 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import seedAccounts from './Seeds/accounts.seed.js';
-import seedModules from './Seeds/modules.seed.js';
+import seedModulesEnhanced from './Seeds/modules-enhanced.seed.js';
 import seedCategories from './Seeds/categories.seed.js';
-import seedQuizzesComplete from './Seeds/quizzes-complete.seed.js';
+import seedQuizzesEnhanced from './Seeds/quizzes-enhanced.seed.js';
 import { seedFAQs } from './Seeds/faqs.seed.js';
+import seedFeedback from './Seeds/feedback.seed.js';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -52,11 +53,12 @@ async function main() {
     await showBanner();
 
     const seedFunctions = [
-      { name: 'User Accounts', fn: seedAccounts, emoji: '👥' },
-      { name: 'Learning Modules', fn: seedModules, emoji: '📚' },
-      { name: 'Module Categories', fn: seedCategories, emoji: '🏷️' },
-      { name: 'Complete Quizzes (11 Modules)', fn: seedQuizzesComplete, emoji: '📝' },
-      { name: 'FAQs', fn: seedFAQs, emoji: '❓' }
+      { name: 'User Accounts (20 Accounts)', fn: seedAccounts, emoji: '👥' },
+      { name: 'FAQs (3-6 per Category)', fn: seedFAQs, emoji: '❓' },
+      { name: 'Learning Modules (20 Modules, 15 Slides Each)', fn: seedModulesEnhanced, emoji: '📚' },
+      { name: 'Module Categories (Randomized Order)', fn: seedCategories, emoji: '🏷️' },
+      { name: 'Quizzes (20-25 Questions, 10-15 Attempts)', fn: seedQuizzesEnhanced, emoji: '📝' },
+      { name: 'Feedback System (Comments & Reactions)', fn: seedFeedback, emoji: '💬' }
     ];
 
     let totalSuccess = 0;

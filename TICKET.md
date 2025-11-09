@@ -24,7 +24,7 @@
 
 - tapos huwag daw basta login yung unang bukas, make it marketing website na catchy kuno sa gagamit chuchu (nandon dapat yung footer)
 
-- Auto generate put Primary ID, Logo
+- Auto generate put Primary ID (8 digit id instead), Logo
 
 - # Ilabas yung Registration for User (the user allowed to add users and admin) 
 
