@@ -236,8 +236,22 @@ async function loadImageAsBlob(imageName) {
   return null;
 }
 
-function getVideoPath(videoName) {
-  return `videos/${videoName}`;
+function copyVideoToPublic(videoName) {
+  try {
+    const sourcePath = path.join(__dirname, '..', 'data', 'modules', 'videos', videoName);
+    const destPath = path.join(__dirname, '..', '..', 'public', 'videos', videoName);
+    
+    // Only copy if source exists and dest doesn't exist
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+      fs.copyFileSync(sourcePath, destPath);
+      console.log(`   📹 Copied video: ${videoName}`.dim);
+    }
+    
+    return `/videos/${videoName}`;
+  } catch (error) {
+    console.log(`   ⚠️  Could not copy video ${videoName}: ${error.message}`.yellow);
+    return null;
+  }
 }
 
 async function createSlide(moduleId, position, skillLevel, type) {
@@ -261,7 +275,8 @@ async function createSlide(moduleId, position, skillLevel, type) {
       imageMime = imageBlob.mime;
     }
   } else if (type === 'video') {
-    videoPath = getVideoPath(randomElement(availableVideos));
+    const videoName = randomElement(availableVideos);
+    videoPath = copyVideoToPublic(videoName);
   }
 
   return {
@@ -281,6 +296,13 @@ export async function seedModulesEnhanced() {
   console.log('\n' + '='.repeat(60).rainbow);
   console.log('  📚 SEEDING ENHANCED MODULES (20 Modules)'.bold.cyan);
   console.log('='.repeat(60).rainbow + '\n');
+
+  // Ensure public/videos directory exists
+  const publicVideosDir = path.join(__dirname, '..', '..', 'public', 'videos');
+  if (!fs.existsSync(publicVideosDir)) {
+    fs.mkdirSync(publicVideosDir, { recursive: true });
+    console.log('📁 Created public/videos directory'.dim);
+  }
 
   let successCount = 0;
   let skipCount = 0;

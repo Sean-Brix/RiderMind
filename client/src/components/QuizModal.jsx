@@ -772,7 +772,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
               <div className="h-full flex flex-col">
                 {/* Media Section - Only show for questions with media */}
                 {(currentQuestionData.imageMime || currentQuestionData.videoPath) && (
-                  <div className="flex-shrink-0 h-[60%] bg-neutral-900 dark:bg-neutral-950 flex items-center justify-center p-4 lg:p-6">
+                  <div className="flex-shrink-0 h-[45%] bg-neutral-900 dark:bg-neutral-950 flex items-center justify-center p-4 lg:p-6">
                     {/* Image Question */}
                     {currentQuestionData.imageMime && (
                       <div className="w-full h-full flex items-center justify-center">
@@ -823,7 +823,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                 )}
 
                 {/* Question & Answer Section */}
-                <div className={`flex flex-col ${
+                <div className={`flex flex-col overflow-hidden ${
                   currentQuestionData.imageMime || currentQuestionData.videoPath 
                     ? 'flex-1' 
                     : 'h-full justify-center'
@@ -882,7 +882,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                   )}
 
                   {/* Answer Options Section */}
-                  <div className={`flex-1 overflow-y-auto px-6 py-4 lg:px-8 lg:py-6 space-y-4 ${
+                  <div className={`flex-1 min-h-0 overflow-y-auto px-6 py-4 lg:px-8 lg:py-6 space-y-4 ${
                     currentQuestionData.imageMime || currentQuestionData.videoPath 
                       ? 'bg-neutral-50 dark:bg-neutral-900' 
                       : 'bg-white dark:bg-neutral-900 max-w-4xl mx-auto w-full'
