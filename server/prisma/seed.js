@@ -26,7 +26,7 @@ async function showBanner() {
 ║                                                            ║
 ║     🏍️  RIDERMIND DATABASE SEEDING SYSTEM 🏍️              ║
 ║                                                            ║
-║     Initializing database with sample data...             ║
+║     Initializing MOTORCYCLE TRAINING database...          ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
   `.cyan.bold;
@@ -55,9 +55,9 @@ async function main() {
     const seedFunctions = [
       { name: 'User Accounts (20 Accounts)', fn: seedAccounts, emoji: '👥' },
       { name: 'FAQs (3-6 per Category)', fn: seedFAQs, emoji: '❓' },
-      { name: 'Learning Modules (20 Modules, 15 Slides Each)', fn: seedModulesEnhanced, emoji: '📚' },
-      { name: 'Module Categories (Randomized Order)', fn: seedCategories, emoji: '🏷️' },
-      { name: 'Quizzes (20-25 Questions, 10-15 Attempts)', fn: seedQuizzesEnhanced, emoji: '📝' },
+      { name: 'Motorcycle Modules (15 Modules, 15 Slides Each)', fn: seedModulesEnhanced, emoji: '🏍️' },
+      { name: 'Categories (Motorcycle: 10 modules, Car: empty)', fn: seedCategories, emoji: '🏷️' },
+      { name: 'Motorcycle Quizzes (20-25 Questions, 10-15 Attempts)', fn: seedQuizzesEnhanced, emoji: '📝' },
       { name: 'Feedback System (Comments & Reactions)', fn: seedFeedback, emoji: '💬' }
     ];
 

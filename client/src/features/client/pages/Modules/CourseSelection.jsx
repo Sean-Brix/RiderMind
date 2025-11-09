@@ -321,21 +321,35 @@ export default function CourseSelection({ onComplete }) {
                 {skillLevels.map((skill, index) => (
                   <motion.div
                     key={skill.level}
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.15 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
                     whileHover={{ scale: 1.05, y: -8 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleSkillLevelSelect(skill.level)}
-                    className={`cursor-pointer bg-gradient-to-br ${skill.color} hover:${skill.hoverColor} rounded-2xl p-8 shadow-xl text-white transition-all transform ${
-                      selectedSkillLevel === skill.level ? 'ring-4 ring-white' : ''
-                    }`}
+                    className={`relative cursor-pointer bg-gradient-to-br ${skill.color} hover:${skill.hoverColor} rounded-2xl p-8 shadow-xl text-white transition-all`}
                   >
+                    {/* Selection Checkmark */}
+                    <AnimatePresence>
+                      {selectedSkillLevel === skill.level && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-4 -right-4 bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+                        >
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <div className="text-center">
                       <motion.div
                         className="text-6xl mb-4"
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        animate={selectedSkillLevel === skill.level ? { rotate: [0, -10, 10, 0] } : {}}
+                        transition={{ duration: 0.5 }}
                       >
                         {skill.icon}
                       </motion.div>

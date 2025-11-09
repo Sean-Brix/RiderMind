@@ -101,15 +101,24 @@ async function enrollStudentInCategory(userId, categoryId, skillLevel = 'Beginne
     }));
 
     console.log('🔍 SERVICE: Prepared', studentModules.length, 'student modules to insert');
-    console.log('🔍 SERVICE: Sample data:', studentModules[0]);
+    console.log('🔍 SERVICE: Sample data:', JSON.stringify(studentModules[0], null, 2));
 
-    // 4. Insert all records
-    const insertResult = await prisma.studentModule.createMany({
-      data: studentModules
-      // Removed skipDuplicates to see actual errors
-    });
+    // 4. Insert all records individually to better handle errors
+    const insertedModules = [];
+    for (const sm of studentModules) {
+      try {
+        const created = await prisma.studentModule.create({
+          data: sm
+        });
+        insertedModules.push(created);
+      } catch (error) {
+        console.error('❌ Failed to insert student module:', sm);
+        console.error('Error:', error.message);
+        // Continue with other modules
+      }
+    }
 
-    console.log('🔍 SERVICE: Insert result:', insertResult);
+    console.log('🔍 SERVICE: Successfully inserted', insertedModules.length, 'out of', studentModules.length, 'modules');
 
     // 5. Return the created records
     const createdModules = await prisma.studentModule.findMany({

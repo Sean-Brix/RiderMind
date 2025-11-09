@@ -70,24 +70,37 @@ export async function seedCategories() {
       const createMessage = `Creating: ${categoryData.name} (${categoryData.vehicleType})`;
       await animateProgress(createMessage, 500);
 
-      // All categories get all modules with randomized positions
-      const modulesToAssign = [...modules].sort(() => Math.random() - 0.5); // Shuffle modules
+      // Only assign modules to Motorcycle Training category
+      if (categoryData.vehicleType === 'MOTORCYCLE') {
+        // Motorcycle category gets first 10 modules with randomized positions
+        const allModules = [...modules].sort(() => Math.random() - 0.5); // Shuffle modules
+        const modulesToAssign = allModules.slice(0, 10); // Take only first 10
 
-      // Create category with module assignments
-      await prisma.moduleCategory.create({
-        data: {
-          ...categoryData,
-          modules: {
-            create: modulesToAssign.map((module, index) => ({
-              moduleId: module.id,
-              position: index // Sequential position after shuffle
-            }))
+        // Create category with module assignments
+        await prisma.moduleCategory.create({
+          data: {
+            ...categoryData,
+            modules: {
+              create: modulesToAssign.map((module, index) => ({
+                moduleId: module.id,
+                position: index // Sequential position after shuffle
+              }))
+            }
           }
-        }
-      });
+        });
 
-      console.log(`   📚 ${modulesToAssign.length} modules assigned with randomized order`.dim);
-      console.log(`   ${categoryData.isDefault ? '⭐ Default category' : '  '}\n`.dim);
+        console.log(`   📚 ${modulesToAssign.length} modules assigned with randomized order`.dim);
+        console.log(`   ${categoryData.isDefault ? '⭐ Default category' : '  '}\n`.dim);
+      } else {
+        // Car category created without modules
+        await prisma.moduleCategory.create({
+          data: categoryData
+        });
+
+        console.log(`   📦 Empty category (no modules assigned)`.dim);
+        console.log(`   ${categoryData.isDefault ? '⭐ Default category' : '  '}\n`.dim);
+      }
+
       successCount++;
 
     } catch (error) {

@@ -37,11 +37,11 @@ function randomInt(min, max) {
 const availableImages = ['1.jpg', '2.jpeg', '3.jpg', '4.jpeg', '5.jpeg', '6.jpeg', '7.jpeg', '8.jpeg', '9.jpg', '10.jpeg', '11.jpeg'];
 const availableVideos = ['1.mp4', '2.mp4', '3.mp4', '4.mp4', '5.mp4', '6.mp4', '7.mp4', '8.mp4', '9.mp4', '10.mp4', '11.mp4'];
 
-// Module titles and descriptions
+// Module titles and descriptions - MOTORCYCLE ONLY (15 modules)
 const moduleTopics = [
   {
     title: 'Basic Traffic Rules and Regulations',
-    description: 'Learn the fundamental traffic rules and regulations that every driver must know.',
+    description: 'Learn the fundamental traffic rules and regulations that every rider must know.',
     objectives: [
       'Understand basic traffic signs and their meanings',
       'Learn right-of-way rules at intersections',
@@ -60,23 +60,13 @@ const moduleTopics = [
     ]
   },
   {
-    title: 'Vehicle Pre-Operation Inspection',
-    description: 'Learn how to properly inspect your vehicle before starting your journey.',
+    title: 'Motorcycle Pre-Operation Inspection',
+    description: 'Learn how to properly inspect your motorcycle before starting your journey.',
     objectives: [
       'Check tire pressure and condition',
       'Inspect lights, signals, and mirrors',
       'Verify fluid levels and brake functionality',
       'Ensure all safety equipment is present'
-    ]
-  },
-  {
-    title: 'Defensive Driving Techniques',
-    description: 'Master defensive driving strategies to stay safe on the road.',
-    objectives: [
-      'Maintain safe following distance',
-      'Anticipate potential hazards',
-      'Practice proper scanning techniques',
-      'Handle aggressive drivers safely'
     ]
   },
   {
@@ -100,22 +90,22 @@ const moduleTopics = [
     ]
   },
   {
-    title: 'Night Driving Safety',
-    description: 'Special considerations and techniques for safe night driving.',
+    title: 'Defensive Riding Techniques',
+    description: 'Master defensive riding strategies to stay safe on the road.',
     objectives: [
-      'Adjust to reduced visibility conditions',
-      'Use headlights and signals effectively',
-      'Avoid glare from oncoming vehicles',
-      'Maintain extra vigilance for pedestrians'
+      'Maintain safe following distance',
+      'Anticipate potential hazards',
+      'Practice proper scanning techniques',
+      'Handle aggressive drivers safely'
     ]
   },
   {
     title: 'Weather Conditions and Hazards',
-    description: 'Learn to drive safely in various weather conditions.',
+    description: 'Learn to ride safely in various weather conditions.',
     objectives: [
       'Handle rain and wet road conditions',
       'Navigate through fog safely',
-      'Drive in strong winds',
+      'Ride in strong winds',
       'Avoid hydroplaning and skidding'
     ]
   },
@@ -124,89 +114,59 @@ const moduleTopics = [
     description: 'Master emergency braking techniques for critical situations.',
     objectives: [
       'Learn threshold braking technique',
-      'Understand ABS operation',
+      'Understand ABS operation on motorcycles',
       'Practice emergency stopping procedures',
       'Avoid common braking mistakes'
     ]
   },
   {
-    title: 'Parking Procedures and Techniques',
-    description: 'Learn proper parking techniques for various situations.',
-    objectives: [
-      'Master parallel parking',
-      'Perform perpendicular parking',
-      'Execute angle parking correctly',
-      'Park on hills safely'
-    ]
-  },
-  {
-    title: 'Highway Driving and Merging',
-    description: 'Learn safe practices for highway driving and merging.',
+    title: 'Highway Riding and Merging',
+    description: 'Learn safe practices for highway riding and merging.',
     objectives: [
       'Master highway entry and exit procedures',
-      'Maintain proper highway speed',
+      'Maintain proper highway speed and position',
       'Execute safe lane changes',
-      'Handle highway traffic flow'
+      'Handle highway traffic flow and wind buffeting'
     ]
   },
   {
     title: 'Intersections and Right-of-Way',
-    description: 'Understand intersection navigation and right-of-way rules.',
+    description: 'Understand intersection navigation and right-of-way rules for motorcyclists.',
     objectives: [
       'Navigate controlled intersections',
       'Handle uncontrolled intersections',
-      'Yield appropriately',
+      'Increase visibility at intersections',
       'Make safe left and right turns'
     ]
   },
   {
-    title: 'Vehicle Maintenance Basics',
-    description: 'Learn essential vehicle maintenance procedures.',
+    title: 'Motorcycle Maintenance Basics',
+    description: 'Learn essential motorcycle maintenance procedures.',
     objectives: [
       'Perform routine oil and fluid checks',
       'Inspect and maintain tire condition',
-      'Check and replace air filters',
+      'Check and adjust chain tension',
       'Understand basic engine maintenance'
     ]
   },
   {
-    title: 'Accident Prevention and Response',
-    description: 'Learn to prevent accidents and respond appropriately when they occur.',
-    objectives: [
-      'Recognize accident risk factors',
-      'Respond to vehicle emergencies',
-      'Follow proper accident reporting procedures',
-      'Provide first aid when necessary'
-    ]
-  },
-  {
     title: 'Passenger and Cargo Safety',
-    description: 'Ensure the safety of passengers and proper cargo handling.',
+    description: 'Ensure the safety of passengers and proper cargo handling on motorcycles.',
     objectives: [
-      'Secure passengers properly',
-      'Load cargo safely',
-      'Adjust driving for additional weight',
-      'Handle group riding safely'
+      'Prepare your motorcycle for a passenger',
+      'Communicate with your passenger',
+      'Load cargo safely on your motorcycle',
+      'Adjust riding for additional weight'
     ]
   },
   {
     title: 'Urban Traffic Navigation',
-    description: 'Master driving in busy urban environments.',
+    description: 'Master riding in busy urban environments.',
     objectives: [
-      'Navigate congested traffic',
+      'Navigate congested traffic safely',
       'Handle pedestrians and cyclists',
       'Use proper lane positioning',
       'Manage stress in traffic'
-    ]
-  },
-  {
-    title: 'Rural and Mountain Road Driving',
-    description: 'Learn techniques for driving on rural and mountain roads.',
-    objectives: [
-      'Navigate curves and switchbacks',
-      'Handle steep inclines and declines',
-      'Manage narrow roads',
-      'Deal with unpaved surfaces'
     ]
   },
   {
@@ -220,54 +180,44 @@ const moduleTopics = [
     ]
   },
   {
-    title: 'Advanced Riding Techniques',
-    description: 'Master advanced riding skills for experienced riders.',
+    title: 'Protective Gear and Safety Equipment',
+    description: 'Learn about essential motorcycle safety gear and equipment.',
     objectives: [
-      'Perform advanced cornering techniques',
-      'Handle high-speed situations',
-      'Execute emergency maneuvers',
-      'Optimize riding efficiency'
-    ]
-  },
-  {
-    title: 'Environmental Awareness and Eco-Driving',
-    description: 'Learn eco-friendly driving practices and environmental awareness.',
-    objectives: [
-      'Reduce fuel consumption',
-      'Minimize environmental impact',
-      'Practice efficient acceleration',
-      'Understand emission standards'
+      'Choose proper helmet and protective clothing',
+      'Understand gear ratings and certifications',
+      'Maintain your safety equipment',
+      'Dress appropriately for weather conditions'
     ]
   }
 ];
 
-// Slide content templates
+// Slide content templates - MOTORCYCLE FOCUSED
 const slideContentTemplates = {
   beginner: [
-    'This is an introduction to fundamental concepts that every beginner should understand.',
-    'Let\'s start with the basic principles that form the foundation of safe driving.',
-    'Understanding these core concepts is essential before moving to advanced topics.',
-    'This lesson covers the essential information you need to know as you begin.',
-    'These are the fundamental skills that will serve as your foundation.',
-    'Master these basics before progressing to more complex techniques.',
-    'This introductory content will help you build a strong foundation.',
-    'Learn the essential principles that every driver must understand.',
-    'These basic concepts are crucial for your development as a safe driver.',
-    'Start your journey with these fundamental lessons and principles.'
+    'This is an introduction to fundamental motorcycle riding concepts that every beginner should understand.',
+    'Let\'s start with the basic principles that form the foundation of safe motorcycle riding.',
+    'Understanding these core concepts is essential before moving to advanced riding topics.',
+    'This lesson covers the essential information you need to know as you begin your riding journey.',
+    'These are the fundamental riding skills that will serve as your foundation.',
+    'Master these motorcycle basics before progressing to more complex techniques.',
+    'This introductory content will help you build a strong foundation as a motorcyclist.',
+    'Learn the essential principles that every motorcycle rider must understand.',
+    'These basic concepts are crucial for your development as a safe rider.',
+    'Start your riding journey with these fundamental lessons and principles.'
   ],
   intermediate: [
-    'Now that you understand the basics, let\'s explore more advanced concepts.',
-    'This intermediate lesson builds upon your foundational knowledge.',
-    'Apply your basic skills to more complex scenarios and situations.',
-    'Develop your abilities further with these intermediate techniques.',
-    'Enhance your skills with these more sophisticated methods.',
-    'Progress your understanding with these intermediate-level concepts.'
+    'Now that you understand the basics, let\'s explore more advanced riding concepts.',
+    'This intermediate lesson builds upon your foundational motorcycle knowledge.',
+    'Apply your basic riding skills to more complex scenarios and situations.',
+    'Develop your riding abilities further with these intermediate techniques.',
+    'Enhance your motorcycle skills with these more sophisticated methods.',
+    'Progress your understanding with these intermediate-level riding concepts.'
   ],
   expert: [
-    'Master these advanced techniques to become an expert driver.',
-    'This expert-level content requires strong foundational knowledge.',
-    'Apply advanced principles to handle the most challenging situations.',
-    'Refine your mastery with these expert-level techniques and strategies.'
+    'Master these advanced techniques to become an expert motorcycle rider.',
+    'This expert-level content requires strong foundational riding knowledge.',
+    'Apply advanced riding principles to handle the most challenging situations.',
+    'Refine your mastery with these expert-level motorcycle techniques and strategies.'
   ]
 };
 
