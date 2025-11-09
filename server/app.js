@@ -11,6 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const viewPath = path.join(__dirname, './View');
 const publicPath = path.join(__dirname, './public');
+const buildPath = path.join(__dirname, './public/build');
 
 
 // Request Handler
@@ -22,6 +23,8 @@ app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use(cookieParser());
 app.use(express.static(viewPath));
 app.use('/public', express.static(publicPath));
+// Serve React build
+app.use(express.static(buildPath));
 
 app.use(
     cors({
@@ -35,9 +38,9 @@ app.use(
 import index from './API/index.js';
 app.use('/api', index);
 
-// Fallback handler for non-API routes (optional)
-app.use((req, res) => {
-    res.status(404).json({ error: 'Not Found' });
+// Serve React app for all non-API routes (must be after API routes)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
 });
 
 export default app;
