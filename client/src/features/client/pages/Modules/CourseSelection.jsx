@@ -31,25 +31,32 @@ export default function CourseSelection({ onComplete }) {
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    // Animate to next step after brief delay
+    // Show terms modal after vehicle selection
     setTimeout(() => {
-      setStep('skillLevel');
+      setShowTermsModal(true);
     }, 600);
   };
 
   const handleSkillLevelSelect = (skillLevel) => {
     setSelectedSkillLevel(skillLevel);
-    // Show terms and conditions modal instead of enrolling immediately
-    setShowTermsModal(true);
+    // Enroll immediately after skill level selection (terms already accepted)
+    handleEnrollment(skillLevel);
   };
 
-  const handleAcceptTerms = async () => {
+  const handleAcceptTerms = () => {
     if (!termsAccepted) {
       alert('Please accept the terms and conditions to continue.');
       return;
     }
 
     setShowTermsModal(false);
+    // Move to skill level selection after accepting terms
+    setTimeout(() => {
+      setStep('skillLevel');
+    }, 300);
+  };
+
+  const handleEnrollment = async (skillLevel) => {
     setIsCreating(true);
 
     try {
@@ -71,7 +78,7 @@ export default function CourseSelection({ onComplete }) {
         },
         body: JSON.stringify({
           categoryId: selectedCategory.id,
-          skillLevel: selectedSkillLevel
+          skillLevel: skillLevel || selectedSkillLevel
         })
       });
 
@@ -291,6 +298,7 @@ export default function CourseSelection({ onComplete }) {
                 onClick={() => {
                   setStep('category');
                   setSelectedCategory(null);
+                  setTermsAccepted(false);
                 }}
                 className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-brand-600 dark:hover:text-brand-400 font-bold mb-8 transition-colors"
                 whileHover={{ x: -5 }}

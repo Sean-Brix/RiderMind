@@ -69,8 +69,8 @@ export default function Landing() {
 
   const benefits = [
     {
-      title: 'LTO-Validated Lessons',
-      description: 'All content is validated by certified driving instructors and aligned with Philippine Traffic Code (RA 4136).',
+      title: 'Expert-Validated Lessons',
+      description: 'All content is validated by certified driving instructors and aligned with Philippine traffic laws and best practices.',
     },
     {
       title: 'Exclusive Access',
@@ -90,7 +90,7 @@ export default function Landing() {
     { value: '20+', label: 'Learning Modules' },
     { value: '300+', label: 'Interactive Lessons' },
     { value: '500+', label: 'Practice Questions' },
-    { value: '100%', label: 'LTO Compliant' },
+    { value: '95%+', label: 'Success Rate' },
   ];
 
   const testimonials = [
@@ -98,7 +98,7 @@ export default function Landing() {
       name: 'Maria Santos',
       role: 'New Driver',
       avatar: 'MS',
-      comment: 'The interactive lessons made learning traffic rules so much easier! I passed my LTO exam on the first try.',
+      comment: 'The interactive lessons made learning traffic rules so much easier! I passed my driving test on the first try.',
       rating: 5,
     },
     {
@@ -123,7 +123,7 @@ export default function Landing() {
     'Unlimited quiz attempts',
     'Progress tracking dashboard',
     'Digital certification upon completion',
-    'LTO-validated content',
+    'Professionally curated content',
     'Mobile-friendly platform',
     '24/7 learning access',
   ];
@@ -148,7 +148,7 @@ export default function Landing() {
               <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span className="font-semibold">LTO-Certified Driving Education</span>
+              <span className="font-semibold">Expert-Led Driving Education</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
@@ -157,7 +157,7 @@ export default function Landing() {
             </h1>
             <p className="text-xl md:text-2xl text-brand-100 mb-10 max-w-3xl mx-auto leading-relaxed">
               Join thousands of Filipinos who've mastered road safety with our interactive, 
-              LTO-validated e-learning platform. Start your journey to becoming a confident driver today.
+              professionally designed e-learning platform. Start your journey to becoming a confident driver today.
             </p>
 
             {/* CTA Buttons */}
@@ -200,7 +200,7 @@ export default function Landing() {
                 <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm font-medium">LTO Validated</span>
+                <span className="text-sm font-medium">Comprehensive Curriculum</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -296,7 +296,7 @@ export default function Landing() {
               <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-8 leading-relaxed">
                 Rider Mind revolutionizes road safety education with interactive 2D animations, 
                 real-world scenarios, and bite-sized lessons. Whether you're learning to drive a 
-                motorcycle or car, our LTO-validated platform ensures you're fully prepared for the road ahead.
+                motorcycle or car, our professionally designed platform ensures you're fully prepared for the road ahead.
               </p>
               <div className="space-y-6">
                 {benefits.map((benefit, index) => (
@@ -519,7 +519,7 @@ export default function Landing() {
             </h2>
             <p className="text-xl md:text-2xl text-brand-100 mb-10 max-w-3xl mx-auto leading-relaxed">
               Join thousands of Filipinos who've mastered road safety. Start your free course today 
-              and get certified by LTO-validated instructors.
+              and get certified by our expert instructors.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -584,7 +584,7 @@ export default function Landing() {
                 <h3 className="text-white font-bold text-xl">Rider Mind</h3>
               </div>
               <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-                Your trusted partner in road safety education. LTO-validated courses for motorcycles and cars.
+                Your trusted partner in road safety education. Professional courses for motorcycles and cars.
               </p>
               <div className="flex gap-3">
                 <a href="#" className="w-10 h-10 bg-neutral-800 hover:bg-brand-600 rounded-lg flex items-center justify-center transition-colors">
@@ -712,7 +712,7 @@ export default function Landing() {
                 <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>LTO-Certified · RA 4136 Compliant</span>
+                <span>Quality Assured · Safety Focused</span>
               </div>
             </div>
           </div>

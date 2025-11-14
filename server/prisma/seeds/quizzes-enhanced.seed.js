@@ -153,7 +153,7 @@ function createTrueFalseQuestion() {
 }
 
 async function createQuizForModule(module, position) {
-  const numQuestions = randomInt(20, 25);
+  const numQuestions = 10; // Fixed at 10 questions
   const hasMedia = Math.random() > 0.7; // 30% chance to have media questions
   
   // Determine time limit (120 seconds to unlimited)

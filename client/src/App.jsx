@@ -16,6 +16,7 @@ import FAQs from './features/admin/pages/FAQs/FAQs';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
 import Register from './features/auth/pages/Register.jsx';
+import DevTools from './features/client/pages/DevTools.jsx';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -48,6 +49,7 @@ function App() {
       <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/profile" element={<Protected><Profile /></Protected>} />
+      <Route path="/dev" element={<Protected><DevTools /></Protected>} />
       <Route path="/admin" element={<Protected role="ADMIN"><AdminLayout /></Protected>}>
         <Route index element={<Navigate to="/admin/analytics" replace />} />
         <Route path="analytics" element={<Analytics />} />

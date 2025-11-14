@@ -253,8 +253,8 @@ export default function Quizes() {
       setIsSaving(true);
       
       // Validate minimum question count
-      if (quizForm.questions.length < 20) {
-        alert(`Each quiz must have at least 20 questions. Currently: ${quizForm.questions.length}/20 questions.`);
+      if (quizForm.questions.length < 10) {
+        alert(`Each quiz must have at least 10 questions. Currently: ${quizForm.questions.length}/10 questions.`);
         setIsSaving(false);
         return;
       }
@@ -954,9 +954,9 @@ export default function Quizes() {
                               </button>
                               <button
                                 onClick={handleSaveQuiz}
-                                disabled={!quizForm.title || quizForm.questions.length === 0 || quizForm.questions.length < 20 || isSaving}
+                                disabled={!quizForm.title || quizForm.questions.length === 0 || quizForm.questions.length < 10 || isSaving}
                                 className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                                title={quizForm.questions.length < 20 && quizForm.questions.length > 0 ? `Add ${20 - quizForm.questions.length} more question(s) to reach the minimum of 20 questions` : ''}
+                                title={quizForm.questions.length < 10 && quizForm.questions.length > 0 ? `Add ${10 - quizForm.questions.length} more question(s) to reach the minimum of 10 questions` : ''}
                               >
                                 {isSaving ? 'Saving...' : 'Save Quiz'}
                               </button>
@@ -1111,11 +1111,11 @@ export default function Quizes() {
                             </h3>
                             {isEditing && (
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                quizForm.questions.length >= 20 
+                                quizForm.questions.length >= 10 
                                   ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
                                   : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
                               }`}>
-                                {quizForm.questions.length}/20 questions
+                                {quizForm.questions.length}/10 questions
                               </span>
                             )}
                           </div>
@@ -1134,7 +1134,7 @@ export default function Quizes() {
                         </div>
 
                         {/* Warning banner when below minimum questions */}
-                        {isEditing && quizForm.questions.length > 0 && quizForm.questions.length < 20 && (
+                        {isEditing && quizForm.questions.length > 0 && quizForm.questions.length < 10 && (
                           <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                             <div className="flex items-start gap-3">
                               <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1145,7 +1145,7 @@ export default function Quizes() {
                                   Minimum questions required
                                 </p>
                                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                                  You need to add {20 - quizForm.questions.length} more question(s) to reach the minimum of 20 questions per quiz.
+                                  You need to add {10 - quizForm.questions.length} more question(s) to reach the minimum of 10 questions per quiz.
                                 </p>
                               </div>
                             </div>
