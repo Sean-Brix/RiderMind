@@ -3,7 +3,7 @@
  * POST /api/dev/generate-modules
  */
 
-import { seedModules } from '../../prisma/Seeds/modules.seed.js';
+import { seedModules } from '../../prisma/seeds/modules.seed.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

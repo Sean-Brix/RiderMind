@@ -3,12 +3,12 @@ import colors from 'colors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import seedAccounts from './Seeds/accounts.seed.js';
-import seedCategories from './Seeds/categories.seed.js';
-import { seedFAQs } from './Seeds/faqs.seed.js';
-import seedFeedback from './Seeds/feedback.seed.js';
-import { seedModules } from './Seeds/modules.seed.js';
-import { seedQuizzes } from './Seeds/quizzes.seed.js';
+import seedAccounts from './seeds/accounts.seed.js';
+import seedCategories from './seeds/categories.seed.js';
+import { seedFAQs } from './seeds/faqs.seed.js';
+import seedFeedback from './seeds/feedback.seed.js';
+import { seedModules } from './seeds/modules.seed.js';
+import { seedQuizzes } from './seeds/quizzes.seed.js';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);

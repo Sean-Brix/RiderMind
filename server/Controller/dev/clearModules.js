@@ -3,7 +3,7 @@
  * DELETE /api/dev/clear-modules
  */
 
-import { clearModules } from '../../prisma/Seeds/modules.seed.js';
+import { clearModules } from '../../prisma/seeds/modules.seed.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

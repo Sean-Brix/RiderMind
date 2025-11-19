@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { seedQuizzes } from '../../prisma/Seeds/quizzes.seed.js';
+import { seedQuizzes } from '../../prisma/seeds/quizzes.seed.js';
 
 const prisma = new PrismaClient();
 
