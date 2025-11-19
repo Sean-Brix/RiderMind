@@ -21,14 +21,24 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
   // Reset quiz when modal opens with new quiz
   useEffect(() => {
-    if (isOpen && quiz && quizState === 'start') {
+    if (isOpen && quiz) {
       console.log('🔄 Resetting quiz to initial state');
+      
+      // Force close all other modals first to prevent stacking
+      // Find all modal backdrop elements and trigger their close handlers
+      const modalBackdrops = document.querySelectorAll('[data-modal-type="lesson"]');
+      modalBackdrops.forEach(backdrop => {
+        const closeButton = backdrop.querySelector('[aria-label="Close modal"]');
+        if (closeButton) closeButton.click();
+      });
+      
       setCurrentQuestion(0);
       setAnswers({});
       setQuizResult(null);
       setIsSubmitting(false);
       setShowConfirmSubmit(false);
       setShowEndQuizConfirm(false);
+      setQuizState('start');
       
       if (quiz.timeLimit) {
         setTimeRemaining(quiz.timeLimit);

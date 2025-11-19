@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import QuizModal from './QuizModalNew';
 import { submitQuizAttempt } from '../services/studentModuleService';
+import './Lesson/LessonModal.css';
 
 /**
  * LessonModal - Dynamic component for displaying module lessons with slides
@@ -361,77 +362,98 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+      data-modal-type="lesson"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-500 ${
         isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)'
+      }}
       onClick={onClose}
     >
       {/* Modal Container - Hide when showing quiz/results with no slides */}
       {!hideMainModal && (
         <div
-          className={`relative w-full max-w-7xl h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 ${
-            isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          className={`relative w-full max-w-[95vw] h-[92vh] bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-700 ease-out ${
+            isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-8'
           }`}
+          style={{
+            border: '1px solid rgba(var(--brand-rgb, 59, 130, 246), 0.2)'
+          }}
           onClick={(e) => e.stopPropagation()}
         >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 z-20 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg transition-all hover:scale-110 group"
+          className="absolute top-6 left-6 z-20 p-3 bg-white/95 dark:bg-neutral-800/95 hover:bg-white dark:hover:bg-neutral-800 rounded-xl shadow-xl transition-all hover:scale-110 hover:rotate-90 duration-300 group backdrop-blur-sm border border-neutral-200 dark:border-neutral-700"
           aria-label="Close modal"
         >
           <svg
-            className="w-6 h-6 text-neutral-700 dark:text-neutral-300 group-hover:text-brand-600"
+            className="w-6 h-6 text-neutral-700 dark:text-neutral-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
         {/* Main Content Area */}
         <div className="flex h-full">
           {/* Left Side - Slide Content (70%) */}
-          <div className="flex-1 flex flex-col bg-neutral-50 dark:bg-neutral-800 relative">
+          <div className="flex-1 flex flex-col bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 relative">
             {/* Progress Bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-200 dark:bg-neutral-700 z-10">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-neutral-200 dark:bg-neutral-700 z-10">
               <div
-                className="h-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-300"
+                className="h-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700 transition-all duration-500 ease-out shadow-lg shadow-brand-500/50"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
             {/* Slide Header */}
-            <div className="pt-8 px-8 pb-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
-              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+            <div className="pt-10 px-8 pb-5 bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-2">
                 {lesson.title}
               </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Slide {currentSlide + 1} of {totalSlides}
-              </p>
+              <div className="flex items-center gap-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-brand-100 dark:bg-brand-900/30 rounded-full text-sm font-bold text-brand-700 dark:text-brand-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Slide {currentSlide + 1} / {totalSlides}
+                </span>
+                <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+                  {Math.round(progress)}% Complete
+                </span>
+              </div>
             </div>
 
             {/* Slide Content with Animation */}
             <>
             <div className="flex-1 relative overflow-hidden">
+              {/* Decorative corner accents */}
+              <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-brand-500/10 to-transparent rounded-br-[100px] pointer-events-none z-10" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-brand-500/10 to-transparent rounded-tl-[100px] pointer-events-none z-10" />
+              
               <div
-                className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+                className={`absolute inset-0 transition-all duration-700 ease-out ${
                   isAnimating
                     ? direction === 'next'
-                      ? '-translate-x-full opacity-0'
-                      : 'translate-x-full opacity-0'
-                    : 'translate-x-0 opacity-100'
+                      ? '-translate-x-full opacity-0 scale-95'
+                      : 'translate-x-full opacity-0 scale-95'
+                    : 'translate-x-0 opacity-100 scale-100'
                 }`}
               >
                 {currentSlideData && (
                   <div className="h-full flex items-center justify-center p-8">
                     {/* Video Slide */}
                     {currentSlideData.type === 'video' && (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full flex items-center justify-center animate-fadeIn">
                         <video
                           key={currentSlide}
-                          className="w-full h-full object-contain rounded-xl shadow-2xl"
+                          className="w-full h-full object-contain rounded-2xl shadow-2xl ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all"
                           controls
                           autoPlay
                           src={currentSlideData.content}
@@ -443,29 +465,26 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
 
                     {/* Image Slide */}
                     {currentSlideData.type === 'image' && (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full flex items-center justify-center animate-fadeIn">
                         {imageError === currentSlide ? (
-                          <div className="text-center p-8">
-                            <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
-                              <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="text-center p-12 animate-fadeIn">
+                            <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 rounded-2xl mb-6 shadow-xl">
+                              <svg className="w-16 h-16 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                               </svg>
                             </div>
-                            <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
+                            <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-3">
                               Image Not Available
                             </h3>
-                            <p className="text-red-700 dark:text-red-300 mb-4">
-                              This slide's image could not be loaded.
-                            </p>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 font-mono bg-neutral-100 dark:bg-neutral-800 p-3 rounded">
-                              {currentSlideData.content}
+                            <p className="text-red-700 dark:text-red-300 mb-4 text-lg">
+                              This slide&apos;s image could not be loaded.
                             </p>
                           </div>
                         ) : (
                           <img
                             src={currentSlideData.content}
                             alt={currentSlideData.title}
-                            className="w-full h-full object-contain rounded-xl shadow-2xl"
+                            className="w-full h-full object-contain rounded-2xl shadow-2xl ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all hover:scale-[1.02] duration-300"
                             onError={(e) => {
                               console.error('Image failed to load:', {
                                 src: currentSlideData.content,
@@ -491,13 +510,13 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
 
                     {/* Text Content Slide */}
                     {currentSlideData.type === 'text' && (
-                      <div className="w-full h-full flex items-center justify-center p-12">
-                        <div className="max-w-3xl">
-                          <h3 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+                      <div className="w-full h-full flex items-center justify-center p-12 animate-fadeIn">
+                        <div className="max-w-4xl bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-12 border border-neutral-200 dark:border-neutral-700">
+                          <h3 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-8">
                             {currentSlideData.title}
                           </h3>
-                          <div className="prose prose-lg dark:prose-invert">
-                            <p className="text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                          <div className="prose prose-xl dark:prose-invert max-w-none">
+                            <p className="text-2xl text-neutral-800 dark:text-neutral-200 leading-relaxed whitespace-pre-wrap">
                               {currentSlideData.content}
                             </p>
                           </div>
@@ -510,31 +529,31 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
             </div>
 
             {/* Navigation Controls - Only show when viewing slides */}
-            <div className="p-6 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between gap-4">
+            <div className="p-8 bg-gradient-to-t from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between gap-6">
                 {/* Previous Button */}
                 <button
                   onClick={handlePrevSlide}
                   disabled={currentSlide === 0 || isAnimating}
-                  className="px-6 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="group px-8 py-4 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg hover:shadow-xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-600 disabled:hover:border-neutral-200 dark:disabled:hover:border-neutral-700"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Previous
+                  <span>Previous</span>
                 </button>
 
                 {/* Page Indicators */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-neutral-800 rounded-xl shadow-lg border-2 border-neutral-200 dark:border-neutral-700">
                   {lesson.slides?.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
                       disabled={isAnimating}
-                      className={`transition-all duration-300 rounded-full ${
+                      className={`transition-all duration-500 rounded-full ${
                         index === currentSlide
-                          ? 'w-8 h-3 bg-brand-600'
-                          : 'w-3 h-3 bg-neutral-300 dark:bg-neutral-600 hover:bg-brand-400'
+                          ? 'w-12 h-4 bg-gradient-to-r from-brand-500 to-brand-600 shadow-lg shadow-brand-500/50'
+                          : 'w-4 h-4 bg-neutral-300 dark:bg-neutral-600 hover:bg-brand-400 hover:scale-110'
                       }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
@@ -545,23 +564,29 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                 {currentSlide === totalSlides - 1 ? (
                   <button 
                     onClick={handleMarkAsDone}
-                    disabled={isCompleting}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                    disabled={isCompleting || isAnimating}
+                    className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    {lesson.quiz ? 'Take Quiz' : 'Mark as Done'}
+                    <span>{lesson.quiz ? 'Take Quiz' : 'Mark as Done'}</span>
+                    {isCompleting && (
+                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
                   </button>
                 ) : (
                   <button
                     onClick={handleNextSlide}
                     disabled={isAnimating}
-                    className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="group px-8 py-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
                   >
-                    Next
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <span>Next</span>
+                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 )}
