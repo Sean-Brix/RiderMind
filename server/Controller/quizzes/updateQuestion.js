@@ -18,8 +18,10 @@ export default async function updateQuestion(req, res) {
       explanation,
       caseSensitive,
       shuffleOptions,
-      imageData,
+      imageUrl,
+      imagePath,
       imageMime,
+      videoUrl,
       videoPath
     } = req.body;
 
@@ -45,8 +47,10 @@ export default async function updateQuestion(req, res) {
     if (explanation !== undefined) updateData.explanation = explanation;
     if (caseSensitive !== undefined) updateData.caseSensitive = caseSensitive;
     if (shuffleOptions !== undefined) updateData.shuffleOptions = shuffleOptions;
-    if (imageData !== undefined) updateData.imageData = imageData;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (imagePath !== undefined) updateData.imagePath = imagePath;
     if (imageMime !== undefined) updateData.imageMime = imageMime;
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
     if (videoPath !== undefined) updateData.videoPath = videoPath;
 
     // Update question

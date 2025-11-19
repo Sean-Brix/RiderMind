@@ -3,7 +3,7 @@
  * Generates quizzes for all modules with random questions using sample media
  */
 
-import fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -107,44 +107,88 @@ function getRandom(array) {
 }
 
 /**
+ * Load media URLs from firebase-urls.json
+ */
+function loadMediaMap() {
+  const jsonPath = path.join(__dirname, '../data/modules/firebase-urls.json');
+  
+  try {
+    const jsonData = readFileSync(jsonPath, 'utf8');
+    const data = JSON.parse(jsonData);
+    
+    const mediaMap = { images: [], videos: [] };
+    
+    // Convert images to array
+    Object.keys(data.images).forEach((filename) => {
+      const imageData = data.images[filename];
+      mediaMap.images.push({
+        url: imageData.url.url || imageData.url,
+        path: imageData.url.path || imageData.path,
+        mime: 'image/jpeg'
+      });
+    });
+    
+    // Convert videos to array
+    Object.keys(data.videos).forEach((filename) => {
+      const videoData = data.videos[filename];
+      mediaMap.videos.push({
+        url: videoData.url.url || videoData.url,
+        path: videoData.url.path || videoData.path
+      });
+    });
+    
+    return mediaMap;
+  } catch (error) {
+    console.error('❌ Error loading firebase-urls.json for quizzes');
+    console.error('   Please run: node scripts/uploadSampleMedia.js');
+    return { images: [], videos: [] };
+  }
+}
+
+/**
  * Get random media reference
  */
-function getRandomMedia(imageCount, videoCount) {
+function getRandomMedia(mediaMap) {
   const hasMedia = Math.random() > 0.3; // 70% chance of having media
   
-  if (!hasMedia) return null;
+  if (!hasMedia || (mediaMap.images.length === 0 && mediaMap.videos.length === 0)) {
+    return null;
+  }
   
   const useImage = Math.random() > 0.5; // 50/50 chance between image and video
   
-  if (useImage) {
-    const imageNum = Math.floor(Math.random() * imageCount) + 1;
-    const imageName = `${imageNum}.${imageNum === 1 || imageNum === 3 || imageNum === 9 ? 'jpg' : 'jpeg'}`;
+  if (useImage && mediaMap.images.length > 0) {
+    const imageIndex = Math.floor(Math.random() * mediaMap.images.length);
+    const media = mediaMap.images[imageIndex];
     return {
       type: 'image',
-      url: `https://firebasestorage.googleapis.com/sample-media/images/${imageName}`,
-      path: `sample-media/images/${imageName}`,
-      mime: 'image/jpeg'
+      url: media.url,
+      path: media.path,
+      mime: media.mime
     };
-  } else {
-    const videoNum = Math.floor(Math.random() * videoCount) + 1;
+  } else if (mediaMap.videos.length > 0) {
+    const videoIndex = Math.floor(Math.random() * mediaMap.videos.length);
+    const media = mediaMap.videos[videoIndex];
     return {
       type: 'video',
-      url: `https://firebasestorage.googleapis.com/sample-media/videos/${videoNum}.mp4`,
-      path: `sample-media/videos/${videoNum}.mp4`
+      url: media.url,
+      path: media.path
     };
   }
+  
+  return null;
 }
 
 /**
  * Generate a random question
  */
-function generateQuestion(index, imageCount, videoCount) {
+function generateQuestion(index, mediaMap) {
   // Randomly select question type
   const typeIndex = Math.floor(Math.random() * questionTemplates.length);
   const template = questionTemplates[typeIndex];
   
   const questionIndex = Math.floor(Math.random() * template.templates.length);
-  const media = getRandomMedia(imageCount, videoCount);
+  const media = getRandomMedia(mediaMap);
   
   const baseQuestion = {
     type: template.type,
@@ -208,6 +252,16 @@ export async function seedQuizzes(prisma) {
   console.log('📝 Starting quiz seeding...');
 
   try {
+    // Load media map from firebase-urls.json
+    console.log('📁 Loading media from firebase-urls.json...');
+    const mediaMap = loadMediaMap();
+    
+    if (mediaMap.images.length === 0 && mediaMap.videos.length === 0) {
+      console.log('⚠️  No media found. Questions will be created without media.');
+    } else {
+      console.log(`✅ Loaded ${mediaMap.images.length} images and ${mediaMap.videos.length} videos`);
+    }
+
     // Get all modules
     const modules = await prisma.module.findMany({
       select: { id: true, title: true }
@@ -220,10 +274,7 @@ export async function seedQuizzes(prisma) {
 
     console.log(`📚 Found ${modules.length} modules`);
 
-    const imageCount = 11; // Number of sample images
-    const videoCount = 11; // Number of sample videos
     const minQuestionsPerQuiz = 10;
-
     let createdCount = 0;
 
     for (const module of modules) {
@@ -234,7 +285,7 @@ export async function seedQuizzes(prisma) {
       const questions = [];
 
       for (let i = 0; i < questionCount; i++) {
-        questions.push(generateQuestion(i, imageCount, videoCount));
+        questions.push(generateQuestion(i, mediaMap));
       }
 
       // Create quiz with questions
@@ -282,9 +333,10 @@ export async function clearQuizzes(prisma) {
 
   try {
     // Delete in correct order due to foreign key constraints
-    await prisma.quizOption.deleteMany({});
-    await prisma.quizQuestion.deleteMany({});
+    await prisma.quizAnswer.deleteMany({});
     await prisma.quizAttempt.deleteMany({});
+    await prisma.quizQuestionOption.deleteMany({});
+    await prisma.quizQuestion.deleteMany({});
     await prisma.quiz.deleteMany({});
 
     console.log('✅ All quizzes cleared successfully');

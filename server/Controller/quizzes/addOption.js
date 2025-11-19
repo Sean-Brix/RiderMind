@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 /**
  * Add an option to a question
  * Params: questionId
- * Body: { optionText, isCorrect, position, imageData, imageMime }
+ * Body: { optionText, isCorrect, position, imageUrl, imagePath, imageMime }
  */
 export default async function addOption(req, res) {
   try {
     const { questionId } = req.params;
-    const { optionText, isCorrect, position, imageData, imageMime } = req.body;
+    const { optionText, isCorrect, position, imageUrl, imagePath, imageMime } = req.body;
 
     // Validation
     if (!optionText) {
@@ -44,7 +44,8 @@ export default async function addOption(req, res) {
         optionText,
         isCorrect: isCorrect || false,
         position: position || question._count.options + 1,
-        imageData: imageData || null,
+        imageUrl: imageUrl || null,
+        imagePath: imagePath || null,
         imageMime: imageMime || null
       }
     });

@@ -121,15 +121,18 @@ export default async function updateQuiz(req, res) {
             position: q.position,
             caseSensitive: q.caseSensitive || false,
             shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
-            imageData: q.imageData || null,
+            imageUrl: q.imageUrl || null,
+            imagePath: q.imagePath || null,
             imageMime: q.imageMime || null,
+            videoUrl: q.videoUrl || null,
             videoPath: q.videoPath || null,
             options: {
               create: (q.options || []).map((opt, optIndex) => ({
                 optionText: opt.optionText,
                 isCorrect: opt.isCorrect === true,
                 position: opt.position || optIndex + 1,
-                imageData: opt.imageData || null,
+                imageUrl: opt.imageUrl || null,
+                imagePath: opt.imagePath || null,
                 imageMime: opt.imageMime || null
               }))
             }
@@ -150,8 +153,10 @@ export default async function updateQuiz(req, res) {
               position: q.position || (questionsToUpdate.length + qIndex + 1),
               caseSensitive: q.caseSensitive || false,
               shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
-              imageData: q.imageData || null,
+              imageUrl: q.imageUrl || null,
+              imagePath: q.imagePath || null,
               imageMime: q.imageMime || null,
+              videoUrl: q.videoUrl || null,
               videoPath: q.videoPath || null
             };
 
@@ -162,7 +167,8 @@ export default async function updateQuiz(req, res) {
                   optionText: opt.optionText,
                   isCorrect: opt.isCorrect === true,
                   position: opt.position || optIndex + 1,
-                  imageData: opt.imageData || null,
+                  imageUrl: opt.imageUrl || null,
+                  imagePath: opt.imagePath || null,
                   imageMime: opt.imageMime || null
                 }))
               };

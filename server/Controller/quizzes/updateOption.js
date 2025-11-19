@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 /**
  * Update an option
  * Params: optionId
- * Body: { optionText, isCorrect, position, imageData, imageMime }
+ * Body: { optionText, isCorrect, position, imageUrl, imagePath, imageMime }
  */
 export default async function updateOption(req, res) {
   try {
     const { optionId } = req.params;
-    const { optionText, isCorrect, position, imageData, imageMime } = req.body;
+    const { optionText, isCorrect, position, imageUrl, imagePath, imageMime } = req.body;
 
     // Check if option exists
     const existing = await prisma.quizQuestionOption.findUnique({
@@ -30,7 +30,8 @@ export default async function updateOption(req, res) {
     if (optionText !== undefined) updateData.optionText = optionText;
     if (isCorrect !== undefined) updateData.isCorrect = isCorrect;
     if (position !== undefined) updateData.position = position;
-    if (imageData !== undefined) updateData.imageData = imageData;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (imagePath !== undefined) updateData.imagePath = imagePath;
     if (imageMime !== undefined) updateData.imageMime = imageMime;
 
     // Update option

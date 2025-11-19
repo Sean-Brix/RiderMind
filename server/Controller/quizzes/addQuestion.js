@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 /**
  * Add a question to a quiz
  * Params: quizId
- * Body: { type, question, points, explanation, caseSensitive, shuffleOptions, imageData, imageMime, videoPath, options[] }
+ * Body: { type, question, points, explanation, caseSensitive, shuffleOptions, imageUrl, imagePath, imageMime, videoUrl, videoPath, options[] }
  */
 export default async function addQuestion(req, res) {
   try {
@@ -18,8 +18,10 @@ export default async function addQuestion(req, res) {
       explanation,
       caseSensitive,
       shuffleOptions,
-      imageData,
+      imageUrl,
+      imagePath,
       imageMime,
+      videoUrl,
       videoPath,
       options
     } = req.body;
@@ -59,8 +61,10 @@ export default async function addQuestion(req, res) {
       explanation: explanation || null,
       caseSensitive: caseSensitive || false,
       shuffleOptions: shuffleOptions !== undefined ? shuffleOptions : false,
-      imageData: imageData || null,
+      imageUrl: imageUrl || null,
+      imagePath: imagePath || null,
       imageMime: imageMime || null,
+      videoUrl: videoUrl || null,
       videoPath: videoPath || null
     };
 
@@ -71,7 +75,8 @@ export default async function addQuestion(req, res) {
           optionText: opt.optionText,
           isCorrect: opt.isCorrect || false,
           position: opt.position || index + 1,
-          imageData: opt.imageData || null,
+          imageUrl: opt.imageUrl || null,
+          imagePath: opt.imagePath || null,
           imageMime: opt.imageMime || null
         }))
       };
