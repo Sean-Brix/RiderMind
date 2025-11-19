@@ -74,26 +74,26 @@ const imageFileFilter = (req, file, cb) => {
 };
 
 /**
- * Multer upload instance for quiz videos
+ * Multer upload instance for quiz videos (memory storage for Firebase)
  */
 export const uploadQuizVideo = multer({
-  storage: quizVideoStorage,
+  storage: multer.memoryStorage(),
   fileFilter: videoFileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB
   }
-});
+}).single('video');
 
 /**
- * Multer upload instance for quiz images
+ * Multer upload instance for quiz images (memory storage for Firebase)
  */
 export const uploadQuizImage = multer({
-  storage: quizImageStorage,
+  storage: multer.memoryStorage(),
   fileFilter: imageFileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB
   }
-});
+}).single('image');
 
 /**
  * Delete quiz video file from filesystem

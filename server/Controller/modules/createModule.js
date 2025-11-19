@@ -60,9 +60,11 @@ export default async function createModule(req, res) {
           content: slide.content || '',
           description: slide.description || null,
           position: slide.position || index + 1,
-          imageData: slide.imageData || null,
-          imageMime: slide.imageMime || null,
-          videoPath: slide.videoPath || null
+            imageUrl: slide.imageUrl || null,
+            imagePath: slide.imagePath || null,
+            imageMime: slide.imageMime || null,
+            videoUrl: slide.videoUrl || null,
+            videoPath: slide.videoPath || null
         }))
       };
     }
@@ -84,8 +86,11 @@ export default async function createModule(req, res) {
             description: true,
             position: true,
             videoPath: true,
+            imageUrl: true,
+            imagePath: true,
             imageMime: true,
-            imageData: false // Don't return BLOB in response
+            videoUrl: true,
+            videoPath: true
           }
         }
       }

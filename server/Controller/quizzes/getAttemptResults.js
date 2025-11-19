@@ -40,8 +40,10 @@ export default async function getAttemptResults(req, res) {
                 question: true,
                 points: true,
                 explanation: true,
-                imageData: false,
+                imageUrl: true,
+                imagePath: true,
                 imageMime: true,
+                videoUrl: true,
                 videoPath: true
               }
             },

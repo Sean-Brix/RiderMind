@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { streamVideo } from '../../utils/videoHandler.js';
+import { getFileUrlCached } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
@@ -41,10 +41,19 @@ export default async function streamSlideVideo(req, res) {
       });
     }
 
-    console.log('✅ Streaming video:', slide.videoPath);
-    
-    // Use the streamVideo utility
-    streamVideo(slide.videoPath, req, res);
+    // If we have a cloud path, resolve a cached download URL and redirect client to it
+    try {
+      const url = slide.videoUrl || await getFileUrlCached(slide.videoPath);
+      if (!url) {
+        return res.status(404).json({ success: false, error: 'Video URL not available' });
+      }
+
+      // Redirect client to Firebase Storage download URL (supports ranged requests)
+      return res.redirect(url);
+    } catch (err) {
+      console.error('Error resolving video URL for slide:', slideId, err);
+      return res.status(500).json({ success: false, error: 'Failed to resolve video URL', message: err.message });
+    }
 
   } catch (error) {
     console.error('❌ Error streaming video:', error);

@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { validateImage } from '../../utils/imageHandler.js';
+import { uploadFile, deleteFile, generateUniqueFilename } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
 /**
- * Upload image to a slide using FormData
+ * Upload image to a slide using FormData (Firebase Storage)
  * Uses multer middleware to handle image upload
  * Params: slideId
  * Files: image (from multer)
@@ -47,20 +49,31 @@ export default async function uploadSlideImage(req, res) {
     const imageBuffer = req.file.buffer;
     const imageMime = req.file.mimetype;
 
-    console.log('Uploading image to slide:', {
+    console.log('Uploading image to slide (to Firebase):', {
       slideId,
       imageMime,
       size: imageBuffer.length,
       originalName: req.file.originalname
     });
 
-    // Update slide with image data
+    // Build a storage path: modules/{moduleId}/slides/{slideId}/{timestamp}-{filename}
+    const filename = generateUniqueFilename(req.file.originalname);
+    const storagePath = `modules/${slide.moduleId || 'unknown'}/slides/${slideId}/${filename}`;
+
+    // Upload to Firebase
+    const result = await uploadFile(imageBuffer, storagePath, imageMime);
+
+    // Clear any cached URL for previous path
+    if (slide.imagePath) clearFileCache(slide.imagePath);
+
+    // Update slide with cloud references
     const updatedSlide = await prisma.moduleSlide.update({
       where: { id: parseInt(slideId) },
       data: {
-        imageData: imageBuffer,
+        imageUrl: result.url,
+        imagePath: result.path,
         imageMime: imageMime,
-        type: 'image' // Ensure type is image
+        type: 'image'
       },
       select: {
         id: true,
@@ -70,7 +83,8 @@ export default async function uploadSlideImage(req, res) {
         description: true,
         position: true,
         imageMime: true,
-        imageData: false, // Don't return the blob
+        imageUrl: true,
+        imagePath: true,
         createdAt: true,
         updatedAt: true
       }

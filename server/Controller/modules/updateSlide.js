@@ -60,9 +60,11 @@ export default async function updateSlide(req, res) {
         description: true,
         position: true,
         skillLevel: true,
-        videoPath: true,
+        imageUrl: true,
+        imagePath: true,
         imageMime: true,
-        imageData: false,
+        videoUrl: true,
+        videoPath: true,
         createdAt: true,
         updatedAt: true
       }

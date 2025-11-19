@@ -1,0 +1,160 @@
+{
+  "images": {
+    "1.jpg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F1.jpg?alt=media&token=bbfeda38-4b21-4aa4-97a7-b547855bf0ce",
+        "path": "sample-media/images/1.jpg"
+      },
+      "path": "sample-media/images/1.jpg"
+    },
+    "10.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F10.jpeg?alt=media&token=aee0bf83-cbc1-467c-8671-cc33dcd59b19",
+        "path": "sample-media/images/10.jpeg"
+      },
+      "path": "sample-media/images/10.jpeg"
+    },
+    "11.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F11.jpeg?alt=media&token=a1001ec8-5613-44ff-bec7-3bc5024acae4",
+        "path": "sample-media/images/11.jpeg"
+      },
+      "path": "sample-media/images/11.jpeg"
+    },
+    "2.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F2.jpeg?alt=media&token=dd667049-06f3-427f-8025-5daef4dc320b",
+        "path": "sample-media/images/2.jpeg"
+      },
+      "path": "sample-media/images/2.jpeg"
+    },
+    "3.jpg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F3.jpg?alt=media&token=6c3e43e9-6d7c-4846-ac35-1755ea4d67dc",
+        "path": "sample-media/images/3.jpg"
+      },
+      "path": "sample-media/images/3.jpg"
+    },
+    "4.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F4.jpeg?alt=media&token=6a204b33-61f7-4218-b929-e66e9dc0f09f",
+        "path": "sample-media/images/4.jpeg"
+      },
+      "path": "sample-media/images/4.jpeg"
+    },
+    "5.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F5.jpeg?alt=media&token=b1abedef-fdb9-4f36-b05e-b009acf3b532",
+        "path": "sample-media/images/5.jpeg"
+      },
+      "path": "sample-media/images/5.jpeg"
+    },
+    "6.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F6.jpeg?alt=media&token=993de917-792c-4b42-ae54-8ecbdc85f739",
+        "path": "sample-media/images/6.jpeg"
+      },
+      "path": "sample-media/images/6.jpeg"
+    },
+    "7.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F7.jpeg?alt=media&token=7829be65-9bc0-4f7a-9e34-28529f9980f7",
+        "path": "sample-media/images/7.jpeg"
+      },
+      "path": "sample-media/images/7.jpeg"
+    },
+    "8.jpeg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F8.jpeg?alt=media&token=cf4a0f64-102f-4591-821e-57efa0f4a6fc",
+        "path": "sample-media/images/8.jpeg"
+      },
+      "path": "sample-media/images/8.jpeg"
+    },
+    "9.jpg": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fimages%2F9.jpg?alt=media&token=d82bc33e-d93d-4717-a385-6dede0e115de",
+        "path": "sample-media/images/9.jpg"
+      },
+      "path": "sample-media/images/9.jpg"
+    }
+  },
+  "videos": {
+    "1.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F1.mp4?alt=media&token=ad806fd7-5f26-4703-acd8-d887d2e2aa2b",
+        "path": "sample-media/videos/1.mp4"
+      },
+      "path": "sample-media/videos/1.mp4"
+    },
+    "10.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F10.mp4?alt=media&token=5edbadb3-94de-4f24-bb77-f7b098e5f860",
+        "path": "sample-media/videos/10.mp4"
+      },
+      "path": "sample-media/videos/10.mp4"
+    },
+    "11.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F11.mp4?alt=media&token=428bf661-af41-4494-b199-4209be86cfd7",
+        "path": "sample-media/videos/11.mp4"
+      },
+      "path": "sample-media/videos/11.mp4"
+    },
+    "2.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F2.mp4?alt=media&token=5717cabb-4cfb-49ff-a9f5-c714784f3c2a",
+        "path": "sample-media/videos/2.mp4"
+      },
+      "path": "sample-media/videos/2.mp4"
+    },
+    "3.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F3.mp4?alt=media&token=f93ab479-794b-438f-bf11-de60ab79907a",
+        "path": "sample-media/videos/3.mp4"
+      },
+      "path": "sample-media/videos/3.mp4"
+    },
+    "4.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F4.mp4?alt=media&token=edf797c1-53dd-4572-8e22-ba5235454ee7",
+        "path": "sample-media/videos/4.mp4"
+      },
+      "path": "sample-media/videos/4.mp4"
+    },
+    "5.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F5.mp4?alt=media&token=4b0c0ae4-061e-4c42-ada5-7ec3a55aba2d",
+        "path": "sample-media/videos/5.mp4"
+      },
+      "path": "sample-media/videos/5.mp4"
+    },
+    "6.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F6.mp4?alt=media&token=d6c0d3fb-3c91-421e-9248-c18ccd4d8238",
+        "path": "sample-media/videos/6.mp4"
+      },
+      "path": "sample-media/videos/6.mp4"
+    },
+    "7.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F7.mp4?alt=media&token=d83d9778-978c-445a-b159-5d4c074a8f9c",
+        "path": "sample-media/videos/7.mp4"
+      },
+      "path": "sample-media/videos/7.mp4"
+    },
+    "8.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F8.mp4?alt=media&token=52cb1c0d-a188-4b7d-a339-aecb105576da",
+        "path": "sample-media/videos/8.mp4"
+      },
+      "path": "sample-media/videos/8.mp4"
+    },
+    "9.mp4": {
+      "url": {
+        "url": "https://firebasestorage.googleapis.com/v0/b/ridermind-dev/o/sample-media%2Fvideos%2F9.mp4?alt=media&token=a3e9b3a4-f4ec-4c6e-aa85-cc2357b64e70",
+        "path": "sample-media/videos/9.mp4"
+      },
+      "path": "sample-media/videos/9.mp4"
+    }
+  }
+}

@@ -1,364 +1,296 @@
-import { PrismaClient } from '@prisma/client';
-import colors from 'colors';
-import { readFileSync, existsSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const prisma = new PrismaClient();
-
-// Get the directory path for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Paths
-const QUIZ_IMAGES_DIR = join(__dirname, '..', 'data', 'quizzes', 'images');
-
-// Animation helpers
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-let spinnerIndex = 0;
-
-async function animateProgress(message, duration = 600) {
-  const steps = Math.floor(duration / 100);
-  for (let i = 0; i < steps; i++) {
-    process.stdout.write(`\r${spinner[spinnerIndex]} ${message}`.cyan);
-    spinnerIndex = (spinnerIndex + 1) % spinner.length;
-    await sleep(100);
-  }
-  process.stdout.write(`\r✓ ${message}`.green + '\n');
-}
-
 /**
- * Process quiz image file if exists
- * @param {string} imageName - Image filename
- * @returns {Object|null} - { data: Buffer, mime: string } or null
+ * Quiz Seeds
+ * Generates quizzes for all modules with random questions using sample media
  */
-function processQuizImage(imageName) {
-  if (!imageName) return null;
 
-  const imagePath = join(QUIZ_IMAGES_DIR, imageName);
-  
-  if (!existsSync(imagePath)) {
-    return null;
-  }
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-  const imageBuffer = readFileSync(imagePath);
-  const ext = imageName.split('.').pop().toLowerCase();
-  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  return {
-    data: imageBuffer,
-    mime: mimeType
-  };
-}
-
-// Sample quiz data for each module
-const quizzesData = [
+// Question templates with variety
+const questionTemplates = [
   {
-    title: 'Road Safety Fundamentals Quiz',
-    moduleIndex: 1,
-    description: 'Test your knowledge on basic road safety principles',
-    instructions: 'Answer all questions to the best of your ability. You need 70% to pass.',
-    passingScore: 70,
-    timeLimit: 15,
-    shuffleQuestions: true,
-    questions: [
-      {
-        type: 'MULTIPLE_CHOICE',
-        question: 'What does a red traffic light mean?',
-        points: 2,
-        position: 1,
-        shuffleOptions: true,
-        options: [
-          { text: 'Stop completely', isCorrect: true, position: 1 },
-          { text: 'Slow down', isCorrect: false, position: 2 },
-          { text: 'Proceed with caution', isCorrect: false, position: 3 },
-          { text: 'Speed up', isCorrect: false, position: 4 }
-        ]
-      },
-      {
-        type: 'TRUE_FALSE',
-        question: 'You should always wear a helmet when riding a motorcycle.',
-        points: 1,
-        position: 2,
-        options: [
-          { text: 'True', isCorrect: true, position: 1 },
-          { text: 'False', isCorrect: false, position: 2 }
-        ]
-      },
-      {
-        type: 'MULTIPLE_CHOICE',
-        question: 'What is the minimum safe following distance in good weather?',
-        description: 'Consider the two-second rule.',
-        points: 2,
-        position: 3,
-        shuffleOptions: true,
-        options: [
-          { text: 'One car length', isCorrect: false, position: 1 },
-          { text: 'Two seconds', isCorrect: true, position: 2 },
-          { text: 'Five seconds', isCorrect: false, position: 3 },
-          { text: 'Ten meters', isCorrect: false, position: 4 }
-        ]
-      },
-      {
-        type: 'IDENTIFICATION',
-        question: 'What shape is a STOP sign?',
-        points: 2,
-        position: 4,
-        caseSensitive: false,
-        options: [
-          { text: 'octagon', isCorrect: true, position: 1 },
-          { text: 'Octagon', isCorrect: true, position: 2 },
-          { text: 'OCTAGON', isCorrect: true, position: 3 }
-        ]
-      },
-      {
-        type: 'MULTIPLE_ANSWER',
-        question: 'Which of the following are required safety equipment for motorcycles? (Select all that apply)',
-        points: 3,
-        position: 5,
-        shuffleOptions: false,
-        options: [
-          { text: 'Helmet', isCorrect: true, position: 1 },
-          { text: 'Working headlight', isCorrect: true, position: 2 },
-          { text: 'Horn', isCorrect: true, position: 3 },
-          { text: 'Air conditioning', isCorrect: false, position: 4 },
-          { text: 'Rearview mirror', isCorrect: true, position: 5 }
-        ]
-      }
-    ]
+    type: 'MULTIPLE_CHOICE',
+    templates: [
+      "What is the most important safety equipment for motorcycle riding?",
+      "Which technique is essential for maintaining control during cornering?",
+      "What should you check before every ride?",
+      "How do you properly adjust your mirrors?",
+      "What is the correct body position for high-speed riding?",
+      "When should you replace your motorcycle tires?",
+      "What is the purpose of counter-steering?",
+      "How often should you check your chain tension?",
+      "What is the recommended following distance on a highway?",
+      "Which braking technique is most effective in emergency situations?"
+    ],
+    options: [
+      ["Full-face helmet", "Half helmet", "No helmet needed", "Baseball cap"],
+      ["Proper throttle control", "Ignoring speed limits", "One-handed riding", "Standing on pegs"],
+      ["Tire pressure and tread", "Radio station", "Phone battery", "Favorite playlist"],
+      ["By guessing", "While riding at speed", "While stationary", "Never adjust them"],
+      ["Leaning forward", "Sitting upright", "Standing up", "Lying on tank"],
+      ["Every 10 years", "When completely bald", "At tread wear indicators", "Never"],
+      ["To confuse other riders", "To steer at low speeds", "To initiate turns at speed", "To stop quickly"],
+      ["Every 10,000 miles", "Every 500-1000 miles", "Once a year", "Never"],
+      ["1 car length", "2-3 seconds", "10 feet", "As close as possible"],
+      ["Both brakes together", "Only rear brake", "Only front brake", "No brakes, downshift"]
+    ],
+    correctIndex: 0
   },
   {
-    title: 'Traffic Signs and Signals Quiz',
-    moduleIndex: 2,
-    description: 'Identify and understand common traffic signs and signals',
-    instructions: 'Match each sign with its correct meaning. Passing score: 70%',
-    passingScore: 70,
-    timeLimit: 20,
-    shuffleQuestions: true,
-    questions: [
-      {
-        type: 'MULTIPLE_CHOICE',
-        question: 'What does a yellow traffic light mean?',
-        points: 2,
-        position: 1,
-        options: [
-          { text: 'Go faster to beat the red light', isCorrect: false, position: 1 },
-          { text: 'Prepare to stop', isCorrect: true, position: 2 },
-          { text: 'Stop immediately', isCorrect: false, position: 3 },
-          { text: 'Proceed normally', isCorrect: false, position: 4 }
-        ]
-      },
-      {
-        type: 'TRUE_FALSE',
-        question: 'A triangular sign usually indicates a warning.',
-        points: 1,
-        position: 2,
-        options: [
-          { text: 'True', isCorrect: true, position: 1 },
-          { text: 'False', isCorrect: false, position: 2 }
-        ]
-      },
-      {
-        type: 'MULTIPLE_CHOICE',
-        question: 'What does a circular sign with a red border typically indicate?',
-        points: 2,
-        position: 3,
-        options: [
-          { text: 'Information', isCorrect: false, position: 1 },
-          { text: 'Warning', isCorrect: false, position: 2 },
-          { text: 'Prohibition or restriction', isCorrect: true, position: 3 },
-          { text: 'Direction', isCorrect: false, position: 4 }
-        ]
-      },
-      {
-        type: 'IDENTIFICATION',
-        question: 'What color are most regulatory signs?',
-        points: 2,
-        position: 4,
-        caseSensitive: false,
-        options: [
-          { text: 'red', isCorrect: true, position: 1 },
-          { text: 'Red', isCorrect: true, position: 2 },
-          { text: 'RED', isCorrect: true, position: 3 },
-          { text: 'red and white', isCorrect: true, position: 4 }
-        ]
-      },
-      {
-        type: 'TRUE_FALSE',
-        question: 'You can turn right on a red light after coming to a complete stop, unless otherwise posted.',
-        points: 2,
-        position: 5,
-        options: [
-          { text: 'True', isCorrect: false, position: 1 },
-          { text: 'False', isCorrect: true, position: 2 }
-        ]
-      }
-    ]
+    type: 'TRUE_FALSE',
+    templates: [
+      "You should always ride with your headlight on during the day for visibility.",
+      "It's safer to ride in the center of your lane at all times.",
+      "You should avoid braking while cornering if possible.",
+      "Loud pipes save lives is scientifically proven.",
+      "You should check your blind spots before changing lanes.",
+      "Riding in the rain requires the same technique as dry conditions.",
+      "A full-face helmet provides the best protection.",
+      "You can text at red lights if you're careful.",
+      "Practicing emergency braking is an important safety skill.",
+      "You should grip the handlebars tightly at all times."
+    ],
+    correctAnswer: [true, false, true, false, true, false, true, false, true, false]
   },
   {
-    title: 'Defensive Driving Techniques Quiz',
-    moduleIndex: 3,
-    description: 'Master defensive driving strategies',
-    instructions: 'Complete all questions. You need 70% to pass.',
-    passingScore: 70,
-    timeLimit: 15,
-    shuffleQuestions: true,
-    questions: [
-      {
-        type: 'MULTIPLE_CHOICE',
-        question: 'What is the most important aspect of defensive driving?',
-        points: 2,
-        position: 1,
-        options: [
-          { text: 'Driving fast to avoid hazards', isCorrect: false, position: 1 },
-          { text: 'Anticipating potential dangers', isCorrect: true, position: 2 },
-          { text: 'Following closely to save fuel', isCorrect: false, position: 3 },
-          { text: 'Using your horn frequently', isCorrect: false, position: 4 }
-        ]
-      },
-      {
-        type: 'TRUE_FALSE',
-        question: 'Scanning 12-15 seconds ahead helps you identify potential hazards early.',
-        points: 1,
-        position: 2,
-        options: [
-          { text: 'True', isCorrect: true, position: 1 },
-          { text: 'False', isCorrect: false, position: 2 }
-        ]
-      },
-      {
-        type: 'MULTIPLE_ANSWER',
-        question: 'Which techniques are part of defensive driving? (Select all that apply)',
-        points: 3,
-        position: 3,
-        options: [
-          { text: 'Maintaining safe following distance', isCorrect: true, position: 1 },
-          { text: 'Checking blind spots', isCorrect: true, position: 2 },
-          { text: 'Aggressive lane changing', isCorrect: false, position: 3 },
-          { text: 'Staying alert and focused', isCorrect: true, position: 4 },
-          { text: 'Using turn signals', isCorrect: true, position: 5 }
-        ]
-      },
-      {
-        type: 'IDENTIFICATION',
-        question: 'What is the recommended following distance in seconds during rain?',
-        points: 2,
-        position: 4,
-        caseSensitive: false,
-        options: [
-          { text: '4', isCorrect: true, position: 1 },
-          { text: 'four', isCorrect: true, position: 2 },
-          { text: '4 seconds', isCorrect: true, position: 3 }
-        ]
-      }
+    type: 'IDENTIFICATION',
+    templates: [
+      "What is the name of the safety technique where you press the handlebars in the direction opposite to where you want to turn?",
+      "What do the letters ATGATT stand for in motorcycle safety?",
+      "What is the name of the optimal path through a corner?",
+      "What is the safety check you perform before each ride called?",
+      "What is the hand signal for slowing down or stopping?",
+      "What gear should you be in when stopped at a light?",
+      "What is the blind spot behind a vehicle called?",
+      "What is the recommended tire pressure unit?",
+      "What does MSF stand for in motorcycle training?",
+      "What is the protective layer between the rider and road called?"
+    ],
+    correctAnswers: [
+      "Counter-steering",
+      "All The Gear All The Time",
+      "Racing line",
+      "Pre-ride inspection",
+      "Left arm down",
+      "First gear",
+      "No zone",
+      "PSI",
+      "Motorcycle Safety Foundation",
+      "Safety gear"
     ]
   }
 ];
 
-export async function seedQuizzes() {
-  console.log('\n' + '='.repeat(60).rainbow);
-  console.log('  📝 SEEDING QUIZZES'.bold.green);
-  console.log('='.repeat(60).rainbow + '\n');
+// Additional question content for variety
+const descriptionTemplates = [
+  "This is an essential safety concept every rider should know.",
+  "Understanding this can help prevent accidents.",
+  "This knowledge is crucial for safe motorcycle operation.",
+  "Mastering this skill improves your riding confidence.",
+  "This is a fundamental principle of motorcycle safety.",
+  "Knowing this can save your life on the road.",
+  "This technique is used by professional riders.",
+  "Understanding this helps you make better riding decisions.",
+  "This is important for maintaining your motorcycle.",
+  "This knowledge is essential for passing your riding test."
+];
 
-  let successCount = 0;
-  let skipCount = 0;
-  let questionCount = 0;
-  let optionCount = 0;
+/**
+ * Get random element from array
+ */
+function getRandom(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
 
-  // Get all modules
-  const modules = await prisma.module.findMany({
-    orderBy: { position: 'asc' }
-  });
+/**
+ * Get random media reference
+ */
+function getRandomMedia(imageCount, videoCount) {
+  const hasMedia = Math.random() > 0.3; // 70% chance of having media
+  
+  if (!hasMedia) return null;
+  
+  const useImage = Math.random() > 0.5; // 50/50 chance between image and video
+  
+  if (useImage) {
+    const imageNum = Math.floor(Math.random() * imageCount) + 1;
+    const imageName = `${imageNum}.${imageNum === 1 || imageNum === 3 || imageNum === 9 ? 'jpg' : 'jpeg'}`;
+    return {
+      type: 'image',
+      url: `https://firebasestorage.googleapis.com/sample-media/images/${imageName}`,
+      path: `sample-media/images/${imageName}`,
+      mime: 'image/jpeg'
+    };
+  } else {
+    const videoNum = Math.floor(Math.random() * videoCount) + 1;
+    return {
+      type: 'video',
+      url: `https://firebasestorage.googleapis.com/sample-media/videos/${videoNum}.mp4`,
+      path: `sample-media/videos/${videoNum}.mp4`
+    };
+  }
+}
 
-  if (modules.length === 0) {
-    console.log('⚠️  No modules found. Please seed modules first.'.yellow);
-    return { success: 0, skipped: 0 };
+/**
+ * Generate a random question
+ */
+function generateQuestion(index, imageCount, videoCount) {
+  // Randomly select question type
+  const typeIndex = Math.floor(Math.random() * questionTemplates.length);
+  const template = questionTemplates[typeIndex];
+  
+  const questionIndex = Math.floor(Math.random() * template.templates.length);
+  const media = getRandomMedia(imageCount, videoCount);
+  
+  const baseQuestion = {
+    type: template.type,
+    question: template.templates[questionIndex],
+    description: getRandom(descriptionTemplates),
+    points: Math.random() > 0.7 ? 2 : 1, // 30% chance of 2 points
+    position: index + 1,
+    shuffleOptions: Math.random() > 0.5
+  };
+
+  // Add media if generated
+  if (media) {
+    if (media.type === 'image') {
+      baseQuestion.imageUrl = media.url;
+      baseQuestion.imagePath = media.path;
+      baseQuestion.imageMime = media.mime;
+    } else {
+      baseQuestion.videoUrl = media.url;
+      baseQuestion.videoPath = media.path;
+    }
   }
 
-  for (const quizData of quizzesData) {
-    const { questions, moduleIndex, ...quizInfo } = quizData;
-
-    try {
-      // Find the module by position (moduleIndex)
-      const module = modules[moduleIndex - 1];
-      
-      if (!module) {
-        console.log(`⚠️  Module ${moduleIndex} not found. Skipping quiz.`.yellow);
-        skipCount++;
-        continue;
-      }
-
-      // Check if quiz already exists for this module
-      const existing = await prisma.quiz.findFirst({
-        where: { 
-          moduleId: module.id,
-          title: quizInfo.title
+  // Generate options based on type
+  if (template.type === 'MULTIPLE_CHOICE') {
+    const optionSet = template.options[questionIndex];
+    baseQuestion.options = {
+      create: optionSet.map((text, idx) => ({
+        optionText: text,
+        isCorrect: idx === template.correctIndex,
+        position: idx + 1
+      }))
+    };
+  } else if (template.type === 'TRUE_FALSE') {
+    const isTrue = template.correctAnswer[questionIndex];
+    baseQuestion.options = {
+      create: [
+        { optionText: 'True', isCorrect: isTrue, position: 1 },
+        { optionText: 'False', isCorrect: !isTrue, position: 2 }
+      ]
+    };
+  } else if (template.type === 'IDENTIFICATION') {
+    baseQuestion.caseSensitive = false;
+    baseQuestion.options = {
+      create: [
+        {
+          optionText: template.correctAnswers[questionIndex],
+          isCorrect: true,
+          position: 1
         }
-      });
+      ]
+    };
+  }
 
-      if (existing) {
-        console.log(`⏭️  Skipping: ${quizInfo.title}`.yellow);
-        skipCount++;
-        continue;
+  return baseQuestion;
+}
+
+/**
+ * Seed quizzes for all modules
+ */
+export async function seedQuizzes(prisma) {
+  console.log('📝 Starting quiz seeding...');
+
+  try {
+    // Get all modules
+    const modules = await prisma.module.findMany({
+      select: { id: true, title: true }
+    });
+
+    if (modules.length === 0) {
+      console.log('⚠️  No modules found. Please seed modules first.');
+      return { success: false, message: 'No modules found' };
+    }
+
+    console.log(`📚 Found ${modules.length} modules`);
+
+    const imageCount = 11; // Number of sample images
+    const videoCount = 11; // Number of sample videos
+    const minQuestionsPerQuiz = 10;
+
+    let createdCount = 0;
+
+    for (const module of modules) {
+      console.log(`\n📝 Creating quiz for: ${module.title}`);
+
+      // Generate 10-15 questions per quiz for variety
+      const questionCount = minQuestionsPerQuiz + Math.floor(Math.random() * 6);
+      const questions = [];
+
+      for (let i = 0; i < questionCount; i++) {
+        questions.push(generateQuestion(i, imageCount, videoCount));
       }
 
-      // Animate quiz creation
-      const createMessage = `Creating: ${quizInfo.title} (Module ${moduleIndex})`;
-      await animateProgress(createMessage, 700);
-
-      // Create quiz with questions and options
-      await prisma.quiz.create({
+      // Create quiz with questions
+      const quiz = await prisma.quiz.create({
         data: {
-          ...quizInfo,
           moduleId: module.id,
+          title: `${module.title} Assessment`,
+          description: `Test your knowledge of ${module.title.toLowerCase()}. This quiz covers key concepts and safety practices.`,
+          instructions: "Read each question carefully. Some questions may include images or videos to help illustrate the concept. Choose the best answer for each question.",
+          passingScore: 70,
+          timeLimit: questionCount * 60, // 60 seconds per question
+          shuffleQuestions: true,
+          showResults: true,
           questions: {
-            create: questions.map((q) => {
-              const { options, ...questionData } = q;
-              
-              return {
-                ...questionData,
-                options: {
-                  create: options.map((opt) => ({
-                    optionText: opt.text,
-                    isCorrect: opt.isCorrect,
-                    position: opt.position
-                  }))
-                }
-              };
-            })
+            create: questions
+          }
+        },
+        include: {
+          questions: {
+            include: {
+              options: true
+            }
           }
         }
       });
 
-      const totalQuestions = questions.length;
-      const totalOptions = questions.reduce((sum, q) => sum + q.options.length, 0);
-      
-      console.log(`   ❓ ${totalQuestions} questions`.dim);
-      console.log(`   ✓ ${totalOptions} options`.dim);
-      console.log(`   ⏱️  Time limit: ${quizInfo.timeLimit} minutes`.dim);
-      console.log(`   🎯 Passing score: ${quizInfo.passingScore}%\n`.dim);
-      
-      questionCount += totalQuestions;
-      optionCount += totalOptions;
-      successCount++;
-
-    } catch (error) {
-      console.log(`✗ Error creating ${quizInfo.title}: ${error.message}`.red);
-      console.log(`   ${error.stack}`.dim);
+      console.log(`  ✓ Created quiz with ${quiz.questions.length} questions`);
+      console.log(`  ✓ Questions with media: ${quiz.questions.filter(q => q.imageUrl || q.videoUrl).length}`);
+      createdCount++;
     }
+
+    console.log(`\n✅ Quiz seeding completed! Created ${createdCount} quizzes`);
+    return { success: true, count: createdCount };
+  } catch (error) {
+    console.error('❌ Error seeding quizzes:', error);
+    throw error;
   }
-
-  console.log('\n' + '─'.repeat(60).gray);
-  console.log(`📊 Results:`.bold);
-  console.log(`   ✓ Created: ${successCount} quizzes`.green);
-  console.log(`   ❓ Total questions: ${questionCount}`.cyan);
-  console.log(`   ✓ Total options: ${optionCount}`.magenta);
-  console.log(`   ⏭️  Skipped: ${skipCount} quizzes`.yellow);
-  console.log('─'.repeat(60).gray + '\n');
-
-  return { success: successCount, skipped: skipCount };
 }
 
-export default seedQuizzes;
+/**
+ * Clear all quizzes
+ */
+export async function clearQuizzes(prisma) {
+  console.log('🗑️  Clearing all quizzes...');
+
+  try {
+    // Delete in correct order due to foreign key constraints
+    await prisma.quizOption.deleteMany({});
+    await prisma.quizQuestion.deleteMany({});
+    await prisma.quizAttempt.deleteMany({});
+    await prisma.quiz.deleteMany({});
+
+    console.log('✅ All quizzes cleared successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error clearing quizzes:', error);
+    throw error;
+  }
+}

@@ -1,210 +1,284 @@
-import { PrismaClient } from '@prisma/client';
-import colors from 'colors';
-import { readFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+/**
+ * Module Seeds
+ * Generates sample modules with slides using Firebase Storage media
+ * 
+ * Prerequisites:
+ * 1. Run `node scripts/uploadSampleMedia.js` first to upload media to Firebase
+ * 2. This will create firebase-urls.json with all media URLs
+ */
+
+import { readFileSync } from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import crypto from 'crypto';
 
-const prisma = new PrismaClient();
-
-// Get the directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-// Paths
-const MODULE_DATA_PATH = join(__dirname, '..', 'data', 'modules', 'module.json');
-const IMAGES_DIR = join(__dirname, '..', 'data', 'modules', 'images');
-const VIDEOS_DIR = join(__dirname, '..', 'data', 'modules', 'videos');
-const PUBLIC_VIDEOS_DIR = join(__dirname, '..', '..', 'public', 'videos');
-
-// Ensure public videos directory exists
-if (!existsSync(PUBLIC_VIDEOS_DIR)) {
-  mkdirSync(PUBLIC_VIDEOS_DIR, { recursive: true });
-}
-
-// Animation helpers
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-let spinnerIndex = 0;
-
-async function animateProgress(message, duration = 1000) {
-  const steps = Math.floor(duration / 100);
-  for (let i = 0; i < steps; i++) {
-    process.stdout.write(`\r${spinner[spinnerIndex]} ${message}`.cyan);
-    spinnerIndex = (spinnerIndex + 1) % spinner.length;
-    await sleep(100);
+const moduleTemplates = [
+  {
+    title: "Mastering Motorcycle Safety",
+    description: "Essential safety techniques and best practices for riders",
+    skillLevel: "Beginner",
+    objectives: [
+      "Understand proper riding gear and equipment",
+      "Learn defensive riding techniques",
+      "Master pre-ride safety checks"
+    ]
+  },
+  {
+    title: "Advanced Cornering Techniques",
+    description: "Develop skills for navigating turns with confidence and control",
+    skillLevel: "Intermediate",
+    objectives: [
+      "Perfect body positioning in corners",
+      "Learn throttle control through turns",
+      "Understand racing lines and apex points"
+    ]
+  },
+  {
+    title: "Urban Riding Strategies",
+    description: "Navigate city traffic safely and efficiently",
+    skillLevel: "Beginner",
+    objectives: [
+      "Master lane positioning in traffic",
+      "Learn to anticipate driver behavior",
+      "Practice emergency braking techniques"
+    ]
+  },
+  {
+    title: "Track Day Preparation",
+    description: "Get ready for your first track experience",
+    skillLevel: "Expert",
+    objectives: [
+      "Understand track etiquette and rules",
+      "Optimize bike setup for track riding",
+      "Learn racing lines and passing zones"
+    ]
+  },
+  {
+    title: "Motorcycle Maintenance Basics",
+    description: "Essential maintenance skills every rider should know",
+    skillLevel: "Beginner",
+    objectives: [
+      "Perform basic maintenance checks",
+      "Learn oil change procedures",
+      "Understand chain maintenance"
+    ]
+  },
+  {
+    title: "Weather Riding Techniques",
+    description: "Adapt your riding for various weather conditions",
+    skillLevel: "Intermediate",
+    objectives: [
+      "Master wet weather riding",
+      "Handle crosswinds safely",
+      "Prepare for cold weather riding"
+    ]
+  },
+  {
+    title: "Group Riding Fundamentals",
+    description: "Safe and enjoyable group riding practices",
+    skillLevel: "Beginner",
+    objectives: [
+      "Learn group riding formations",
+      "Understand hand signals",
+      "Practice group communication"
+    ]
+  },
+  {
+    title: "Emergency Maneuvers",
+    description: "Critical skills for avoiding accidents",
+    skillLevel: "Intermediate",
+    objectives: [
+      "Master emergency braking",
+      "Learn swerve techniques",
+      "Practice panic situation responses"
+    ]
+  },
+  {
+    title: "Long Distance Touring",
+    description: "Plan and execute successful motorcycle tours",
+    skillLevel: "Intermediate",
+    objectives: [
+      "Plan efficient touring routes",
+      "Pack effectively for long trips",
+      "Manage fatigue on long rides"
+    ]
+  },
+  {
+    title: "Sport Bike Performance",
+    description: "Unlock the potential of your sport bike",
+    skillLevel: "Expert",
+    objectives: [
+      "Master high-speed stability",
+      "Learn aggressive braking techniques",
+      "Perfect throttle control"
+    ]
   }
-  process.stdout.write(`\r✓ ${message}`.green + '\n');
-}
+];
+
+const slideTemplates = [
+  {
+    type: "text",
+    title: "Welcome",
+    description: "Introduction to the module"
+  },
+  {
+    type: "image",
+    title: "Key Concepts",
+    description: "Core learning material"
+  },
+  {
+    type: "video",
+    title: "Practice Exercise",
+    description: "Apply what you've learned"
+  },
+  {
+    type: "text",
+    title: "Review",
+    description: "Module summary and key takeaways"
+  }
+];
 
 /**
- * Upload video file to public directory
- * @param {number} moduleIndex - Module index (1-11)
- * @returns {string} - Relative path to uploaded video
+ * Load media URLs from firebase-urls.json
  */
-function uploadVideoFile(moduleIndex) {
-  const videoFileName = `${moduleIndex}.mp4`;
-  const sourcePath = join(VIDEOS_DIR, videoFileName);
+function loadMediaMap() {
+  const jsonPath = path.join(__dirname, '../data/modules/firebase-urls.json');
   
-  if (!existsSync(sourcePath)) {
-    throw new Error(`Video file not found: ${videoFileName}`);
+  try {
+    const jsonData = readFileSync(jsonPath, 'utf8');
+    const data = JSON.parse(jsonData);
+    
+    // Convert to indexed format
+    const mediaMap = { images: {}, videos: {} };
+    
+    // Map images by index
+    Object.keys(data.images).forEach((filename, index) => {
+      const imageData = data.images[filename];
+      mediaMap.images[index + 1] = {
+        url: imageData.url.url || imageData.url, // Handle nested url object
+        path: imageData.url.path || imageData.path,
+        mime: 'image/jpeg'
+      };
+    });
+    
+    // Map videos by index
+    Object.keys(data.videos).forEach((filename, index) => {
+      const videoData = data.videos[filename];
+      mediaMap.videos[index + 1] = {
+        url: videoData.url.url || videoData.url, // Handle nested url object
+        path: videoData.url.path || videoData.path
+      };
+    });
+    
+    console.log(`📦 Loaded ${Object.keys(mediaMap.images).length} images and ${Object.keys(mediaMap.videos).length} videos from Firebase`);
+    return mediaMap;
+  } catch (error) {
+    console.error('❌ Error loading firebase-urls.json');
+    console.error('   Please run: node scripts/uploadSampleMedia.js');
+    throw new Error('firebase-urls.json not found. Run uploadSampleMedia.js first.');
   }
-
-  // Generate unique filename
-  const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-  const destFileName = `module-${moduleIndex}-${uniqueSuffix}.mp4`;
-  const destPath = join(PUBLIC_VIDEOS_DIR, destFileName);
-
-  // Copy video to public directory
-  copyFileSync(sourcePath, destPath);
-
-  // Return relative path for database
-  return `/videos/${destFileName}`;
 }
 
 /**
- * Process image file and convert to binary
- * @param {number} moduleIndex - Module index (1-11)
- * @returns {Object} - { data: Buffer, mime: string }
+ * Seed modules with sample data
  */
-function processImageFile(moduleIndex) {
-  // Try different extensions
-  const extensions = ['.jpg', '.jpeg', '.png'];
-  let imagePath = null;
-  let foundExt = null;
+export async function seedModules(prisma) {
+  console.log('🏍️  Starting module seeding...');
 
-  for (const ext of extensions) {
-    const testPath = join(IMAGES_DIR, `${moduleIndex}${ext}`);
-    if (existsSync(testPath)) {
-      imagePath = testPath;
-      foundExt = ext;
-      break;
-    }
-  }
+  try {
+    // Load media URLs from JSON
+    const mediaMap = loadMediaMap();
 
-  if (!imagePath) {
-    throw new Error(`Image file not found for module ${moduleIndex}`);
-  }
+    console.log(`📚 Creating ${moduleTemplates.length} modules...\n`);
 
-  const imageBuffer = readFileSync(imagePath);
-  const mimeType = foundExt === '.png' ? 'image/png' : 'image/jpeg';
+    for (let i = 0; i < moduleTemplates.length; i++) {
+      const template = moduleTemplates[i];
+      const mediaIndex = (i % 11) + 1; // Cycle through 11 media files
 
-  return {
-    data: imageBuffer,
-    mime: mimeType
-  };
-}
-
-export async function seedModules() {
-  console.log('\n' + '='.repeat(60).rainbow);
-  console.log('  🏍️  SEEDING LEARNING MODULES'.bold.cyan);
-  console.log('='.repeat(60).rainbow + '\n');
-
-  // Load module data from JSON
-  const modulesData = JSON.parse(readFileSync(MODULE_DATA_PATH, 'utf-8'));
-
-  let successCount = 0;
-  let skipCount = 0;
-  let uploadedVideos = 0;
-  let uploadedImages = 0;
-
-  for (let i = 0; i < modulesData.length; i++) {
-    const moduleData = modulesData[i];
-    const moduleIndex = i + 1; // 1-based index
-    const { objectives, slides, ...moduleInfo } = moduleData;
-    
-    try {
-      // Check if module already exists
-      const existing = await prisma.module.findFirst({
-        where: { title: moduleInfo.title }
-      });
-
-      if (existing) {
-        console.log(`⏭️  Skipping: ${moduleInfo.title}`.yellow);
-        skipCount++;
-        continue;
-      }
-
-      // Animate module creation
-      const createMessage = `[${moduleIndex}/11] Creating: ${moduleInfo.title}`;
-      await animateProgress(createMessage, 800);
-
-      // Process image
-      console.log(`   📸 Processing image ${moduleIndex}...`.dim);
-      const imageData = processImageFile(moduleIndex);
-      uploadedImages++;
-
-      // Upload video
-      console.log(`   🎥 Uploading video ${moduleIndex}...`.dim);
-      const videoPath = uploadVideoFile(moduleIndex);
-      uploadedVideos++;
-
-      // Prepare slides with image and video
-      const processedSlides = slides.map((slide, idx) => {
-        const baseSlide = {
-          ...slide,
-          position: idx + 1
-        };
-
-        // Add image to first slide
-        if (idx === 0) {
-          return {
-            ...baseSlide,
-            type: 'image',
-            imageData: imageData.data,
-            imageMime: imageData.mime
-          };
-        }
-        
-        // Add video to second slide
-        if (idx === 1) {
-          return {
-            ...baseSlide,
-            type: 'video',
-            videoPath: videoPath
-          };
-        }
-
-        // Keep text slide as is
-        return baseSlide;
-      });
+      console.log(`Creating module ${i + 1}: ${template.title}`);
 
       // Create module with objectives and slides
-      await prisma.module.create({
+      const module = await prisma.module.create({
         data: {
-          ...moduleInfo,
+          title: template.title,
+          description: template.description,
+          position: i + 1,
           objectives: {
-            create: objectives.map((obj, index) => ({
-              objective: obj,
-              position: index + 1
+            create: template.objectives.map((text, idx) => ({
+              objective: text,
+              position: idx + 1
             }))
           },
           slides: {
-            create: processedSlides
+            create: slideTemplates.map((slideTemplate, slideIdx) => {
+              const slideData = {
+                type: slideTemplate.type,
+                title: slideTemplate.title,
+                content: `${template.description}\n\nThis is ${slideTemplate.description.toLowerCase()}.`,
+                description: slideTemplate.description,
+                position: slideIdx + 1,
+                skillLevel: template.skillLevel,
+                imageUrl: null,
+                imagePath: null,
+                imageMime: null,
+                videoUrl: null,
+                videoPath: null
+              };
+
+              // Add media based on slide type
+              if (slideTemplate.type === 'image') {
+                const image = mediaMap.images[mediaIndex];
+                slideData.imageUrl = image.url;
+                slideData.imagePath = image.path;
+                slideData.imageMime = image.mime;
+              } else if (slideTemplate.type === 'video') {
+                const video = mediaMap.videos[mediaIndex];
+                slideData.videoUrl = video.url;
+                slideData.videoPath = video.path;
+              }
+              // 'text' type has no media attachments
+
+              return slideData;
+            })
           }
+        },
+        include: {
+          objectives: true,
+          slides: true
         }
       });
 
-      console.log(`   📚 ${objectives.length} objectives`.dim);
-      console.log(`   📄 ${slides.length} slides (1 image, 1 video, 1 text)\n`.dim);
-      successCount++;
-      
-    } catch (error) {
-      console.log(`✗ Error creating ${moduleInfo.title}: ${error.message}`.red);
-      console.log(`   ${error.stack}`.dim);
+      console.log(`  ✓ Created with ${module.slides.length} slides`);
     }
+
+    const count = await prisma.module.count();
+    console.log(`\n✅ Module seeding completed! Total modules: ${count}`);
+    return { success: count, skipped: 0 };
+  } catch (error) {
+    console.error('❌ Error seeding modules:', error);
+    throw error;
   }
-
-  console.log('\n' + '─'.repeat(60).gray);
-  console.log(`📊 Results:`.bold);
-  console.log(`   ✓ Created: ${successCount} modules`.green);
-  console.log(`   📸 Uploaded: ${uploadedImages} images`.cyan);
-  console.log(`   🎥 Uploaded: ${uploadedVideos} videos`.magenta);
-  console.log(`   ⏭️  Skipped: ${skipCount} modules`.yellow);
-  console.log('─'.repeat(60).gray + '\n');
-
-  return { success: successCount, skipped: skipCount };
 }
 
-export default seedModules;
+/**
+ * Clear all modules and their related data
+ */
+export async function clearModules(prisma) {
+  console.log('🗑️  Clearing all modules...');
+
+  try {
+    // Delete in correct order due to foreign key constraints
+    await prisma.moduleSlide.deleteMany({});
+    await prisma.moduleObjective.deleteMany({});
+    await prisma.studentModule.deleteMany({});
+    await prisma.module.deleteMany({});
+
+    console.log('✅ All modules cleared successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error clearing modules:', error);
+    throw error;
+  }
+}

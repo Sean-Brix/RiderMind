@@ -4,37 +4,8 @@
  */
 
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import crypto from 'crypto';
-import { fileURLToPath } from 'url';
-
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Video storage directory
-const VIDEO_DIR = path.join(__dirname, '..', 'public', 'videos');
-
-// Ensure video directory exists
-if (!fs.existsSync(VIDEO_DIR)) {
-  fs.mkdirSync(VIDEO_DIR, { recursive: true });
-}
-
-/**
- * Multer storage configuration for videos
- */
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, VIDEO_DIR);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename with timestamp and random hash
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const ext = path.extname(file.originalname);
-    cb(null, `video-${uniqueSuffix}${ext}`);
-  }
-});
+import { deleteFile as deleteCloudFile } from './firebase.js';
 
 /**
  * File filter for video uploads
@@ -53,8 +24,9 @@ const videoFileFilter = (req, file, cb) => {
 /**
  * Multer upload instance for videos
  */
+// Use memory storage so we can stream buffer to Firebase
 const uploadVideo = multer({
-  storage: videoStorage,
+  storage: multer.memoryStorage(),
   fileFilter: videoFileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB
@@ -65,13 +37,13 @@ const uploadVideo = multer({
  * Delete video file from filesystem
  * @param {string} videoPath - Relative path to video file
  */
-function deleteVideoFile(videoPath) {
+async function deleteVideoFile(videoPath) {
   if (!videoPath) return;
-  
-  const fullPath = path.join(__dirname, '..', 'public', videoPath);
-  
-  if (fs.existsSync(fullPath)) {
-    fs.unlinkSync(fullPath);
+  try {
+    // Delegate deletion to Firebase utils
+    await deleteCloudFile(videoPath);
+  } catch (err) {
+    console.error('Failed to delete cloud video:', videoPath, err);
   }
 }
 
@@ -80,21 +52,9 @@ function deleteVideoFile(videoPath) {
  * @param {string} videoPath - Relative path to video file
  * @returns {Object|null}
  */
-function getVideoInfo(videoPath) {
-  if (!videoPath) return null;
-  
-  const fullPath = path.join(__dirname, '..', 'public', videoPath);
-  
-  if (!fs.existsSync(fullPath)) return null;
-  
-  const stats = fs.statSync(fullPath);
-  
-  return {
-    size: stats.size,
-    exists: true,
-    path: videoPath,
-    fullPath: fullPath
-  };
+function getVideoInfo(/*videoPath*/) {
+  // For cloud storage this is not available locally. Use firebase.getFileInfo instead when needed.
+  return null;
 }
 
 /**
@@ -103,45 +63,9 @@ function getVideoInfo(videoPath) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-function streamVideo(videoPath, req, res) {
-  const fullPath = path.join(__dirname, '..', 'public', videoPath);
-  
-  // Check if file exists
-  if (!fs.existsSync(fullPath)) {
-    return res.status(404).json({ error: 'Video not found' });
-  }
-
-  const stat = fs.statSync(fullPath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
-
-  if (range) {
-    // Parse range header
-    const parts = range.replace(/bytes=/, '').split('-');
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    const chunksize = (end - start) + 1;
-    
-    const file = fs.createReadStream(fullPath, { start, end });
-    const head = {
-      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunksize,
-      'Content-Type': 'video/mp4',
-    };
-    
-    res.writeHead(206, head);
-    file.pipe(res);
-  } else {
-    // No range request, send entire file
-    const head = {
-      'Content-Length': fileSize,
-      'Content-Type': 'video/mp4',
-    };
-    
-    res.writeHead(200, head);
-    fs.createReadStream(fullPath).pipe(res);
-  }
+function streamVideo(/*videoPath, req, res*/) {
+  // Streaming now handled by redirecting to cloud download URL in controller
+  throw new Error('streamVideo is deprecated for cloud storage; use controller redirect to download URL');
 }
 
 /**
@@ -179,6 +103,5 @@ export {
   getVideoInfo,
   streamVideo,
   getRelativePath,
-  validateVideo,
-  VIDEO_DIR
+  validateVideo
 };

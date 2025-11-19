@@ -85,8 +85,10 @@ export default async function createQuiz(req, res) {
             position: q.position || qIndex + 1,
             caseSensitive: q.caseSensitive || false,
             shuffleOptions: q.shuffleOptions !== undefined ? q.shuffleOptions : false,
-            imageData: q.imageData || null,
+            imageUrl: q.imageUrl || null,
+            imagePath: q.imagePath || null,
             imageMime: q.imageMime || null,
+            videoUrl: q.videoUrl || null,
             videoPath: q.videoPath || null
           };
 
@@ -100,7 +102,8 @@ export default async function createQuiz(req, res) {
                   optionText: opt.optionText,
                   isCorrect: opt.isCorrect === true, // Explicit boolean check
                   position: opt.position || optIndex + 1,
-                  imageData: opt.imageData || null,
+                  imageUrl: opt.imageUrl || null,
+                  imagePath: opt.imagePath || null,
                   imageMime: opt.imageMime || null
                 };
               })
@@ -133,8 +136,9 @@ export default async function createQuiz(req, res) {
                 optionText: true,
                 isCorrect: true,
                 position: true,
-                imageMime: true,
-                imageData: false
+                imageUrl: true,
+                imagePath: true,
+                imageMime: true
               }
             }
           }

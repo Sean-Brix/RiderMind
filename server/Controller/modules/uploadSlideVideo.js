@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { uploadVideo } from '../../utils/videoHandler.js';
+import { uploadFile, deleteFile, generateUniqueFilename } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
@@ -33,24 +34,31 @@ export default async function uploadSlideVideo(req, res) {
       });
     }
 
-    // Delete old video if exists
+    // Delete old video in cloud if exists
     if (slide.videoPath) {
       try {
-        const { deleteVideoFile } = await import('../../utils/videoHandler.js');
-        deleteVideoFile(slide.videoPath);
+        await deleteFile(slide.videoPath);
+        clearFileCache(slide.videoPath);
       } catch (error) {
-        console.error(`Failed to delete old video: ${slide.videoPath}`, error);
+        console.error(`Failed to delete old video from cloud: ${slide.videoPath}`, error);
       }
     }
 
-    // Update slide with new video path (include /videos/ prefix for serving)
-    const videoPath = `/videos/${req.file.filename}`;
-    
+    // Upload new video buffer to Firebase
+    const videoBuffer = req.file.buffer;
+    const mimetype = req.file.mimetype;
+    const filename = generateUniqueFilename(req.file.originalname);
+    const storagePath = `modules/${slide.moduleId || 'unknown'}/slides/${slideId}/${filename}`;
+
+    const result = await uploadFile(videoBuffer, storagePath, mimetype);
+
+    // Update slide with cloud references
     const updated = await prisma.moduleSlide.update({
       where: { id: parseInt(slideId) },
       data: {
         type: 'video',
-        videoPath: videoPath
+        videoUrl: result.url,
+        videoPath: result.path
       },
       select: {
         id: true,
@@ -59,9 +67,9 @@ export default async function uploadSlideVideo(req, res) {
         content: true,
         description: true,
         position: true,
+        videoUrl: true,
         videoPath: true,
         imageMime: true,
-        imageData: false,
         createdAt: true,
         updatedAt: true
       }

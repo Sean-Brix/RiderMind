@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { deleteFile } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
@@ -24,23 +26,32 @@ export default async function deleteQuestionImage(req, res) {
       });
     }
 
-    if (!question.imageData) {
+    if (!question.imagePath) {
       return res.status(400).json({
         success: false,
         error: 'Question has no image'
       });
     }
 
-    console.log('Deleting quiz question image:', {
+    console.log('Deleting quiz question image from cloud:', {
       questionId,
-      imageMime: question.imageMime
+      imagePath: question.imagePath
     });
 
-    // Update question to remove image data
+    // Delete from cloud storage
+    try {
+      await deleteFile(question.imagePath);
+      clearFileCache(question.imagePath);
+    } catch (err) {
+      console.error('Failed to delete cloud image:', question.imagePath, err);
+    }
+
+    // Update question to remove image references
     const updatedQuestion = await prisma.quizQuestion.update({
       where: { id: parseInt(questionId) },
       data: {
-        imageData: null,
+        imageUrl: null,
+        imagePath: null,
         imageMime: null,
         updatedAt: new Date()
       },

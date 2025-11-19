@@ -15,12 +15,15 @@ import updateQuestion from '../../Controller/quizzes/updateQuestion.js';
 import deleteQuestion from '../../Controller/quizzes/deleteQuestion.js';
 
 // Question media controllers
-import uploadQuestionVideoController, { uploadQuizVideo } from '../../Controller/quizzes/uploadQuestionVideo.js';
-import uploadQuestionImageController, { uploadQuizImage } from '../../Controller/quizzes/uploadQuestionImage.js';
+import uploadQuestionVideoController from '../../Controller/quizzes/uploadQuestionVideo.js';
+import uploadQuestionImageController from '../../Controller/quizzes/uploadQuestionImage.js';
 import deleteQuestionVideo from '../../Controller/quizzes/deleteQuestionVideo.js';
 import deleteQuestionImage from '../../Controller/quizzes/deleteQuestionImage.js';
 import getQuestionImage from '../../Controller/quizzes/getQuestionImage.js';
 import streamQuestionVideo from '../../Controller/quizzes/streamQuestionVideo.js';
+
+// Multer middleware for file uploads
+import { uploadQuizVideo, uploadQuizImage } from '../../utils/quizMediaHandler.js';
 
 // Option controllers
 import addOption from '../../Controller/quizzes/addOption.js';
@@ -79,7 +82,7 @@ router.delete('/questions/:questionId', authenticate, requireRole('ADMIN'), dele
 router.put('/questions/:questionId/upload-video', 
   authenticate, 
   requireRole('ADMIN'), 
-  uploadQuizVideo.single('video'),
+  uploadQuizVideo,
   uploadQuestionVideoController
 );
 
@@ -87,7 +90,7 @@ router.put('/questions/:questionId/upload-video',
 router.put('/questions/:questionId/upload-image', 
   authenticate, 
   requireRole('ADMIN'), 
-  uploadQuizImage.single('image'),
+  uploadQuizImage,
   uploadQuestionImageController
 );
 

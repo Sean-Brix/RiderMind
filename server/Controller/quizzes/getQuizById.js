@@ -47,9 +47,11 @@ export default async function getQuizById(req, res) {
             position: true,
             caseSensitive: true,
             shuffleOptions: true,
-            videoPath: true,
+            imageUrl: true,
+            imagePath: true,
             imageMime: true,
-            imageData: false, // Don't send binary data
+            videoUrl: true,
+            videoPath: true,
             options: {
               orderBy: { position: 'asc' },
               select: {
@@ -57,8 +59,9 @@ export default async function getQuizById(req, res) {
                 optionText: true,
                 isCorrect: true, // Always select it
                 position: true,
-                imageMime: true,
-                imageData: false
+                imageUrl: true,
+                imagePath: true,
+                imageMime: true
               }
             }
           }

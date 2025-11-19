@@ -40,6 +40,8 @@ function App() {
 
   return (
     <Routes>
+
+      {/* PUBLIC */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<Protected><Landing /></Protected>} />
@@ -49,8 +51,10 @@ function App() {
       <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/profile" element={<Protected><Profile /></Protected>} />
-      <Route path="/dev" element={<Protected><DevTools /></Protected>} />
+
+      {/* ADMIN */}
       <Route path="/admin" element={<Protected role="ADMIN"><AdminLayout /></Protected>}>
+
         <Route index element={<Navigate to="/admin/analytics" replace />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="accounts" element={<AccountList />} />
@@ -58,8 +62,14 @@ function App() {
         <Route path="modules" element={<Modules />} />
         <Route path="quizes" element={<Quizes />} />
         <Route path="faqs" element={<FAQs />} />
+
       </Route>
+
+      <Route path="/dev" element={<Protected><DevTools /></Protected>} />
+      
+      {/* FALLBACK */}
       <Route path="*" element={<Navigate to={user ? (user.role === 'ADMIN' ? '/admin' : '/') : '/login'} replace />} />
+
     </Routes>
   )
 }

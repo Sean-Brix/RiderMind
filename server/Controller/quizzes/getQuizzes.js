@@ -31,10 +31,11 @@ export default async function getQuizzes(req, res) {
           explanation: true,
           caseSensitive: true,
           shuffleOptions: true,
-          videoPath: true,
+          imageUrl: true,
+          imagePath: true,
           imageMime: true,
-          // Don't include imageData by default (too large)
-          imageData: false,
+          videoUrl: true,
+          videoPath: true,
           createdAt: true,
           updatedAt: true,
           // Include options if requested
@@ -45,8 +46,9 @@ export default async function getQuizzes(req, res) {
               optionText: true,
               isCorrect: true,
               position: true,
-              imageMime: true,
-              imageData: false
+              imageUrl: true,
+              imagePath: true,
+              imageMime: true
             }
           } : false
         }

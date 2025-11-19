@@ -1,8 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { 
-  uploadQuizImage, 
-  processQuizImageForDB 
-} from '../../utils/quizMediaHandler.js';
+import { uploadFile, deleteFile, generateUniqueFilename } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
+import { uploadQuizImage } from '../../utils/quizMediaHandler.js';
 
 const prisma = new PrismaClient();
 
@@ -54,59 +53,83 @@ export default async function uploadQuestionImage(req, res) {
       });
     }
 
-    console.log('Uploading quiz question image:', {
-      questionId,
-      filename: req.file.originalname,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-      bufferSize: req.file.buffer.length
-    });
-
-    // Get image buffer from multer (memory storage)
-    const { imageData, imageMime } = processQuizImageForDB(
-      req.file.buffer,
-      req.file.mimetype
-    );
-
-    console.log('Processed image for DB:', {
-      imageMime,
-      imageDataLength: imageData.length,
-      isBuffer: Buffer.isBuffer(imageData)
-    });
-
-    // Update question with image data
-    const updatedQuestion = await prisma.quizQuestion.update({
-      where: { id: parseInt(questionId) },
-      data: {
-        imageData,
-        imageMime,
-        updatedAt: new Date()
-      },
-      include: {
-        options: {
-          orderBy: { position: 'asc' }
+    // Get quiz info for organized path
+    const quiz = await prisma.quiz.findFirst({
+      where: {
+        questions: {
+          some: { id: parseInt(questionId) }
         }
       }
     });
 
-    console.log('Question updated with image data');
-    console.log('=== QUIZ IMAGE UPLOAD SUCCESS ===');
+    console.log('Uploading quiz question image to Firebase:', {
+      questionId,
+      quizId: quiz?.id,
+      filename: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
 
-    // Return question without binary data (too large for response)
-    const questionResponse = {
-      ...updatedQuestion,
-      imageData: undefined, // Remove binary data
-      hasImage: !!updatedQuestion.imageData
-    };
+    // Delete old image from Firebase if exists
+    if (question.imagePath) {
+      try {
+        await deleteFile(question.imagePath);
+        await clearFileCache(question.imagePath);
+        console.log('Deleted old image:', question.imagePath);
+      } catch (err) {
+        console.warn('Could not delete old image:', err.message);
+      }
+    }
+
+    // Generate unique filename and upload to Firebase
+    const filename = generateUniqueFilename(req.file.originalname);
+    const storagePath = `quizzes/${quiz?.id || 'unknown'}/questions/${questionId}/${filename}`;
+    
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      storagePath,
+      req.file.mimetype
+    );
+
+    console.log('✅ Uploaded to Firebase:', storagePath);
+
+    // Update question with Firebase URLs
+    const updatedQuestion = await prisma.quizQuestion.update({
+      where: { id: parseInt(questionId) },
+      data: {
+        imageUrl: uploadResult.url,
+        imagePath: storagePath,
+        imageMime: req.file.mimetype,
+        updatedAt: new Date()
+      },
+      include: {
+        options: {
+          orderBy: { position: 'asc' },
+          select: {
+            id: true,
+            optionText: true,
+            isCorrect: true,
+            position: true,
+            imageUrl: true,
+            imagePath: true,
+            imageMime: true
+          }
+        }
+      }
+    });
+
+    console.log('Question updated with Firebase URLs');
+    console.log('=== QUIZ IMAGE UPLOAD SUCCESS ===');
 
     res.status(200).json({
       success: true,
-      message: 'Image uploaded successfully',
+      message: 'Image uploaded successfully to Firebase Storage',
       data: {
         id: updatedQuestion.id,
-        hasImage: true,
+        imageUrl: updatedQuestion.imageUrl,
+        imagePath: updatedQuestion.imagePath,
         imageMime: updatedQuestion.imageMime,
-        question: questionResponse
+        question: updatedQuestion
       }
     });
 
@@ -121,5 +144,5 @@ export default async function uploadQuestionImage(req, res) {
   }
 }
 
-// Export the multer middleware
+// Export multer middleware for route
 export { uploadQuizImage };

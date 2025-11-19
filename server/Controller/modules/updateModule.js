@@ -68,9 +68,11 @@ export default async function updateModule(req, res) {
             content: true,
             description: true,
             position: true,
-            videoPath: true,
+            imageUrl: true,
+            imagePath: true,
             imageMime: true,
-            imageData: false
+            videoUrl: true,
+            videoPath: true
           }
         }
       }

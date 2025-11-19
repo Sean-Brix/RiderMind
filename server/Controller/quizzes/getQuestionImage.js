@@ -1,77 +1,50 @@
 import { PrismaClient } from '@prisma/client';
+import { getFileUrlCached } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
 /**
- * Get question image data (BLOB)
+ * Get question image data (cloud redirect)
  * GET /api/quizzes/questions/:questionId/image
  * 
- * Response: Raw binary image data (same as module slides)
+ * Response: Redirect to Firebase download URL
  */
 export default async function getQuestionImage(req, res) {
   try {
     const { questionId } = req.params;
 
-    // Get question with image data
+    // Get question with cloud references
     const question = await prisma.quizQuestion.findUnique({
       where: { id: parseInt(questionId) },
       select: {
         id: true,
-        imageData: true,
+        imageUrl: true,
+        imagePath: true,
         imageMime: true
       }
     });
 
     if (!question) {
-      return res.status(404).json({
-        success: false,
-        error: 'Question not found'
-      });
+      return res.status(404).json({ success: false, error: 'Question not found' });
     }
 
-    if (!question.imageData || !question.imageMime) {
-      console.log('No image data:', { 
-        questionId, 
-        hasImageData: !!question.imageData,
-        hasImageMime: !!question.imageMime
-      });
-      return res.status(404).json({
-        success: false,
-        error: 'Question has no image'
-      });
+    if (!question.imagePath) {
+      return res.status(404).json({ success: false, error: 'Question has no image' });
     }
 
-    // Convert Prisma BLOB to Buffer
-    // Prisma may return Buffer as: Buffer, {type: 'Buffer', data: [...]}, or Uint8Array
-    let buffer;
-    if (Buffer.isBuffer(question.imageData)) {
-      buffer = question.imageData;
-    } else if (question.imageData && typeof question.imageData === 'object' && question.imageData.type === 'Buffer') {
-      // Prisma returns BLOB as {type: 'Buffer', data: [...]}
-      buffer = Buffer.from(question.imageData.data);
-    } else if (question.imageData instanceof Uint8Array) {
-      buffer = Buffer.from(question.imageData);
-    } else {
-      // Fallback: try to convert whatever we got
-      buffer = Buffer.from(question.imageData);
+    // Use cached download URL if available
+    try {
+      const url = question.imageUrl || await getFileUrlCached(question.imagePath);
+      if (!url) {
+        return res.status(404).json({ success: false, error: 'Image URL not available' });
+      }
+
+      // Redirect to the signed download URL
+      return res.redirect(url);
+    } catch (err) {
+      console.error('Error resolving quiz question image URL:', questionId, err);
+      return res.status(500).json({ success: false, error: 'Failed to resolve image URL', message: err.message });
     }
-
-    console.log('Sending quiz question image:', {
-      questionId,
-      imageMime: question.imageMime,
-      bufferLength: buffer.length,
-      isBuffer: Buffer.isBuffer(buffer)
-    });
-
-    // Set appropriate headers (same as module slides)
-    res.setHeader('Content-Type', question.imageMime || 'image/jpeg');
-    res.setHeader('Content-Length', buffer.length);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
-    // Send binary image data
-    res.end(buffer, 'binary');
-    
-    console.log('Image sent successfully for question:', questionId);
 
   } catch (error) {
     console.error('Error getting quiz question image:', error);

@@ -1,16 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { 
-  uploadQuizVideo, 
-  getQuizVideoRelativePath,
-  deleteQuizVideoFile 
-} from '../../utils/quizMediaHandler.js';
+import { uploadFile, deleteFile, generateUniqueFilename } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
+import { uploadQuizVideo } from '../../utils/quizMediaHandler.js';
 
 const prisma = new PrismaClient();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * Upload video for quiz question
@@ -18,39 +11,24 @@ const __dirname = path.dirname(__filename);
  * Uses multer middleware to handle video upload
  * 
  * Files: video (from multer)
- * Response: Updated question with videoPath
+ * Response: Updated question with videoUrl and videoPath
  */
 export default async function uploadQuestionVideo(req, res) {
   try {
     const { questionId } = req.params;
 
-    console.log('=== QUIZ VIDEO UPLOAD START ===');
+    console.log('=== QUIZ VIDEO UPLOAD START (Firebase) ===');
     console.log('Request params:', req.params);
     console.log('Has file:', !!req.file);
-    
-    // CRITICAL DEBUG - Check if multer saved the file
-    if (req.file) {
-      console.log('🔍 MULTER FILE CHECK:');
-      console.log('  - File path:', req.file.path);
-      console.log('  - File exists after multer:', fs.existsSync(req.file.path));
-      console.log('  - File size on disk:', fs.existsSync(req.file.path) ? fs.statSync(req.file.path).size : 'N/A');
-      console.log('File details:', {
-        fieldname: req.file.fieldname,
-        originalname: req.file.originalname,
-        encoding: req.file.encoding,
-        mimetype: req.file.mimetype,
-        destination: req.file.destination,
-        filename: req.file.filename,
-        path: req.file.path,
-        size: req.file.size
-      });
-    } else {
-      console.log('❌ NO FILE FROM MULTER');
-    }
 
-    // Validate question exists
+    // Validate question exists and get quiz info
     const question = await prisma.quizQuestion.findUnique({
-      where: { id: parseInt(questionId) }
+      where: { id: parseInt(questionId) },
+      include: {
+        quiz: {
+          select: { id: true }
+        }
+      }
     });
 
     if (!question) {
@@ -70,54 +48,48 @@ export default async function uploadQuestionVideo(req, res) {
       });
     }
 
-    console.log('Uploading quiz video:', {
+    console.log('Uploading quiz video to Firebase:', {
       questionId,
-      filename: req.file.filename,
-      path: req.file.path,
+      originalname: req.file.originalname,
       size: req.file.size,
       mimetype: req.file.mimetype
     });
 
-    // Get the new file extension
-    const newFileExt = path.extname(req.file.filename);
-    
-    // Delete old video if exists (including different extensions)
-    // BUT SKIP THE NEWLY UPLOADED FILE!
+    // Delete old video from Firebase if exists
     if (question.videoPath) {
-      console.log('Deleting old video:', question.videoPath);
-      deleteQuizVideoFile(question.videoPath);
-    }
-    
-    // Also check for any existing video files with this question ID (different extension)
-    // IMPORTANT: Skip the file we just uploaded
-    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
-    const videoDir = path.join(__dirname, '..', '..', 'public', 'quiz-videos');
-    
-    for (const ext of videoExtensions) {
-      // Skip the extension of the newly uploaded file
-      if (ext === newFileExt) {
-        console.log(`Skipping cleanup for ${ext} - this is the new file`);
-        continue;
-      }
-      
-      const oldFile = path.join(videoDir, `question-${questionId}${ext}`);
-      if (fs.existsSync(oldFile)) {
-        fs.unlinkSync(oldFile);
-        console.log(`Deleted old video file with different extension: question-${questionId}${ext}`);
+      console.log('Deleting old video from Firebase:', question.videoPath);
+      try {
+        await deleteFile(question.videoPath);
+        clearFileCache(question.videoPath);
+      } catch (err) {
+        console.error('Failed to delete old video:', err);
       }
     }
 
-    // Get relative path for database
-    const videoPath = getQuizVideoRelativePath(req.file.filename);
+    // Generate unique filename with timestamp
+    const timestamp = Date.now();
+    const filename = generateUniqueFilename(req.file.originalname);
     
-    console.log('Video path for database:', videoPath);
-    console.log('Full file path on disk:', req.file.path);
+    // Create organized storage path
+    const storagePath = `quizzes/${question.quiz.id}/questions/${questionId}/${timestamp}-${filename}`;
+    
+    console.log('Firebase storage path:', storagePath);
 
-    // Update question with video path
+    // Upload to Firebase Storage
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      storagePath,
+      req.file.mimetype
+    );
+
+    console.log('Video uploaded to Firebase:', uploadResult.url);
+
+    // Update question with Firebase references
     const updatedQuestion = await prisma.quizQuestion.update({
       where: { id: parseInt(questionId) },
       data: {
-        videoPath,
+        videoUrl: uploadResult.url,
+        videoPath: storagePath,
         updatedAt: new Date()
       },
       include: {
@@ -127,14 +99,7 @@ export default async function uploadQuestionVideo(req, res) {
       }
     });
 
-    console.log('Question updated with videoPath:', videoPath);
-    
-    // CRITICAL DEBUG - Verify file still exists after DB update
-    console.log('🔍 FINAL FILE CHECK:');
-    console.log('  - File path:', req.file.path);
-    console.log('  - File exists after DB update:', fs.existsSync(req.file.path));
-    console.log('  - Expected path matches:', req.file.path.endsWith(`question-${questionId}${path.extname(req.file.originalname)}`));
-    
+    console.log('Question updated with videoUrl and videoPath');
     console.log('=== QUIZ VIDEO UPLOAD SUCCESS ===');
 
     res.status(200).json({
@@ -142,6 +107,7 @@ export default async function uploadQuestionVideo(req, res) {
       message: 'Video uploaded successfully',
       data: {
         id: updatedQuestion.id,
+        videoUrl: updatedQuestion.videoUrl,
         videoPath: updatedQuestion.videoPath,
         question: updatedQuestion
       }
@@ -149,12 +115,6 @@ export default async function uploadQuestionVideo(req, res) {
 
   } catch (error) {
     console.error('Error uploading quiz question video:', error);
-    
-    // Delete uploaded file if database update failed
-    if (req.file && req.file.filename) {
-      const videoPath = getQuizVideoRelativePath(req.file.filename);
-      deleteQuizVideoFile(videoPath);
-    }
 
     res.status(500).json({
       success: false,
@@ -164,5 +124,5 @@ export default async function uploadQuestionVideo(req, res) {
   }
 }
 
-// Export the multer middleware
+// Export multer middleware for route
 export { uploadQuizVideo };

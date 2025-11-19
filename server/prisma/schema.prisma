@@ -275,9 +275,12 @@ model ModuleSlide {
   position    Int        @default(0)
   skillLevel  SkillLevel @default(Beginner)
   
-  imageData   Bytes?
+  // Replaced BLOB storage with cloud storage references
+  imageUrl    String?    @db.VarChar(1024)
+  imagePath   String?    @db.VarChar(1024)
   imageMime   String?    @db.VarChar(50)
-  videoPath   String?    @db.VarChar(500)
+  videoUrl    String?    @db.VarChar(1024)
+  videoPath   String?    @db.VarChar(1024)
   
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -357,10 +360,12 @@ model QuizQuestion {
   position    Int          @default(0)
   isRequired  Boolean      @default(true)
   
-  // Media attachments (similar to module slides)
-  imageData   Bytes?
+  // Media attachments (cloud storage references)
+  imageUrl    String?      @db.VarChar(1024)
+  imagePath   String?      @db.VarChar(1024)
   imageMime   String?      @db.VarChar(50)
-  videoPath   String?      @db.VarChar(500)
+  videoUrl    String?      @db.VarChar(1024)
+  videoPath   String?      @db.VarChar(1024)
   
   // Question settings
   caseSensitive Boolean    @default(false) // For identification/text questions
@@ -386,9 +391,10 @@ model QuizQuestionOption {
   isCorrect   Boolean  @default(false)
   position    Int      @default(0)
   
-  // Optional media for option
-  imageData   Bytes?
-  imageMime   String?  @db.VarChar(50)
+  // Optional media for option (cloud refs)
+  imageUrl    String?   @db.VarChar(1024)
+  imagePath   String?   @db.VarChar(1024)
+  imageMime   String?   @db.VarChar(50)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

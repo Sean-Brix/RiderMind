@@ -4,11 +4,11 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import seedAccounts from './Seeds/accounts.seed.js';
-import seedModulesEnhanced from './Seeds/modules-enhanced.seed.js';
 import seedCategories from './Seeds/categories.seed.js';
-import seedQuizzesEnhanced from './Seeds/quizzes-enhanced.seed.js';
 import { seedFAQs } from './Seeds/faqs.seed.js';
 import seedFeedback from './Seeds/feedback.seed.js';
+import { seedModules } from './Seeds/modules.seed.js';
+import { seedQuizzes } from './Seeds/quizzes.seed.js';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -55,10 +55,10 @@ async function main() {
     const seedFunctions = [
       { name: 'User Accounts (20 Accounts)', fn: seedAccounts, emoji: '👥' },
       { name: 'FAQs (3-6 per Category)', fn: seedFAQs, emoji: '❓' },
-      { name: 'Motorcycle Modules (15 Modules, 15 Slides Each)', fn: seedModulesEnhanced, emoji: '🏍️' },
-      { name: 'Categories (Motorcycle: 10 modules, Car: empty)', fn: seedCategories, emoji: '🏷️' },
-      { name: 'Motorcycle Quizzes (10 Questions, 10-15 Attempts)', fn: seedQuizzesEnhanced, emoji: '📝' },
-      { name: 'Feedback System (Comments & Reactions)', fn: seedFeedback, emoji: '💬' }
+      { name: 'Feedback System (Comments & Reactions)', fn: seedFeedback, emoji: '💬' },
+      { name: 'Modules (10 Training Modules)', fn: () => seedModules(prisma), emoji: '🏍️' },
+      { name: 'Categories (Motorcycle & Car)', fn: seedCategories, emoji: '🏷️' },
+      { name: 'Quizzes (10+ Questions per Module)', fn: () => seedQuizzes(prisma), emoji: '📝' }
     ];
 
     let totalSuccess = 0;

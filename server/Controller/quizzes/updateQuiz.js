@@ -196,8 +196,9 @@ export default async function updateQuiz(req, res) {
                 optionText: true,
                 isCorrect: true,
                 position: true,
-                imageMime: true,
-                imageData: false // Don't return binary data in response
+                imageUrl: true,
+                imagePath: true,
+                imageMime: true
               }
             }
           }

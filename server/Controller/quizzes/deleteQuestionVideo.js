@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { deleteQuizVideoFile } from '../../utils/quizMediaHandler.js';
+import { deleteFile } from '../../utils/firebase.js';
+import { clearFileCache } from '../../utils/firebaseCache.js';
 
 const prisma = new PrismaClient();
 
@@ -32,18 +33,24 @@ export default async function deleteQuestionVideo(req, res) {
       });
     }
 
-    console.log('Deleting quiz video:', {
+    console.log('Deleting quiz question video from cloud:', {
       questionId,
       videoPath: question.videoPath
     });
 
-    // Delete video file from filesystem
-    deleteQuizVideoFile(question.videoPath);
+    // Delete from cloud storage
+    try {
+      await deleteFile(question.videoPath);
+      clearFileCache(question.videoPath);
+    } catch (err) {
+      console.error('Failed to delete cloud video:', question.videoPath, err);
+    }
 
-    // Update question to remove video path
+    // Update question to remove video references
     const updatedQuestion = await prisma.quizQuestion.update({
       where: { id: parseInt(questionId) },
       data: {
+        videoUrl: null,
         videoPath: null,
         updatedAt: new Date()
       },
