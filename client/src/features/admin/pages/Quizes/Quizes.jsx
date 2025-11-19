@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import QuizModal from '../../../../components/QuizModal';
+import QuizModal from '../../../../components/QuizModalNew';
 import { ModuleListItem, SortableQuestionItem, QuestionTypeSelector, FileUpload, QuizAnalytics } from './components';
 import * as quizService from '../../../../services/quizService';
 import * as moduleService from '../../../../services/moduleService';

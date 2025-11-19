@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import QuizModal from './QuizModal';
+import QuizModal from './QuizModalNew';
 import { submitQuizAttempt } from '../services/studentModuleService';
 
 /**
@@ -34,13 +34,9 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
   const [myFeedback, setMyFeedback] = useState(null);
   const [isEditingFeedback, setIsEditingFeedback] = useState(false);
 
-  // Reset to first slide when modal opens
+  // Reset to appropriate slide when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log('LessonModal opened, lesson:', lesson);
-      console.log('Lesson slides:', lesson?.slides);
-      console.log('Skip to quiz:', lesson?.skipToQuiz);
-      
       // Check if we should skip directly to quiz
       if (lesson?.skipToQuiz && lesson?.quiz) {
         setShowQuiz(true);
@@ -50,7 +46,9 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
         setCurrentSlide(0);
       } else {
         setShowQuiz(false);
-        setCurrentSlide(0);
+        // Resume from last viewed slide if available
+        const startSlideIndex = lesson?.currentSlideIndex ?? 0;
+        setCurrentSlide(startSlideIndex);
       }
       
       setDirection('next');
@@ -145,7 +143,6 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
           }
         } catch (error) {
           // User not authenticated or no feedback yet - that's fine
-          console.log('No existing feedback found');
         }
       }
     } catch (error) {
@@ -223,8 +220,6 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
     try {
       setIsCompleting(true);
       
-      console.log('Quiz submitted:', quizData);
-      
       // Submit to backend for scoring
       const result = await submitQuizAttempt(lesson.moduleId, {
         categoryId: lesson.categoryId,
@@ -232,8 +227,6 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
         answers: quizData.answers,
         timeSpent: quizData.timeSpent || 0
       });
-      
-      console.log('📊 Quiz result from backend:', result);
       
       if (result.success) {
         // Return the result so QuizModal can display it
@@ -1049,13 +1042,13 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
           onClose={() => setShowQuiz(false)}
           quiz={lesson.quiz}
           onSubmit={handleQuizSubmit}
-          onQuizComplete={(passed) => {
+          onQuizComplete={async (passed) => {
+            // Call the parent's onQuizComplete if it exists (before closing to allow UI updates)
+            if (lesson?.onQuizComplete) {
+              await lesson.onQuizComplete(passed);
+            }
             setShowQuiz(false);
             onClose();
-            // Call the parent's onQuizComplete if it exists
-            if (lesson?.onQuizComplete) {
-              lesson.onQuizComplete(passed);
-            }
           }}
         />
       )}

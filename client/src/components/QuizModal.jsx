@@ -31,20 +31,10 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
   // Initialize quiz
   useEffect(() => {
     if (isOpen && quiz) {
-      console.log('QuizModal opened, quiz:', quiz);
-      console.log('📊 Full quiz data:', JSON.stringify(quiz, null, 2));
-      console.log('📋 Questions with media:', quiz.questions?.map(q => ({
-        id: q.id,
-        question: q.question,
-        hasImageMime: !!q.imageMime,
-        hasVideoPath: !!q.videoPath,
-        imageMime: q.imageMime,
-        videoPath: q.videoPath
-      })));
-      
       // Only reset if we don't have results showing
       // This prevents clearing results when modal stays open
       if (!quizResult) {
+        console.log('🔄 Initializing quiz state');
         setCurrentQuestion(0);
         setAnswers({});
         setDirection('next');
@@ -63,11 +53,14 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
         // Load user's existing reactions for all questions
         loadQuestionReactions();
+      } else {
+        console.log('⚠️ Skipping quiz init - results are showing');
       }
     }
     
-    // Reset everything when modal closes
-    if (!isOpen) {
+    // Reset everything when modal closes (but only if not showing results)
+    if (!isOpen && !quizResult) {
+      console.log('🚪 Modal closed, resetting state');
       setQuizResult(null);
       setCurrentQuestion(0);
       setAnswers({});
@@ -127,18 +120,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
   // Debug: Log media properties when question changes
   useEffect(() => {
-    if (isOpen && quiz && quiz.questions?.[currentQuestion]) {
-      const currentQuestionData = quiz.questions[currentQuestion];
-      console.log('📋 Current Question Data:', {
-        id: currentQuestionData.id,
-        question: currentQuestionData.question,
-        hasImageMime: !!currentQuestionData.imageMime,
-        hasVideoPath: !!currentQuestionData.videoPath,
-        imageMime: currentQuestionData.imageMime,
-        videoPath: currentQuestionData.videoPath,
-        allKeys: Object.keys(currentQuestionData)
-      });
-    }
+    // Media preloading logic handled automatically
   }, [isOpen, quiz, currentQuestion]);
 
   const handleStartQuiz = () => {
@@ -290,7 +272,6 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
   const handleSubmitQuiz = async () => {
     setIsSubmitting(true);
-    console.log('🚀 Starting quiz submission...');
     
     // Format answers for submission
     const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => {
@@ -322,37 +303,26 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
     const timeSpent = quiz.timeLimit ? quiz.timeLimit - (timeRemaining || 0) : 0;
 
     try {
-      console.log('📤 Calling onSubmit with data:', {
-        quizId: quiz.id,
-        answersCount: formattedAnswers.length,
-        timeSpent
-      });
-      
       // Call onSubmit which returns the result
       const result = await onSubmit({
         quizId: quiz.id,
         answers: formattedAnswers,
         timeSpent
       });
-
-      console.log('📊 Quiz result received in QuizModal:', result);
-      console.log('📊 Result properties:', {
-        hasResult: !!result,
-        score: result?.score,
-        passed: result?.passed,
-        resultType: typeof result,
-        resultKeys: result ? Object.keys(result) : []
-      });
+      
+      console.log('🎯 Quiz submission result:', result);
       
       // Show results inside the modal
       if (result) {
+        console.log('✅ Setting quiz result state');
         setQuizResult(result);
-        console.log('✅ Quiz result state set successfully');
+        setShowConfirmSubmit(false); // Close the confirm dialog
+        setIsSubmitting(false);
       } else {
         console.error('❌ Result is null or undefined!');
+        setIsSubmitting(false);
+        alert('Failed to get quiz results. Please try again.');
       }
-      
-      setIsSubmitting(false);
     } catch (error) {
       console.error('❌ Error submitting quiz:', error);
       setIsSubmitting(false);
@@ -360,16 +330,20 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
     }
   };
 
-  const handleCloseResults = () => {
+  const handleCloseResults = async () => {
+    console.log('🚪 Closing results and updating UI...');
     // Close the entire modal after viewing results
     const passed = quizResult?.passed || false;
+    
+    // Call parent's onQuizComplete if provided (before closing to allow UI updates)
+    if (onQuizComplete) {
+      console.log('📢 Calling onQuizComplete with passed:', passed);
+      await onQuizComplete(passed);
+      console.log('✅ onQuizComplete finished');
+    }
+    
     setQuizResult(null);
     onClose();
-    
-    // Call parent's onQuizComplete if provided
-    if (onQuizComplete) {
-      onQuizComplete(passed);
-    }
   };
 
   const handleRetakeQuiz = () => {
@@ -392,17 +366,10 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!isOpen || !quiz) return null;
-
-  const currentQuestionData = quiz.questions?.[currentQuestion];
-  const totalQuestions = quiz.questions?.length || 0;
-  const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
-  const answeredCount = Object.keys(answers).length;
-  const isLastQuestion = currentQuestion === totalQuestions - 1;
-
-  // Results screen - Show results inside the quiz modal
+  // IMPORTANT: Check quizResult BEFORE checking isOpen
+  // This prevents the modal from closing while showing results
   if (quizResult) {
-    console.log('✅ Rendering results view with:', quizResult);
+    console.log('📊 Rendering quiz results:', quizResult);
     return (
       <div
         className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
@@ -575,6 +542,15 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
       </div>
     );
   }
+
+  // Early return if modal is closed and no results to show
+  if (!isOpen || !quiz) return null;
+
+  const currentQuestionData = quiz.questions?.[currentQuestion];
+  const totalQuestions = quiz.questions?.length || 0;
+  const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
+  const answeredCount = Object.keys(answers).length;
+  const isLastQuestion = currentQuestion === totalQuestions - 1;
 
   // Start screen
   if (!hasStarted) {

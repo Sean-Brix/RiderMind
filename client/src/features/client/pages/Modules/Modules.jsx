@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
 import LessonModal from '../../../../components/LessonModal';
 import CourseSelection from './CourseSelection';
 import { getMyModules, updateModuleProgress } from '../../../../services/studentModuleService';
 
 export default function Modules() {
+  const location = useLocation();
   const [modules, setModules] = useState([]);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const [progress, setProgress] = useState({ total: 0, completed: 0, completionPercentage: 0 });
@@ -23,6 +25,44 @@ export default function Modules() {
   useEffect(() => {
     loadModules();
   }, []);
+
+  // Auto-open quiz modal if navigated from DevTools QuizSimulator
+  useEffect(() => {
+    if (location.state?.openQuiz && modules.length > 0) {
+      const { moduleId, studentModuleId } = location.state;
+      
+      // Find the student module
+      const studentModule = modules.find(m => 
+        m.moduleId === moduleId || m.id === studentModuleId
+      );
+      
+      if (studentModule && studentModule.module.quizzes?.[0]) {
+        // Open quiz modal with skipToQuiz flag
+        const lessonData = {
+          moduleId: studentModule.module.id,
+          studentModuleId: studentModule.id,
+          categoryId: studentModule.categoryId,
+          title: studentModule.module.title,
+          description: studentModule.module.description,
+          objectives: studentModule.module.objectives.map(obj => obj.objective),
+          slides: [],
+          quiz: studentModule.module.quizzes[0],
+          progress: studentModule.progress,
+          onProgressUpdate: async () => {},
+          onQuizComplete: async (passed) => {
+            await loadModules();
+            setIsLessonOpen(false);
+          },
+          skipToQuiz: true
+        };
+        setCurrentLesson(lessonData);
+        setIsLessonOpen(true);
+        
+        // Clear navigation state to prevent reopening on refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, modules]);
 
   const loadModules = async (skipCheck = false) => {
     try {
@@ -63,6 +103,15 @@ export default function Modules() {
   const handleModuleClick = (studentModule, isUnlocked) => {
     if (!isUnlocked) return;
     
+    // Calculate current slide index from currentSlideId
+    let currentSlideIndex = 0;
+    if (studentModule.currentSlideId) {
+      const slideIndex = studentModule.module.slides.findIndex(s => s.id === studentModule.currentSlideId);
+      if (slideIndex !== -1) {
+        currentSlideIndex = slideIndex;
+      }
+    }
+    
     const lessonData = {
       moduleId: studentModule.module.id,
       studentModuleId: studentModule.id,
@@ -70,6 +119,7 @@ export default function Modules() {
       title: studentModule.module.title,
       description: studentModule.module.description,
       objectives: studentModule.module.objectives.map(obj => obj.objective),
+      currentSlideIndex,
       slides: studentModule.module.slides.map(slide => {
         let content = slide.content;
         if (slide.type === 'image') {
@@ -101,7 +151,8 @@ export default function Modules() {
       },
       onQuizComplete: async (passed) => {
         await loadModules();
-        setIsLessonOpen(false);
+        // Note: Modal is already closed by QuizModalNew.handleCloseResults calling onClose first
+        // No need to call setIsLessonOpen(false) here as it will close too late
         
         if (passed) {
           // Find the next module
@@ -492,8 +543,8 @@ export default function Modules() {
                                 progress: studentModule.progress,
                                 onProgressUpdate: async () => {},
                                 onQuizComplete: async (passed) => {
+                                  // Modal already closed by QuizModal, just refresh data
                                   await loadModules();
-                                  setIsLessonOpen(false);
                                 },
                                 skipToQuiz: true
                               };
