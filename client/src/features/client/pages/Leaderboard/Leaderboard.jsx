@@ -152,14 +152,14 @@ export default function Leaderboard() {
 
           {/* Podium (Top 3) */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 text-center">
               🏆 Top Performers
             </h2>
-            <div className="flex items-end justify-center gap-4 md:gap-8">
+            <div className="flex items-end justify-center gap-2 sm:gap-4 md:gap-8">
               {podium.map((user) => (
-                <div key={user.rank} className={`flex flex-col items-center ${getPodiumPosition(user.rank)}`}>
+                <div key={user.rank} className={`flex flex-col items-center ${getPodiumPosition(user.rank)} flex-1 max-w-[140px]`}>
                   {/* Avatar */}
-                  <div className={`relative mb-4 ${user.rank === 1 ? 'w-28 h-28' : 'w-24 h-24'}`}>
+                  <div className={`relative mb-2 md:mb-4 ${user.rank === 1 ? 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28' : 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24'}`}>
                     <div className={`w-full h-full bg-gradient-to-br ${getMedalColor(user.rank)} rounded-full flex items-center justify-center text-white font-bold ${user.rank === 1 ? 'text-3xl' : 'text-2xl'} shadow-lg`}>
                       {user.avatar}
                     </div>
@@ -171,24 +171,25 @@ export default function Leaderboard() {
                   </div>
 
                   {/* Name */}
-                  <h3 className={`font-bold text-neutral-900 dark:text-neutral-100 mb-1 ${user.rank === 1 ? 'text-xl' : 'text-lg'}`}>
+                  <h3 className={`font-bold text-neutral-900 dark:text-neutral-100 mb-1 text-center text-xs sm:text-sm ${user.rank === 1 ? 'md:text-xl' : 'md:text-lg'}`}>
                     {user.name}
                   </h3>
 
                   {/* Score */}
-                  <div className={`font-bold mb-2 ${user.rank === 1 ? 'text-2xl text-brand-600 dark:text-brand-400' : 'text-xl text-neutral-600 dark:text-neutral-400'}`}>
+                  <div className={`font-bold mb-2 ${user.rank === 1 ? 'text-lg sm:text-xl md:text-2xl text-brand-600 dark:text-brand-400' : 'text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-400'}`}>
                     {user.score}%
                   </div>
 
                   {/* Stats */}
-                  <div className="text-xs text-neutral-600 dark:text-neutral-400 text-center mb-4">
-                    <div>{user.completedModules} modules</div>
-                    <div>{user.totalQuizzes} quizzes</div>
+                  <div className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-400 text-center mb-2 md:mb-4">
+                    <div className="hidden sm:block">{user.completedModules} modules</div>
+                    <div className="hidden sm:block">{user.totalQuizzes} quizzes</div>
+                    <div className="sm:hidden">{user.completedModules}M</div>
                   </div>
 
                   {/* Podium Block */}
-                  <div className={`w-32 ${getPodiumHeight(user.rank)} bg-gradient-to-br ${getMedalColor(user.rank)} rounded-t-lg shadow-lg flex items-center justify-center`}>
-                    <span className="text-white font-bold text-4xl">#{user.rank}</span>
+                  <div className={`w-full sm:w-28 md:w-32 ${getPodiumHeight(user.rank)} bg-gradient-to-br ${getMedalColor(user.rank)} rounded-t-lg shadow-lg flex items-center justify-center`}>
+                    <span className="text-white font-bold text-2xl sm:text-3xl md:text-4xl">#{user.rank}</span>
                   </div>
                 </div>
               ))}
@@ -198,41 +199,41 @@ export default function Leaderboard() {
           {/* Rest of Leaderboard */}
           <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg overflow-hidden border border-neutral-200 dark:border-neutral-700">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-neutral-100 dark:bg-neutral-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rank</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rider</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-neutral-700 dark:text-neutral-300">Score</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-neutral-700 dark:text-neutral-300">Modules</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-neutral-700 dark:text-neutral-300">Quizzes</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rank</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rider</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Score</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Modules</th>
+                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Quizzes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
                   {restOfLeaderboard.map((user) => (
                     <tr key={user.rank} className="hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-neutral-900 dark:text-neutral-100">
                         #{user.rank}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
                             {user.avatar}
                           </div>
-                          <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                          <span className="font-medium text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm">
                             {user.name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                        <span className="text-base sm:text-lg font-bold text-brand-600 dark:text-brand-400">
                           {user.score}%
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center text-neutral-700 dark:text-neutral-300">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm">
                         {user.completedModules}
                       </td>
-                      <td className="px-6 py-4 text-center text-neutral-700 dark:text-neutral-300">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm">
                         {user.totalQuizzes}
                       </td>
                     </tr>

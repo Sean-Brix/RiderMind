@@ -58,31 +58,51 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-8">
               <Link
                 to="/"
-                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
                 Home
               </Link>
               <Link
                 to="/about"
-                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/about' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
                 About
               </Link>
               <Link
                 to="/modules"
-                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/modules' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
                 Modules
               </Link>
               <Link
                 to="/progress"
-                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/progress' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
                 Progress
               </Link>
               <Link
                 to="/leaderboard"
-                className="text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 px-3 py-2 text-sm font-medium transition-colors"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/leaderboard' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
                 Leaderboard
               </Link>

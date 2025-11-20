@@ -33,20 +33,19 @@ export default function Settings() {
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <Navbar />
       
-      <div className="relative h-16"></div>
-      <div className='mx-64'>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <div className="flex-col mb-6">
-          <h1 className="flex text-2xl font-bold text-neutral-900 dark:text-neutral-100">Settings</h1>
-          <p className="flex text-neutral-600 dark:text-neutral-400 mt-1">Manage your application preferences and settings</p>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-neutral-100">Settings</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">Manage your application preferences and settings</p>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-neutral-200 dark:border-neutral-700 mb-6">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -136,7 +135,7 @@ export default function Settings() {
           )}
 
           {activeTab === 'notifications' && (
-            <div className="space-y-6 px-[20%]">
+            <div className="space-y-6">
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Notification Settings</h2>
               
               <div className="space-y-4">
@@ -199,7 +198,7 @@ export default function Settings() {
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Security Settings</h2>
               
-              <div className="space-y-4 px-[20%]">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between py-3 border-b border-neutral-200 dark:border-neutral-700">
                   <div>
                     <h3 className="font-medium text-neutral-900 dark:text-neutral-100">Two-Factor Authentication</h3>

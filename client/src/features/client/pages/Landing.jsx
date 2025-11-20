@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
 import { getMyModules } from '../../../services/studentModuleService';
 
 export default function Landing() {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
   const [hasModules, setHasModules] = useState(true); // Default to true to show "Continue Learning" initially
   const [loadingModules, setLoadingModules] = useState(true);
 

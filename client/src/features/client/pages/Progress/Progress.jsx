@@ -10,8 +10,14 @@ export default function Progress() {
   const [error, setError] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all'); // all, completed, in-progress, not-started
   
-  // Check if user is authenticated
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  // Check if user is authenticated - useMemo to prevent re-parsing on every render
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -19,7 +25,7 @@ export default function Progress() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, []); // Empty dependency array - only run once on mount
 
   const loadModules = async () => {
     try {

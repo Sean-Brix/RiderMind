@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
 import LessonModal from '../../../../components/LessonModal';
@@ -17,8 +17,14 @@ export default function Modules() {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   
-  // Check if user is authenticated
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  // Check if user is authenticated - useMemo to prevent re-parsing on every render
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
   
   // Calculate XP and level
   const totalXP = modules.reduce((sum, m) => sum + (m.isCompleted ? 100 : Math.floor(m.progress)), 0);
@@ -27,8 +33,10 @@ export default function Modules() {
   const xpProgress = ((totalXP % 100) / 100) * 100;
 
   useEffect(() => {
-    loadModules();
-  }, []);
+    if (user) {
+      loadModules();
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   // Auto-open quiz modal if navigated from DevTools QuizSimulator
   useEffect(() => {
