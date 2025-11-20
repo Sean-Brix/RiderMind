@@ -52,6 +52,9 @@ model User {
   // Student Type
   student_type StudentType?
 
+  // Profile Picture
+  profilePictureUrl String?
+
   // Relations
   quizAttempts QuizAttempt[]
   studentModules StudentModule[]

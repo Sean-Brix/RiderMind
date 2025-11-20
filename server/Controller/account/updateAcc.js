@@ -3,11 +3,17 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Admin updates a user's details
+// Admin updates a user's details (or users can update their own profile)
 export default async function updateAcc(req, res) {
 	try {
 		const id = Number(req.params.id);
 		if (!id) return res.status(400).json({ error: 'Invalid id' });
+
+		// Allow users to update their own profile, or admins to update any profile
+		const authenticatedUserId = req.user.id;
+		if (authenticatedUserId !== id && req.user.role !== 'ADMIN') {
+			return res.status(403).json({ error: 'Unauthorized to update this profile' });
+		}
 
 		const body = req.body || {};
 		const data = { ...body };

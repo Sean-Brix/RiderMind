@@ -8,7 +8,10 @@ import {
   FirebaseStorageTool,
   QuizSimulator,
   CompleteCategorySimulator,
-  AlmostCompleteSimulator
+  AlmostCompleteSimulator,
+  CertificateTool,
+  QuizModalTool,
+  LessonModalTool
 } from './DevTools/tools';
 
 /**
@@ -129,6 +132,34 @@ function DevTools() {
           description: 'Complete all modules except the last one'
         }
       ]
+    },
+    {
+      id: 'modal',
+      label: 'Modal',
+      icon: '🎭',
+      tools: [
+        {
+          id: 'certificate-modal',
+          label: 'Certificate',
+          icon: '🎓',
+          component: CertificateTool,
+          description: 'Test certificate modal with custom data'
+        },
+        {
+          id: 'quiz-modal',
+          label: 'Quiz Modal',
+          icon: '📝',
+          component: QuizModalTool,
+          description: 'Test quiz modal interface'
+        },
+        {
+          id: 'lesson-modal',
+          label: 'Lesson Modal',
+          icon: '📚',
+          component: LessonModalTool,
+          description: 'Test lesson modal with slides'
+        }
+      ]
     }
   ];
 
@@ -180,7 +211,7 @@ function DevTools() {
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                   ${activeTab === tab.id
-                    ? 'bg-primary-600 shadow-lg shadow-primary-500/30'
+                    ? 'bg-neutral-400 shadow-lg shadow-primary-500/30'
                     : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
                   }
                 `}

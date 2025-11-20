@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
 import LessonModal from '../../../../components/LessonModal';
+import CongratulationsModal from '../../../../components/CongratulationsModal';
 import CourseSelection from './CourseSelection';
 import { getMyModules, updateModuleProgress } from '../../../../services/studentModuleService';
 
@@ -16,6 +17,7 @@ export default function Modules() {
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
   
   // Check if user is authenticated - useMemo to prevent re-parsing on every render
   const user = useMemo(() => {
@@ -169,37 +171,47 @@ export default function Modules() {
         ));
       },
       onQuizComplete: async (passed) => {
-        await loadModules();
+        const updatedModules = await loadModules();
         // Note: Modal is already closed by QuizModalNew.handleCloseResults calling onClose first
         // No need to call setIsLessonOpen(false) here as it will close too late
         
         if (passed) {
-          // Find the next module
-          setTimeout(() => {
-            const currentIndex = modules.findIndex(m => m.module.id === studentModule.module.id);
-            const nextModule = modules[currentIndex + 1];
-            
-            if (nextModule) {
-              // Find the next module card element and scroll to it
-              const moduleElements = document.querySelectorAll('[data-module-id]');
-              const nextElement = Array.from(moduleElements).find(
-                el => el.getAttribute('data-module-id') === nextModule.id.toString()
-              );
+          const currentIndex = modules.findIndex(m => m.module.id === studentModule.module.id);
+          const isLastModule = currentIndex === modules.length - 1;
+          
+          // Check if this was the last module and all are now completed
+          if (isLastModule) {
+            // Small delay to allow the modal to close first
+            setTimeout(() => {
+              setShowCongratulations(true);
+            }, 500);
+          } else {
+            // Find the next module
+            setTimeout(() => {
+              const nextModule = modules[currentIndex + 1];
               
-              if (nextElement) {
-                nextElement.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
+              if (nextModule) {
+                // Find the next module card element and scroll to it
+                const moduleElements = document.querySelectorAll('[data-module-id]');
+                const nextElement = Array.from(moduleElements).find(
+                  el => el.getAttribute('data-module-id') === nextModule.id.toString()
+                );
                 
-                // Add a brief animation/flash to highlight the unlocked module
-                nextElement.classList.add('animate-pulse');
-                setTimeout(() => {
-                  nextElement.classList.remove('animate-pulse');
-                }, 2000);
+                if (nextElement) {
+                  nextElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                  });
+                  
+                  // Add a brief animation/flash to highlight the unlocked module
+                  nextElement.classList.add('animate-pulse');
+                  setTimeout(() => {
+                    nextElement.classList.remove('animate-pulse');
+                  }, 2000);
+                }
               }
-            }
-          }, 500);
+            }, 500);
+          }
         }
       },
     };
@@ -632,16 +644,95 @@ export default function Modules() {
                 </div>
               );
             })}
+
+            {/* Finish Line / Destination */}
+            <div className="relative mt-20">
+              {/* Final Road Section */}
+              <div className="absolute left-1/2 -top-20 w-24 h-32 bg-neutral-700 dark:bg-neutral-600 transform -translate-x-1/2 z-0">
+                <div className="absolute left-1/2 top-0 bottom-0 w-1 border-l-4 border-dashed border-yellow-400 transform -translate-x-1/2"></div>
+              </div>
+
+              {/* Finish Line Banner */}
+              <div className="relative z-10 bg-gradient-to-br from-brand-600 via-brand-500 to-red-600 rounded-2xl shadow-2xl overflow-hidden border-8 border-white dark:border-neutral-800">
+                {/* Checkered Pattern Background */}
+                <div className="absolute inset-0 opacity-20" style={{
+                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(0,0,0,0.3) 20px, rgba(0,0,0,0.3) 40px), repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(0,0,0,0.3) 20px, rgba(0,0,0,0.3) 40px)'
+                }}></div>
+                
+                <div className="relative p-12 text-center">
+                  {/* Trophy and Flags */}
+                  <div className="flex justify-center gap-8 mb-6">
+                    <div className="text-6xl animate-bounce">🏁</div>
+                    <div className="text-7xl animate-pulse">🏆</div>
+                    <div className="text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>🏁</div>
+                  </div>
+
+                  <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
+                    FINISH LINE
+                  </h2>
+                  <p className="text-2xl text-red-100 font-bold mb-6 drop-shadow">
+                    Complete all modules to earn your certificate!
+                  </p>
+
+                  {/* Progress Stats */}
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 max-w-md mx-auto border-2 border-white/30">
+                    <div className="flex justify-between items-center">
+                      <div className="text-left">
+                        <div className="text-4xl font-black text-white">{progress.completed}</div>
+                        <div className="text-sm text-red-100">Completed</div>
+                      </div>
+                      <div className="text-3xl">➡️</div>
+                      <div className="text-right">
+                        <div className="text-4xl font-black text-white">{progress.total}</div>
+                        <div className="text-sm text-red-100">Total Modules</div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-4 h-4 bg-white/30 rounded-full overflow-hidden border-2 border-white/50">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500"
+                        style={{ width: `${progress.completionPercentage}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 text-center text-white font-bold text-lg">
+                      {progress.completionPercentage}% Complete
+                    </div>
+                  </div>
+
+                  {/* Completion Message or Next Steps */}
+                  {progress.completionPercentage === 100 ? (
+                    <div className="mt-8">
+                      <button
+                        onClick={() => setShowCongratulations(true)}
+                        className="px-12 py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-2xl font-black rounded-xl shadow-2xl transform hover:scale-105 transition-all animate-pulse"
+                      >
+                        🎉 Claim Your Certificate! 🎉
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-8 text-white text-lg font-semibold">
+                      Keep going! You're {progress.total - progress.completed} module{progress.total - progress.completed !== 1 ? 's' : ''} away from glory! 💪
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Road End Marker */}
+              <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2 text-4xl z-20">
+                🎯
+              </div>
+            </div>
           </div>
 
           {/* Achievement Banner */}
-          {progress.completed > 0 && (
+          {progress.completed > 0 && progress.completionPercentage < 100 && (
             <div className="mt-16 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-xl p-8 text-center shadow-xl relative overflow-hidden">
               <div className="absolute inset-0 bg-white/10"></div>
               <div className="relative">
-                <div className="text-6xl mb-4">🏆�</div>
+                <div className="text-6xl mb-4">🏆🎉</div>
                 <h3 className="text-3xl font-black text-white mb-2">Great Driving!</h3>
-                <p className="text-xl text-green-50">You've mastered {progress.completed} route{progress.completed !== 1 ? 's' : ''}! Keep up the safe driving! 🚗�</p>
+                <p className="text-xl text-green-50">You've mastered {progress.completed} route{progress.completed !== 1 ? 's' : ''}! Keep up the safe driving! 🚗💨</p>
               </div>
             </div>
           )}
@@ -652,6 +743,28 @@ export default function Modules() {
         isOpen={isLessonOpen} 
         onClose={() => setIsLessonOpen(false)} 
         lesson={currentLesson} 
+      />
+
+      <CongratulationsModal
+        isOpen={showCongratulations}
+        onClose={() => setShowCongratulations(false)}
+        studentData={{
+          fullName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'Student',
+          accountId: user?.id ? `ACC-${String(user.id).padStart(6, '0')}` : 'ACC-000000'
+        }}
+        categoryData={{
+          name: categoryInfo?.name || 'Course',
+          modules: modules.map(sm => ({
+            id: sm.id,
+            title: sm.module.title,
+            isCompleted: sm.isCompleted,
+            quiz: sm.module.quizzes?.[0] || null,
+            quizScore: sm.quizScore
+          }))
+        }}
+        onDownloadCertificate={() => {
+          console.log('Certificate downloaded!');
+        }}
       />
     </>
   );

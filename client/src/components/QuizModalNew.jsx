@@ -381,7 +381,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
       }}
     >
       <div
-        className="relative w-full max-w-6xl h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-6xl h-[95vh] lg:h-[90vh] bg-white dark:bg-neutral-900 rounded-lg lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -393,40 +393,41 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
             />
           </div>
 
-          <div className="px-8 py-5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          <div className="px-3 lg:px-8 py-3 lg:py-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2 lg:gap-4">
+            <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto">
+              <h2 className="text-base lg:text-2xl font-bold text-neutral-900 dark:text-neutral-100 flex-1 lg:flex-initial">
                 {quiz.title}
               </h2>
-              <span className="px-4 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Question {currentQuestion + 1} / {totalQuestions}
+              <span className="px-2 lg:px-4 py-1 lg:py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-xs lg:text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                {currentQuestion + 1} / {totalQuestions}
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto justify-between lg:justify-end">
               {timeRemaining !== null && (
-                <div className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-mono font-semibold text-lg ${
+                <div className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-5 py-1.5 lg:py-2.5 rounded-lg font-mono font-semibold text-sm lg:text-lg ${
                   timeRemaining < 60 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
                 }`}>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {formatTime(timeRemaining)}
                 </div>
               )}
 
-              <div className="text-base text-neutral-600 dark:text-neutral-400 font-medium">
-                {answeredCount} / {totalQuestions} answered
+              <div className="text-xs lg:text-base text-neutral-600 dark:text-neutral-400 font-medium whitespace-nowrap">
+                {answeredCount} / {totalQuestions}
               </div>
 
               <button
                 onClick={handleEndQuizEarly}
-                className="px-5 py-2.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg font-semibold transition-all flex items-center gap-2"
+                className="px-2 lg:px-5 py-1.5 lg:py-2.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg font-semibold text-xs lg:text-base transition-all flex items-center gap-1 lg:gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                End Quiz
+                <span className="hidden sm:inline">End Quiz</span>
+                <span className="sm:hidden">End</span>
               </button>
             </div>
           </div>
@@ -447,17 +448,17 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
               <div className="h-full flex flex-col">
                 {/* Media Section */}
                 {(currentQuestionData.imageMime || currentQuestionData.videoPath) && (
-                  <div className="flex-shrink-0 h-1/2 bg-neutral-900 dark:bg-neutral-950 flex items-center justify-center p-6">
+                  <div className="flex-shrink-0 max-h-[35vh] lg:h-1/2 bg-neutral-900 dark:bg-neutral-950 flex items-center justify-center p-3 lg:p-6">
                     {currentQuestionData.imageMime && (
                       <div className="w-full h-full flex items-center justify-center">
                         {imageError === currentQuestion ? (
-                          <div className="text-center p-8">
-                            <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
-                              <svg className="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="text-center p-4 lg:p-8">
+                            <div className="inline-flex items-center justify-center w-16 h-16 lg:w-24 lg:h-24 bg-red-100 dark:bg-red-900/20 rounded-full mb-2 lg:mb-4">
+                              <svg className="w-8 h-8 lg:w-12 lg:h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                               </svg>
                             </div>
-                            <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
+                            <h3 className="text-base lg:text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
                               Image Not Available
                             </h3>
                           </div>
@@ -465,7 +466,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                           <img
                             src={`/api/quizzes/questions/${currentQuestionData.id}/image`}
                             alt="Question"
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            className="max-w-full max-h-full object-contain rounded-lg lg:rounded-xl shadow-2xl"
                             onError={() => setImageError(currentQuestion)}
                             onLoad={() => setImageError(null)}
                           />
@@ -477,7 +478,7 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                       <div className="w-full h-full flex items-center justify-center">
                         <video
                           key={currentQuestion}
-                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                          className="max-w-full max-h-full object-contain rounded-lg lg:rounded-xl shadow-2xl"
                           controls
                           autoPlay
                           loop
@@ -492,51 +493,51 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                 )}
 
                 {/* Question and Options Section */}
-                <div className={`flex-1 min-h-0 overflow-y-auto px-8 py-6 space-y-6 ${
+                <div className={`flex-1 min-h-0 overflow-y-auto px-3 lg:px-8 py-3 lg:py-6 space-y-3 lg:space-y-6 ${
                   currentQuestionData.imageMime || currentQuestionData.videoPath 
                     ? 'bg-neutral-50 dark:bg-neutral-900' 
                     : 'bg-white dark:bg-neutral-900 max-w-5xl mx-auto w-full'
                 }`}>
                   {/* Question Text */}
                   {(currentQuestionData.imageMime || currentQuestionData.videoPath) ? (
-                    <div className="px-6 py-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    <div className="px-4 lg:px-6 py-3 lg:py-5 bg-white dark:bg-neutral-800 rounded-lg lg:rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                      <div className="flex items-start gap-2 lg:gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-sm lg:text-lg">
                           {currentQuestion + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                          <h3 className="text-base lg:text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2 lg:mb-3">
                             {currentQuestionData.question}
                           </h3>
-                          <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
                             {currentQuestionData.points && (
-                              <span className="inline-block px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded text-sm font-medium">
-                                {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
+                              <span className="inline-block px-2 lg:px-3 py-1 lg:py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded text-xs lg:text-sm font-medium">
+                                {currentQuestionData.points} {currentQuestionData.points === 1 ? 'pt' : 'pts'}
                               </span>
                             )}
                             
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 lg:gap-2">
                               <button
                                 onClick={() => handleReactionToggle(currentQuestionData.id, true)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-all ${
+                                className={`flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 rounded transition-all ${
                                   questionReactions[currentQuestionData.id]?.isLike === true
                                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-green-50'
                                 }`}
                               >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                                 </svg>
                               </button>
                               <button
                                 onClick={() => handleReactionToggle(currentQuestionData.id, false)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-all ${
+                                className={`flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 rounded transition-all ${
                                   questionReactions[currentQuestionData.id]?.isLike === false
                                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-red-50'
                                 }`}
                               >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
                                 </svg>
                               </button>
@@ -546,19 +547,19 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                       </div>
                     </div>
                   ) : (
-                    <div className="p-8 bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="flex-shrink-0 w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    <div className="p-4 lg:p-8 bg-white dark:bg-neutral-800 rounded-lg lg:rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-2 lg:gap-4 mb-3 lg:mb-4">
+                        <div className="flex-shrink-0 w-8 h-8 lg:w-12 lg:h-12 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold text-base lg:text-xl">
                           {currentQuestion + 1}
                         </div>
-                        <h3 className="flex-1 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                        <h3 className="flex-1 text-base lg:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                           {currentQuestionData.question}
                         </h3>
                       </div>
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
                         {currentQuestionData.points && (
-                          <span className="inline-block px-4 py-2 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-base font-medium">
-                            {currentQuestionData.points} {currentQuestionData.points === 1 ? 'point' : 'points'}
+                          <span className="inline-block px-2 lg:px-4 py-1 lg:py-2 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-xs lg:text-base font-medium">
+                            {currentQuestionData.points} {currentQuestionData.points === 1 ? 'pt' : 'pts'}
                           </span>
                         )}
                         <div className="flex items-center gap-2">
@@ -592,39 +593,39 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                   )}
 
                   {/* Answer Options */}
-                  <div className="space-y-4">
+                  <div className="space-y-2 lg:space-y-4">
                     {!currentQuestionData.options || currentQuestionData.options.length === 0 ? (
-                      <div className="p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-xl text-center">
-                        <svg className="w-16 h-16 text-red-600 dark:text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="p-4 lg:p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-lg lg:rounded-xl text-center">
+                        <svg className="w-12 h-12 lg:w-16 lg:h-16 text-red-600 dark:text-red-400 mx-auto mb-2 lg:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">No Answer Options Available</h3>
-                        <p className="text-red-700 dark:text-red-300">This question doesn't have answer options configured. Please contact your instructor.</p>
+                        <h3 className="text-base lg:text-xl font-bold text-red-900 dark:text-red-100 mb-2">No Answer Options Available</h3>
+                        <p className="text-sm lg:text-base text-red-700 dark:text-red-300">This question doesn't have answer options configured. Please contact your instructor.</p>
                       </div>
                     ) : currentQuestionData.type === 'MULTIPLE_CHOICE' || currentQuestionData.type === 'TRUE_FALSE' ? (
                       currentQuestionData.options?.map((option) => (
                         <button
                           key={option.id}
                           onClick={() => handleAnswerChange(currentQuestionData.id, option.id)}
-                          className={`w-full p-5 text-left rounded-xl border-2 transition-all shadow-sm hover:shadow-md ${
+                          className={`w-full p-3 lg:p-5 text-left rounded-lg lg:rounded-xl border-2 transition-all shadow-sm hover:shadow-md ${
                             answers[currentQuestionData.id] === option.id
                               ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/20 dark:border-brand-400'
                               : 'border-neutral-200 dark:border-neutral-600 hover:border-brand-300 dark:hover:border-brand-600 bg-white dark:bg-neutral-700'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                          <div className="flex items-center gap-2 lg:gap-4">
+                            <div className={`flex-shrink-0 w-5 h-5 lg:w-7 lg:h-7 rounded-full border-2 flex items-center justify-center transition-all ${
                               answers[currentQuestionData.id] === option.id
                                 ? 'border-brand-500 bg-brand-500 dark:border-brand-400 dark:bg-brand-400'
                                 : 'border-neutral-400 dark:border-neutral-500'
                             }`}>
                               {answers[currentQuestionData.id] === option.id && (
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-3 h-3 lg:w-4 lg:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               )}
                             </div>
-                            <span className="flex-1 text-lg font-semibold text-neutral-900 dark:text-white">
+                            <span className="flex-1 text-sm lg:text-lg font-semibold text-neutral-900 dark:text-white">
                               {option.optionText || option.text}
                             </span>
                           </div>
@@ -635,25 +636,25 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
                         <button
                           key={option.id}
                           onClick={() => handleMultipleAnswerToggle(currentQuestionData.id, option.id)}
-                          className={`w-full p-5 text-left rounded-xl border-2 transition-all shadow-sm hover:shadow-md ${
+                          className={`w-full p-3 lg:p-5 text-left rounded-lg lg:rounded-xl border-2 transition-all shadow-sm hover:shadow-md ${
                             (answers[currentQuestionData.id] || []).includes(option.id)
                               ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/20 dark:border-brand-400'
                               : 'border-neutral-200 dark:border-neutral-600 hover:border-brand-300 dark:hover:border-brand-600 bg-white dark:bg-neutral-700'
                           }`}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`flex-shrink-0 w-7 h-7 rounded border-2 flex items-center justify-center transition-all ${
+                          <div className="flex items-center gap-2 lg:gap-4">
+                            <div className={`flex-shrink-0 w-5 h-5 lg:w-7 lg:h-7 rounded border-2 flex items-center justify-center transition-all ${
                               (answers[currentQuestionData.id] || []).includes(option.id)
                                 ? 'border-brand-500 bg-brand-500 dark:border-brand-400 dark:bg-brand-400'
                                 : 'border-neutral-400 dark:border-neutral-500'
                             }`}>
                               {(answers[currentQuestionData.id] || []).includes(option.id) && (
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-3 h-3 lg:w-4 lg:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               )}
                             </div>
-                            <span className="flex-1 text-lg font-semibold text-neutral-900 dark:text-white">
+                            <span className="flex-1 text-sm lg:text-lg font-semibold text-neutral-900 dark:text-white">
                               {option.optionText || option.text}
                             </span>
                           </div>
@@ -676,27 +677,16 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
         </div>
 
         {/* Footer Navigation */}
-        <div className="flex-shrink-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 px-8 py-5">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handlePrevQuestion}
-              disabled={currentQuestion === 0 || isAnimating}
-              className="px-6 py-3 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Previous
-            </button>
-
-            {/* Question Navigation Dots */}
-            <div className="flex items-center gap-2 max-w-md">
-              <div className="flex items-center gap-2 overflow-x-auto px-4 scrollbar-hide">
+        <div className="flex-shrink-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 px-3 lg:px-8 py-3 lg:py-5">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-0">
+            {/* Question Navigation Dots - Show first on mobile */}
+            <div className="order-2 lg:order-2 w-full lg:w-auto flex items-center justify-center gap-2 max-w-full lg:max-w-md">
+              <div className="flex items-center gap-1.5 lg:gap-2 overflow-x-auto px-2 lg:px-4 scrollbar-hide">
                 {quiz.questions?.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToQuestion(index)}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full font-semibold transition-all ${
+                    className={`flex-shrink-0 w-7 h-7 lg:w-10 lg:h-10 rounded-full text-xs lg:text-base font-semibold transition-all ${
                       index === currentQuestion
                         ? 'bg-brand-600 text-white scale-110'
                         : answers[quiz.questions[index].id]
@@ -711,29 +701,45 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
               </div>
             </div>
 
-            {isLastQuestion ? (
+            {/* Navigation Buttons */}
+            <div className="order-1 lg:order-1 w-full lg:w-auto flex items-center justify-between gap-2">
               <button
-                onClick={() => setShowConfirmSubmit(true)}
-                disabled={isAnimating}
-                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 text-lg"
+                onClick={handlePrevQuestion}
+                disabled={currentQuestion === 0 || isAnimating}
+                className="px-3 lg:px-6 py-2 lg:py-3 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg font-semibold text-sm lg:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 lg:gap-2"
               >
-                Submit Quiz
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
               </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                disabled={isAnimating}
-                className="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 text-lg"
-              >
-                Next
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
+
+              {isLastQuestion ? (
+                <button
+                  onClick={() => setShowConfirmSubmit(true)}
+                  disabled={isAnimating}
+                  className="px-4 lg:px-8 py-2 lg:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm lg:text-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 lg:gap-2"
+                >
+                  <span className="hidden sm:inline">Submit Quiz</span>
+                  <span className="sm:hidden">Submit</span>
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={isAnimating}
+                  className="px-4 lg:px-8 py-2 lg:py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold text-sm lg:text-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 lg:gap-2"
+                >
+                  Next
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

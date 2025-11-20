@@ -17,6 +17,7 @@ function toggleDark() {
 
 export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,6 +25,49 @@ export default function Navbar() {
   
   // Check if we're in the admin panel
   const isAdminPanel = location.pathname.startsWith('/admin');
+
+  // Fetch and cache profile picture
+  useEffect(() => {
+    async function fetchProfilePicture() {
+      if (!user) return;
+
+      // Check cache first
+      const cached = localStorage.getItem(`profilePicture_${user.id}`);
+      if (cached) {
+        setProfilePicture(cached);
+        return;
+      }
+
+      // Fetch from API
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/account/${user.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.user?.profilePictureUrl) {
+          setProfilePicture(data.user.profilePictureUrl);
+          localStorage.setItem(`profilePicture_${user.id}`, data.user.profilePictureUrl);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile picture:', error);
+      }
+    }
+
+    fetchProfilePicture();
+  }, [user?.id]);
+
+  // Listen for profile picture updates
+  useEffect(() => {
+    function handleProfileUpdate(event) {
+      if (event.key === `profilePicture_${user?.id}`) {
+        setProfilePicture(event.newValue);
+      }
+    }
+
+    window.addEventListener('storage', handleProfileUpdate);
+    return () => window.removeEventListener('storage', handleProfileUpdate);
+  }, [user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -75,6 +119,16 @@ export default function Navbar() {
                 }`}
               >
                 About
+              </Link>
+              <Link
+                to="/faq"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/faq' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+              >
+                FAQ
               </Link>
               <Link
                 to="/modules"
@@ -136,8 +190,20 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold">
-                    {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                  <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold overflow-hidden">
+                    {profilePicture ? (
+                      <img 
+                        src={profilePicture} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : null}
+                    {!profilePicture && (
+                      <span>{(user.displayName || user.email || 'U')[0].toUpperCase()}</span>
+                    )}
                   </div>
                   <span className="hidden sm:inline">Profile</span>
                   <svg

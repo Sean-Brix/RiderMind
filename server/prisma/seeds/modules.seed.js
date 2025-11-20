@@ -117,28 +117,86 @@ const moduleTemplates = [
   }
 ];
 
-const slideTemplates = [
-  {
-    type: "text",
-    title: "Welcome",
-    description: "Introduction to the module"
-  },
-  {
-    type: "image",
-    title: "Key Concepts",
-    description: "Core learning material"
-  },
-  {
-    type: "video",
-    title: "Practice Exercise",
-    description: "Apply what you've learned"
-  },
-  {
-    type: "text",
-    title: "Review",
-    description: "Module summary and key takeaways"
-  }
-];
+const slideTemplatesBySkillLevel = {
+  "Beginner": [
+    {
+      type: "text",
+      title: "Welcome to Basics",
+      description: "Introduction for beginners",
+      skillLevel: "Beginner"
+    },
+    {
+      type: "image",
+      title: "Fundamental Concepts",
+      description: "Core beginner material",
+      skillLevel: "Beginner"
+    },
+    {
+      type: "video",
+      title: "Basic Practice",
+      description: "Beginner practice exercise",
+      skillLevel: "Beginner"
+    },
+    {
+      type: "text",
+      title: "Beginner Summary",
+      description: "Review of basic concepts",
+      skillLevel: "Beginner"
+    }
+  ],
+  "Intermediate": [
+    {
+      type: "text",
+      title: "Building on Basics",
+      description: "Intermediate introduction",
+      skillLevel: "Intermediate"
+    },
+    {
+      type: "image",
+      title: "Advanced Concepts",
+      description: "Intermediate learning material",
+      skillLevel: "Intermediate"
+    },
+    {
+      type: "video",
+      title: "Intermediate Practice",
+      description: "Apply intermediate techniques",
+      skillLevel: "Intermediate"
+    },
+    {
+      type: "text",
+      title: "Intermediate Review",
+      description: "Summary of intermediate concepts",
+      skillLevel: "Intermediate"
+    }
+  ],
+  "Expert": [
+    {
+      type: "text",
+      title: "Mastery Level",
+      description: "Expert-level introduction",
+      skillLevel: "Expert"
+    },
+    {
+      type: "image",
+      title: "Expert Techniques",
+      description: "Advanced expert material",
+      skillLevel: "Expert"
+    },
+    {
+      type: "video",
+      title: "Expert Drills",
+      description: "Master advanced skills",
+      skillLevel: "Expert"
+    },
+    {
+      type: "text",
+      title: "Expert Mastery",
+      description: "Complete mastery review",
+      skillLevel: "Expert"
+    }
+  ]
+};
 
 /**
  * Load media URLs from firebase-urls.json
@@ -199,7 +257,47 @@ export async function seedModules(prisma) {
 
       console.log(`Creating module ${i + 1}: ${template.title}`);
 
-      // Create module with objectives and slides
+      // Create module with objectives and slides for ALL skill levels
+      const allSlides = [];
+      let slidePosition = 1;
+      
+      // Generate slides for each skill level (Beginner, Intermediate, Expert)
+      ["Beginner", "Intermediate", "Expert"].forEach((skillLevel) => {
+        const templates = slideTemplatesBySkillLevel[skillLevel];
+        
+        templates.forEach((slideTemplate) => {
+          const slideData = {
+            type: slideTemplate.type,
+            title: slideTemplate.title,
+            content: `${template.description}\n\n${slideTemplate.description} (${skillLevel} Level).`,
+            description: slideTemplate.description,
+            position: slidePosition++,
+            skillLevel: skillLevel,
+            imageUrl: null,
+            imagePath: null,
+            imageMime: null,
+            videoUrl: null,
+            videoPath: null
+          };
+
+          // Add media based on slide type (rotate through available media)
+          if (slideTemplate.type === 'image') {
+            const imageIndex = ((i + slidePosition) % 11) + 1; // Rotate through images
+            const image = mediaMap.images[imageIndex];
+            slideData.imageUrl = image.url;
+            slideData.imagePath = image.path;
+            slideData.imageMime = image.mime;
+          } else if (slideTemplate.type === 'video') {
+            const videoIndex = ((i + slidePosition) % 11) + 1; // Rotate through videos
+            const video = mediaMap.videos[videoIndex];
+            slideData.videoUrl = video.url;
+            slideData.videoPath = video.path;
+          }
+
+          allSlides.push(slideData);
+        });
+      });
+
       const module = await prisma.module.create({
         data: {
           title: template.title,
@@ -212,36 +310,7 @@ export async function seedModules(prisma) {
             }))
           },
           slides: {
-            create: slideTemplates.map((slideTemplate, slideIdx) => {
-              const slideData = {
-                type: slideTemplate.type,
-                title: slideTemplate.title,
-                content: `${template.description}\n\nThis is ${slideTemplate.description.toLowerCase()}.`,
-                description: slideTemplate.description,
-                position: slideIdx + 1,
-                skillLevel: template.skillLevel,
-                imageUrl: null,
-                imagePath: null,
-                imageMime: null,
-                videoUrl: null,
-                videoPath: null
-              };
-
-              // Add media based on slide type
-              if (slideTemplate.type === 'image') {
-                const image = mediaMap.images[mediaIndex];
-                slideData.imageUrl = image.url;
-                slideData.imagePath = image.path;
-                slideData.imageMime = image.mime;
-              } else if (slideTemplate.type === 'video') {
-                const video = mediaMap.videos[mediaIndex];
-                slideData.videoUrl = video.url;
-                slideData.videoPath = video.path;
-              }
-              // 'text' type has no media attachments
-
-              return slideData;
-            })
+            create: allSlides
           }
         },
         include: {
@@ -250,7 +319,7 @@ export async function seedModules(prisma) {
         }
       });
 
-      console.log(`  ✓ Created with ${module.slides.length} slides`);
+      console.log(`  ✓ Created with ${module.slides.length} slides (${module.slides.filter(s => s.skillLevel === 'Beginner').length} Beginner, ${module.slides.filter(s => s.skillLevel === 'Intermediate').length} Intermediate, ${module.slides.filter(s => s.skillLevel === 'Expert').length} Expert)`);
     }
 
     const count = await prisma.module.count();

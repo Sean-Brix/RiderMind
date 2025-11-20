@@ -417,9 +417,9 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
         </button>
 
         {/* Main Content Area */}
-        <div className="flex h-full">
-          {/* Left Side - Slide Content (70%) */}
-          <div className="flex-1 flex flex-col bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 relative">
+        <div className="flex flex-col lg:flex-row h-full overflow-y-auto lg:overflow-hidden">
+          {/* Left Side - Slide Content (70% on desktop, full width on mobile) */}
+          <div className="flex-1 flex flex-col bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 relative min-h-[50vh] lg:min-h-0">
             {/* Progress Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-neutral-200 dark:bg-neutral-700 z-10">
               <div
@@ -429,18 +429,18 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
             </div>
 
             {/* Slide Header */}
-            <div className="pt-10 px-8 pb-5 bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
-              <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-2">
+            <div className="pt-6 lg:pt-10 px-4 lg:px-8 pb-3 lg:pb-5 bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-2">
                 {lesson.title}
               </h2>
-              <div className="flex items-center gap-4">
-                <span className="inline-flex items-center gap-2 px-4 py-2 bg-brand-100 dark:bg-brand-900/30 rounded-full text-sm font-bold text-brand-700 dark:text-brand-300">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+                <span className="inline-flex items-center gap-2 px-3 lg:px-4 py-1.5 lg:py-2 bg-brand-100 dark:bg-brand-900/30 rounded-full text-xs lg:text-sm font-bold text-brand-700 dark:text-brand-300">
+                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   Slide {currentSlide + 1} / {totalSlides}
                 </span>
-                <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+                <span className="text-xs lg:text-sm font-semibold text-neutral-600 dark:text-neutral-400">
                   {Math.round(progress)}% Complete
                 </span>
               </div>
@@ -463,13 +463,13 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                 }`}
               >
                 {currentSlideData && (
-                  <div className="h-full flex items-center justify-center p-8">
+                  <div className="h-full flex items-center justify-center p-4 lg:p-8">
                     {/* Video Slide */}
                     {currentSlideData.type === 'video' && (
                       <div className="w-full h-full flex items-center justify-center animate-fadeIn">
                         <video
                           key={currentSlide}
-                          className="w-full h-full object-contain rounded-2xl shadow-2xl ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all"
+                          className="w-full h-full max-h-[40vh] lg:max-h-full object-contain rounded-lg lg:rounded-2xl shadow-2xl ring-2 lg:ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all"
                           controls
                           autoPlay
                           src={currentSlideData.content}
@@ -483,7 +483,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                     {currentSlideData.type === 'image' && (
                       <div className="w-full h-full flex items-center justify-center animate-fadeIn">
                         {imageError === currentSlide ? (
-                          <div className="text-center p-12 animate-fadeIn">
+                          <div className="text-center p-6 lg:p-12 animate-fadeIn">
                             <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 rounded-2xl mb-6 shadow-xl">
                               <svg className="w-16 h-16 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -500,7 +500,7 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                           <img
                             src={currentSlideData.content}
                             alt={currentSlideData.title}
-                            className="w-full h-full object-contain rounded-2xl shadow-2xl ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all hover:scale-[1.02] duration-300"
+                            className="w-full h-full max-h-[40vh] lg:max-h-full object-contain rounded-lg lg:rounded-2xl shadow-2xl ring-2 lg:ring-4 ring-brand-500/20 hover:ring-brand-500/40 transition-all hover:scale-[1.01] lg:hover:scale-[1.02] duration-300"
                             onError={(e) => {
                               console.error('Image failed to load:', {
                                 src: currentSlideData.content,
@@ -526,13 +526,13 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
 
                     {/* Text Content Slide */}
                     {currentSlideData.type === 'text' && (
-                      <div className="w-full h-full flex items-center justify-center p-12 animate-fadeIn">
-                        <div className="max-w-4xl bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-12 border border-neutral-200 dark:border-neutral-700">
-                          <h3 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-8">
+                      <div className="w-full h-full flex items-center justify-center p-4 lg:p-12 animate-fadeIn">
+                        <div className="max-w-4xl bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl rounded-xl lg:rounded-3xl shadow-2xl p-6 lg:p-12 border border-neutral-200 dark:border-neutral-700">
+                          <h3 className="text-2xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 dark:from-brand-400 dark:to-brand-500 mb-4 lg:mb-8">
                             {currentSlideData.title}
                           </h3>
-                          <div className="prose prose-xl dark:prose-invert max-w-none">
-                            <p className="text-2xl text-neutral-800 dark:text-neutral-200 leading-relaxed whitespace-pre-wrap">
+                          <div className="prose prose-sm lg:prose-xl dark:prose-invert max-w-none">
+                            <p className="text-base lg:text-2xl text-neutral-800 dark:text-neutral-200 leading-relaxed whitespace-pre-wrap">
                               {currentSlideData.content}
                             </p>
                           </div>
@@ -545,22 +545,10 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
             </div>
 
             {/* Navigation Controls - Only show when viewing slides */}
-            <div className="p-8 bg-gradient-to-t from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between gap-6">
-                {/* Previous Button */}
-                <button
-                  onClick={handlePrevSlide}
-                  disabled={currentSlide === 0 || isAnimating}
-                  className="group px-8 py-4 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg hover:shadow-xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-600 disabled:hover:border-neutral-200 dark:disabled:hover:border-neutral-700"
-                >
-                  <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span>Previous</span>
-                </button>
-
-                {/* Page Indicators */}
-                <div className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-neutral-800 rounded-xl shadow-lg border-2 border-neutral-200 dark:border-neutral-700">
+            <div className="p-4 lg:p-8 bg-gradient-to-t from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-6">
+                {/* Page Indicators - Show centered on mobile */}
+                <div className="flex items-center gap-2 lg:gap-3 px-4 lg:px-6 py-2 lg:py-3 bg-white dark:bg-neutral-800 rounded-lg lg:rounded-xl shadow-lg border-2 border-neutral-200 dark:border-neutral-700 order-2 lg:order-2">
                   {lesson.slides?.map((_, index) => (
                     <button
                       key={index}
@@ -568,64 +556,81 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                       disabled={isAnimating}
                       className={`transition-all duration-500 rounded-full ${
                         index === currentSlide
-                          ? 'w-12 h-4 bg-gradient-to-r from-brand-500 to-brand-600 shadow-lg shadow-brand-500/50'
-                          : 'w-4 h-4 bg-neutral-300 dark:bg-neutral-600 hover:bg-brand-400 hover:scale-110'
+                          ? 'w-8 lg:w-12 h-3 lg:h-4 bg-gradient-to-r from-brand-500 to-brand-600 shadow-lg shadow-brand-500/50'
+                          : 'w-3 lg:w-4 h-3 lg:h-4 bg-neutral-300 dark:bg-neutral-600 hover:bg-brand-400 hover:scale-110'
                       }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
                   ))}
                 </div>
 
-                {/* Next Button or Mark as Done */}
-                {currentSlide === totalSlides - 1 ? (
-                  <button 
-                    onClick={handleMarkAsDone}
-                    disabled={isCompleting || isAnimating}
-                    className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>{lesson.quiz ? 'Take Quiz' : 'Mark as Done'}</span>
-                    {isCompleting && (
-                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                  </button>
-                ) : (
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-between w-full lg:w-auto gap-2 lg:gap-6 order-1 lg:order-1">
+                  {/* Previous Button */}
                   <button
-                    onClick={handleNextSlide}
-                    disabled={isAnimating}
-                    className="group px-8 py-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                    onClick={handlePrevSlide}
+                    disabled={currentSlide === 0 || isAnimating}
+                    className="group px-4 lg:px-8 py-3 lg:py-4 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg lg:rounded-xl font-bold text-sm lg:text-base transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2 lg:gap-3 shadow-lg hover:shadow-xl border-2 border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-600 disabled:hover:border-neutral-200 dark:disabled:hover:border-neutral-700"
                   >
-                    <span>Next</span>
-                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                     </svg>
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </button>
-                )}
+
+                  {/* Next Button or Mark as Done */}
+                  {currentSlide === totalSlides - 1 ? (
+                    <button 
+                      onClick={handleMarkAsDone}
+                      disabled={isCompleting || isAnimating}
+                      className="group px-4 lg:px-8 py-3 lg:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg lg:rounded-xl font-bold text-sm lg:text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 lg:gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                    >
+                      <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="hidden sm:inline">{lesson.quiz ? 'Take Quiz' : 'Mark as Done'}</span>
+                      <span className="sm:hidden">{lesson.quiz ? 'Quiz' : 'Done'}</span>
+                      {isCompleting && (
+                        <svg className="animate-spin w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNextSlide}
+                      disabled={isAnimating}
+                      className="group px-4 lg:px-8 py-3 lg:py-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white rounded-lg lg:rounded-xl font-bold text-sm lg:text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 lg:gap-3 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                    >
+                      <span>Next</span>
+                      <svg className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             </>
           </div>
 
-          {/* Right Sidebar - Lesson Details (30%) */}
-          <div className="w-96 bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700 overflow-y-auto flex flex-col">
+          {/* Right Sidebar - Lesson Details (30% on desktop, full width on mobile) */}
+          <div className="w-full lg:w-96 bg-white dark:bg-neutral-900 lg:border-l border-t lg:border-t-0 border-neutral-200 dark:border-neutral-700 overflow-y-auto flex flex-col">
             {/* Tabs */}
             <div className="border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 sticky top-0 z-10">
               <div className="flex">
                 <button
                   onClick={() => setSidebarTab('lesson')}
-                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors border-b-2 ${
+                  className={`flex-1 px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-semibold transition-colors border-b-2 ${
                     sidebarTab === 'lesson'
                       ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                       : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center gap-1 lg:gap-2">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                     Lesson
@@ -633,14 +638,14 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                 </button>
                 <button
                   onClick={() => setSidebarTab('feedbacks')}
-                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors border-b-2 ${
+                  className={`flex-1 px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-semibold transition-colors border-b-2 ${
                     sidebarTab === 'feedbacks'
                       ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                       : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center gap-1 lg:gap-2">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                     </svg>
                     Feedbacks
@@ -653,11 +658,11 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
             <div className="flex-1 overflow-y-auto">
               {sidebarTab === 'lesson' ? (
                 /* Lesson Tab Content */
-                <div className="p-6">
+                <div className="p-4 lg:p-6">
                   {/* Lesson Info */}
-                  <div className="mb-6">
+                  <div className="mb-4 lg:mb-6">
                     <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 mb-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -665,26 +670,26 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
                           d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                         />
                       </svg>
-                      <span className="font-semibold text-sm">Module {lesson.moduleId}</span>
+                      <span className="font-semibold text-xs lg:text-sm">Module {lesson.moduleId}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+                    <h3 className="text-lg lg:text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 lg:mb-3">
                       {lesson.title}
                     </h3>
-                    <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+                    <p className="text-neutral-600 dark:text-neutral-400 text-xs lg:text-sm leading-relaxed">
                       {lesson.description}
                     </p>
                   </div>
 
                   {/* Current Slide Details */}
                   {currentSlideData && (
-                    <div className="mb-6 p-4 bg-brand-50 dark:bg-brand-900/20 rounded-lg border border-brand-200 dark:border-brand-800">
-                      <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-2">
-                        <svg className="w-4 h-4 text-brand-600" fill="currentColor" viewBox="0 0 24 24">
+                    <div className="mb-4 lg:mb-6 p-3 lg:p-4 bg-brand-50 dark:bg-brand-900/20 rounded-lg border border-brand-200 dark:border-brand-800">
+                      <h4 className="font-semibold text-sm lg:text-base text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-2">
+                        <svg className="w-3 h-3 lg:w-4 lg:h-4 text-brand-600" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
                         Current Slide
                       </h4>
-                      <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <p className="text-xs lg:text-sm text-neutral-700 dark:text-neutral-300">
                         {currentSlideData.description || currentSlideData.title}
                       </p>
                     </div>

@@ -10,3 +10,6 @@ export { default as FirebaseStorageTool } from './FirebaseStorageTool';
 export { default as QuizSimulator } from './QuizSimulator';
 export { default as CompleteCategorySimulator } from './CompleteCategorySimulator';
 export { default as AlmostCompleteSimulator } from './AlmostCompleteSimulator';
+export { default as CertificateTool } from './CertificateTool';
+export { default as QuizModalTool } from './QuizModalTool';
+export { default as LessonModalTool } from './LessonModalTool';

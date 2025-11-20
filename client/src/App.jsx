@@ -8,11 +8,13 @@ import About from './features/client/pages/About';
 import ModulesPage from './features/client/pages/Modules';
 import Progress from './features/client/pages/Progress';
 import Leaderboard from './features/client/pages/Leaderboard';
+import FAQ from './features/client/pages/FAQ';
 import AdminLayout from './features/admin/layout/AdminLayout.jsx';
 import Analytics from './features/admin/pages/Analytics';
 import Modules from './features/admin/pages/Modules';
 import Quizes from './features/admin/pages/Quizes';
 import FAQs from './features/admin/pages/FAQs/FAQs';
+import Certificate from './components/Certificate.jsx';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
 import Register from './features/auth/pages/Register.jsx';
@@ -46,6 +48,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<Landing />} />
       <Route path="/about" element={<About />} />
+      <Route path="/faq" element={<FAQ />} />
       <Route path="/modules" element={<ModulesPage />} />
       <Route path="/progress" element={<Progress />} />
       <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
@@ -62,6 +65,7 @@ function App() {
         <Route path="modules" element={<Modules />} />
         <Route path="quizes" element={<Quizes />} />
         <Route path="faqs" element={<FAQs />} />
+        <Route path="certificate" element={<Certificate />} />
 
       </Route>
 

@@ -1,6 +1,32 @@
+import { useState, useEffect } from 'react';
+
 export default function AccountTable({ users = [], onEdit, onDelete }) {
+  const [profilePictures, setProfilePictures] = useState({});
+
   // Helper function to format ID as 8-digit number
   const formatId = (id) => String(id).padStart(8, '0');
+
+  // Fetch profile pictures for all users
+  useEffect(() => {
+    async function fetchProfilePictures() {
+      const userIds = users.map(user => user.id);
+      const pictures = {};
+      
+      for (const userId of userIds) {
+        // Check cache first
+        const cached = localStorage.getItem(`profilePicture_${userId}`);
+        if (cached && cached !== 'null') {
+          pictures[userId] = cached;
+        }
+      }
+      
+      setProfilePictures(pictures);
+    }
+
+    if (users.length > 0) {
+      fetchProfilePictures();
+    }
+  }, [users]);
 
   return (
     <div className="overflow-x-auto">
@@ -35,8 +61,20 @@ export default function AccountTable({ users = [], onEdit, onDelete }) {
                 {/* User Info */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
-                      {initials}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
+                      {profilePictures[u.id] ? (
+                        <img 
+                          src={profilePictures[u.id]} 
+                          alt={displayName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
+                      {!profilePictures[u.id] && (
+                        <span>{initials}</span>
+                      )}
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium text-neutral-900 dark:text-neutral-100">

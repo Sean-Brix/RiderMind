@@ -46,6 +46,7 @@ export default function Profile() {
     address_barangay: '',
     address_city_municipality: '',
     address_province: '',
+    profilePictureUrl: null,
   });
 
   useEffect(() => {
@@ -102,6 +103,65 @@ export default function Profile() {
     setProfile((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function handleProfilePictureUpload(file) {
+    try {
+      setError('');
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const res = await fetch(`/api/account/${currentUser.id}/profile-picture`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to upload profile picture');
+
+      // Update profile state with new picture URL
+      setProfile((prev) => ({ ...prev, profilePictureUrl: data.user.profilePictureUrl }));
+      
+      // Update cache for navbar
+      localStorage.setItem(`profilePicture_${currentUser.id}`, data.user.profilePictureUrl);
+      
+      setSuccess('Profile picture uploaded successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleProfilePictureDelete() {
+    try {
+      setError('');
+      const token = localStorage.getItem('token');
+
+      const res = await fetch(`/api/account/${currentUser.id}/profile-picture`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete profile picture');
+
+      // Update profile state to remove picture URL
+      setProfile((prev) => ({ ...prev, profilePictureUrl: null }));
+      
+      // Remove from cache
+      localStorage.removeItem(`profilePicture_${currentUser.id}`);
+      
+      setSuccess('Profile picture deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -123,7 +183,7 @@ export default function Profile() {
     name: displayName,
     email: profile.email,
     role: currentUser?.role || 'Student',
-    avatarUrl: null,
+    avatarUrl: profile.profilePictureUrl,
     sections: [
       {
         title: 'Personal Information',
@@ -231,6 +291,8 @@ export default function Profile() {
               avatarUrl={profileData.avatarUrl}
               role={profileData.role}
               email={profileData.email}
+              onUpload={handleProfilePictureUpload}
+              onDelete={handleProfilePictureDelete}
             />
 
             {/* Edit button - small, rounded, with icon */}
