@@ -1,3 +1,4 @@
+
 - # Since Motorcycle & Cars, motorcycle and cars lang yung categories
 
 - # Modules: pa Proportion yung text kasi mas malaki yung picture/animation/text sa slider

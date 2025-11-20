@@ -101,6 +101,15 @@ export default function Navbar() {
               </svg>
             </button>
 
+            {!user && !isAdminPanel && (
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 rounded-lg transition-colors"
+              >
+                Login
+              </Link>
+            )}
+
             {user && (
               <div className="relative" ref={dropdownRef}>
                 <button

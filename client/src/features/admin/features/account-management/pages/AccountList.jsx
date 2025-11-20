@@ -18,6 +18,9 @@ export default function AccountList() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showArchived, setShowArchived] = useState(false); // New state for archive toggle
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Filter and search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,6 +117,45 @@ export default function AccountList() {
     setShowDetailModal(false);
     setSelectedRequest(null);
     fetchRequests(); // Refresh the list
+  }
+
+  function handleDeleteUser(user) {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  }
+
+  async function confirmDeleteUser() {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/account/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      // Close modal and refresh list
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function cancelDelete() {
+    setShowDeleteModal(false);
+    setUserToDelete(null);
   }
 
   // Filtered and sorted users
@@ -518,7 +560,7 @@ export default function AccountList() {
           </div>
         ) : activeTab === 'accounts' ? (
           filteredUsers.length > 0 ? (
-            <AccountTable users={filteredUsers} onEdit={handleEditUser} />
+            <AccountTable users={filteredUsers} onEdit={handleEditUser} onDelete={handleDeleteUser} />
           ) : (
             <div className="p-12 text-center">
               <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -595,6 +637,103 @@ export default function AccountList() {
           onSuccess={handleRequestUpdated}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={cancelDelete}
+        title="Delete User Account"
+        size="medium"
+      >
+        <div className="space-y-6">
+          {userToDelete && (
+            <>
+              <div className="flex items-center gap-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">Warning: This action cannot be undone</h4>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                    All data associated with this user will be permanently deleted.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-neutral-700 dark:text-neutral-300">
+                  Are you sure you want to delete the following user account?
+                </p>
+                
+                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold">
+                      {(userToDelete.displayName || userToDelete.email).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                        {userToDelete.displayName || `${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`.trim() || userToDelete.email}
+                      </div>
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {userToDelete.email}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          userToDelete.role === 'ADMIN'
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        }`}>
+                          {userToDelete.role}
+                        </span>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                          ID: {String(userToDelete.id).padStart(8, '0')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                <button
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteUser}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete Account
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

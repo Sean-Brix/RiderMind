@@ -4,7 +4,7 @@ import Navbar from '../../../components/Navbar';
 import { getMyModules } from '../../../services/studentModuleService';
 
 export default function Landing() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   const [hasModules, setHasModules] = useState(true); // Default to true to show "Continue Learning" initially
   const [loadingModules, setLoadingModules] = useState(true);
 

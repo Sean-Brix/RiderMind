@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
 import { getMyModules } from '../../../../services/studentModuleService';
 
@@ -8,10 +9,17 @@ export default function Progress() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all'); // all, completed, in-progress, not-started
+  
+  // Check if user is authenticated
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   useEffect(() => {
-    loadModules();
-  }, []);
+    if (user) {
+      loadModules();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const loadModules = async () => {
     try {
@@ -78,6 +86,46 @@ export default function Progress() {
         return modules;
     }
   }, [modules, selectedFilter]);
+
+  // If not authenticated, show login prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700">
+              <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+                Login Required
+              </h2>
+              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                Please log in to view your learning progress and statistics.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  to="/login"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 rounded-lg transition-colors"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 dark:hover:bg-brand-900/50 rounded-lg transition-colors"
+                >
+                  Create Account
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

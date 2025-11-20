@@ -24,14 +24,6 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
     if (isOpen && quiz) {
       console.log('🔄 Resetting quiz to initial state');
       
-      // Force close all other modals first to prevent stacking
-      // Find all modal backdrop elements and trigger their close handlers
-      const modalBackdrops = document.querySelectorAll('[data-modal-type="lesson"]');
-      modalBackdrops.forEach(backdrop => {
-        const closeButton = backdrop.querySelector('[aria-label="Close modal"]');
-        if (closeButton) closeButton.click();
-      });
-      
       setCurrentQuestion(0);
       setAnswers({});
       setQuizResult(null);
@@ -288,20 +280,33 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
   const handleCloseResults = async (passed) => {
     console.log('🏁 Closing results and completing quiz flow...');
     
-    // Close modal immediately to prevent stacking
+    // STEP 1: Force close ALL lesson modals immediately
+    const lessonModals = document.querySelectorAll('[data-modal-type="lesson"]');
+    lessonModals.forEach(backdrop => {
+      const closeButton = backdrop.querySelector('[aria-label="Close modal"]');
+      if (closeButton) {
+        console.log('🚫 Force closing lesson modal');
+        closeButton.click();
+      }
+    });
+    
+    // STEP 2: Close this quiz modal
     onClose();
     
-    // Then update data in background
-    if (onQuizComplete) {
-      console.log('📢 Calling onQuizComplete with passed:', passed);
-      await onQuizComplete(passed);
-    }
-    
-    // Clean up state
+    // STEP 3: Clean up quiz state
     setQuizResult(null);
     setQuizState('start');
     setAnswers({});
     setCurrentQuestion(0);
+    
+    // STEP 4: Call parent completion callback AFTER everything is closed
+    if (onQuizComplete) {
+      console.log('📢 Calling onQuizComplete with passed:', passed);
+      // Use setTimeout to ensure modals are fully unmounted first
+      setTimeout(async () => {
+        await onQuizComplete(passed);
+      }, 100);
+    }
   };
 
   const handleRetakeQuiz = () => {

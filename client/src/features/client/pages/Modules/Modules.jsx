@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
 import LessonModal from '../../../../components/LessonModal';
 import CourseSelection from './CourseSelection';
@@ -7,6 +7,7 @@ import { getMyModules, updateModuleProgress } from '../../../../services/student
 
 export default function Modules() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [modules, setModules] = useState([]);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const [progress, setProgress] = useState({ total: 0, completed: 0, completionPercentage: 0 });
@@ -15,6 +16,9 @@ export default function Modules() {
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
+  
+  // Check if user is authenticated
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   
   // Calculate XP and level
   const totalXP = modules.reduce((sum, m) => sum + (m.isCompleted ? 100 : Math.floor(m.progress)), 0);
@@ -103,6 +107,13 @@ export default function Modules() {
   const handleModuleClick = (studentModule, isUnlocked) => {
     if (!isUnlocked) return;
     
+    console.log('🎯 Module clicked:', {
+      studentModule,
+      hasSlides: !!studentModule.module.slides,
+      slideCount: studentModule.module.slides?.length,
+      slides: studentModule.module.slides
+    });
+    
     // Calculate current slide index from currentSlideId
     let currentSlideIndex = 0;
     if (studentModule.currentSlideId) {
@@ -120,7 +131,7 @@ export default function Modules() {
       description: studentModule.module.description,
       objectives: studentModule.module.objectives.map(obj => obj.objective),
       currentSlideIndex,
-      slides: studentModule.module.slides.map(slide => {
+      slides: studentModule.module.slides?.map(slide => {
         let content = slide.content;
         if (slide.type === 'image') {
           content = `/api/modules/slides/${slide.id}/image`;
@@ -134,7 +145,7 @@ export default function Modules() {
           content: content,
           description: slide.description,
         };
-      }),
+      }) || [],
       quiz: studentModule.module.quizzes?.[0] || null,
       progress: studentModule.progress,
       onProgressUpdate: async (moduleId, slideId, progressPercent) => {
@@ -184,6 +195,14 @@ export default function Modules() {
         }
       },
     };
+
+    console.log('📚 Setting lessonData:', {
+      ...lessonData,
+      slideCount: lessonData.slides?.length,
+      hasSlides: !!lessonData.slides?.length,
+      firstSlide: lessonData.slides?.[0],
+      hasQuiz: !!lessonData.quiz
+    });
 
     setCurrentLesson(lessonData);
     setIsLessonOpen(true);
@@ -243,6 +262,46 @@ export default function Modules() {
     setCurrentLesson(lessonData);
     setIsLessonOpen(true);
   };
+
+  // If not authenticated, show login prompt
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-4">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700">
+              <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+                Login Required
+              </h2>
+              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                Please log in to access learning modules and track your progress.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  to="/login"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 rounded-lg transition-colors"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 dark:hover:bg-brand-900/50 rounded-lg transition-colors"
+                >
+                  Create Account
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   if (loading) {
     return (

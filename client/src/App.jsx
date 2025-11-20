@@ -44,10 +44,10 @@ function App() {
       {/* PUBLIC */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/" element={<Protected><Landing /></Protected>} />
-      <Route path="/about" element={<Protected><About /></Protected>} />
-      <Route path="/modules" element={<Protected><ModulesPage /></Protected>} />
-      <Route path="/progress" element={<Protected><Progress /></Protected>} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/modules" element={<ModulesPage />} />
+      <Route path="/progress" element={<Progress />} />
       <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/profile" element={<Protected><Profile /></Protected>} />

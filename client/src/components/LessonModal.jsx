@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import QuizModal from './QuizModalNew';
-import { submitQuizAttempt } from '../services/studentModuleService';
+import { submitQuizAttempt, recordQuizAttempt, completeModule } from '../services/studentModuleService';
 import './Lesson/LessonModal.css';
 
 /**
@@ -249,21 +249,33 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
     try {
       setIsCompleting(true);
       
-      // Record quiz attempt
-      if (lesson.moduleId && lesson.categoryId) {
-        await recordQuizAttempt(lesson.moduleId, {
+      console.log('📝 handleQuizComplete called with:', {
+        quizResult,
+        moduleId: lesson.moduleId,
+        categoryId: lesson.categoryId,
+        studentModuleId: lesson.studentModuleId
+      });
+      
+      // Record quiz attempt - using moduleId from lesson
+      if (lesson.moduleId && lesson.categoryId && quizResult) {
+        const quizData = {
           categoryId: lesson.categoryId,
-          quizScore: quizResult.score,
-          quizAttemptId: quizResult.attemptId || null,
-          passed: quizResult.passed
-        });
+          quizScore: quizResult.score || 0,
+          quizAttemptId: quizResult.attemptId || quizResult.id || null,
+          passed: quizResult.passed || false
+        };
+        
+        console.log('📤 Recording quiz attempt with data:', quizData);
+        
+        await recordQuizAttempt(lesson.moduleId, quizData);
         
         // If passed, complete the module
         if (quizResult.passed) {
+          console.log('✅ Quiz passed, completing module');
           await completeModule(lesson.moduleId, {
             categoryId: lesson.categoryId,
-            quizScore: quizResult.score,
-            quizAttemptId: quizResult.attemptId || null
+            quizScore: quizResult.score || 0,
+            quizAttemptId: quizResult.attemptId || quizResult.id || null
           });
         }
       }
@@ -271,17 +283,21 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
       setQuizCompleted(true);
       setShowQuiz(false);
       
-      // Call the parent's quiz complete handler
+      // Close the lesson modal immediately
+      onClose();
+      
+      // Call the parent's quiz complete handler after closing
+      // QuizModal will handle this with a delay to ensure modals are closed first
       if (lesson.onQuizComplete) {
-        lesson.onQuizComplete(quizResult);
-      } else {
-        // Default: just close the modal
-        setTimeout(() => {
-          onClose();
-        }, 1500);
+        await lesson.onQuizComplete(quizResult);
       }
     } catch (error) {
       console.error('Error completing quiz:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        stack: error.stack
+      });
       alert('Failed to save quiz results. Please try again.');
     } finally {
       setIsCompleting(false);
@@ -1064,17 +1080,13 @@ export default function LessonModal({ isOpen, onClose, lesson }) {
       {lesson?.quiz && (
         <QuizModal
           isOpen={showQuiz}
-          onClose={() => setShowQuiz(false)}
+          onClose={() => {
+            console.log('🚪 QuizModal onClose called, hiding quiz');
+            setShowQuiz(false);
+          }}
           quiz={lesson.quiz}
           onSubmit={handleQuizSubmit}
-          onQuizComplete={async (passed) => {
-            // Call the parent's onQuizComplete if it exists (before closing to allow UI updates)
-            if (lesson?.onQuizComplete) {
-              await lesson.onQuizComplete(passed);
-            }
-            setShowQuiz(false);
-            onClose();
-          }}
+          onQuizComplete={handleQuizComplete}
         />
       )}
     </div>
