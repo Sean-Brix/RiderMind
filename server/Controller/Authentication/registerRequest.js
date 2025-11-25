@@ -67,20 +67,26 @@ export async function submitRegistration(req, res) {
       });
     }
 
-    // Check if there's already a pending request with this email
+    // Check if there's already ANY request with this email
     const existingRequest = await prisma.registrationRequest.findFirst({
-      where: {
-        email,
-        status: 'PENDING'
-      }
+      where: { email }
     });
 
     if (existingRequest) {
-      return res.status(400).json({
-        success: false,
-        message: 'A registration request with this email is already pending approval',
-        requestId: existingRequest.id
+      if (existingRequest.status === 'PENDING') {
+        return res.status(400).json({
+          success: false,
+          message: 'A registration request with this email is already pending approval',
+          requestId: existingRequest.id
+        });
+      }
+
+      // If there's an old APPROVED or REJECTED request, delete it to allow re-registration
+      await prisma.registrationRequest.delete({
+        where: { id: existingRequest.id }
       });
+
+      console.log(`🗑️ Deleted old ${existingRequest.status} registration request for ${email}`);
     }
 
     // Hash password
