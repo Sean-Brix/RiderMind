@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css'
 import Login from './features/auth/pages/Login.jsx';
+import ForgotPassword from './features/auth/pages/ForgotPassword.jsx';
+import ResetPassword from './features/auth/pages/ResetPassword.jsx';
 import Landing from './features/client/pages/Landing.jsx';
 import Settings from './features/client/pages/Settings';
 import Profile from './features/client/pages/Profile';
@@ -46,6 +48,8 @@ function App() {
       {/* PUBLIC */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Landing />} />
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />

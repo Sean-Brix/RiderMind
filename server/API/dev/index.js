@@ -7,6 +7,7 @@ import generateModules from '../../Controller/dev/generateModules.js';
 import clearAllModules from '../../Controller/dev/clearModules.js';
 import generateQuizzes from '../../Controller/dev/generateQuizzes.js';
 import clearQuizzesController from '../../Controller/dev/clearQuizzes.js';
+import sendTestEmail from '../../Controller/dev/sendTestEmail.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -91,5 +92,8 @@ router.post('/generate-quizzes', authenticate, generateQuizzes);
 
 // DELETE /api/dev/clear-quizzes - Clear all quizzes
 router.delete('/clear-quizzes', authenticate, clearQuizzesController);
+
+// POST /api/dev/send-test-email - Send test email
+router.post('/send-test-email', authenticate, sendTestEmail);
 
 export default router;

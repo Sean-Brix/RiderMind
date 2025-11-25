@@ -45,6 +45,15 @@ export default function Login() {
           <div>
             <label className="block text-sm mb-1">Password</label>
             <input className="input" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+            <div className="text-right mt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
           <button className="btn btn-primary w-full" type="submit" disabled={busy}>
             {busy ? 'Signing in…' : 'Sign in'}

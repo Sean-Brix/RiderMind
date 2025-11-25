@@ -55,6 +55,10 @@ model User {
   // Profile Picture
   profilePictureUrl String?
 
+  // Password Reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   // Relations
   quizAttempts QuizAttempt[]
   studentModules StudentModule[]

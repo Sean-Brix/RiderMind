@@ -11,7 +11,10 @@ import {
   AlmostCompleteSimulator,
   CertificateTool,
   QuizModalTool,
-  LessonModalTool
+  LessonModalTool,
+  EmailForgotPasswordTool,
+  EmailNotificationTool,
+  EmailRegistrationRejectedTool
 } from './DevTools/tools';
 
 /**
@@ -158,6 +161,34 @@ function DevTools() {
           icon: '📚',
           component: LessonModalTool,
           description: 'Test lesson modal with slides'
+        }
+      ]
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      icon: '📧',
+      tools: [
+        {
+          id: 'email-forgot-password',
+          label: 'Forgot Password',
+          icon: '🔐',
+          component: EmailForgotPasswordTool,
+          description: 'Send forgot password reset email'
+        },
+        {
+          id: 'email-notification',
+          label: 'Notification',
+          icon: '🔔',
+          component: EmailNotificationTool,
+          description: 'Send general notification email'
+        },
+        {
+          id: 'email-registration-rejected',
+          label: 'Registration Rejected',
+          icon: '❌',
+          component: EmailRegistrationRejectedTool,
+          description: 'Send registration rejection email'
         }
       ]
     }

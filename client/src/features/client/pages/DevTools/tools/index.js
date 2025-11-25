@@ -13,3 +13,6 @@ export { default as AlmostCompleteSimulator } from './AlmostCompleteSimulator';
 export { default as CertificateTool } from './CertificateTool';
 export { default as QuizModalTool } from './QuizModalTool';
 export { default as LessonModalTool } from './LessonModalTool';
+export { default as EmailForgotPasswordTool } from './EmailForgotPasswordTool';
+export { default as EmailNotificationTool } from './EmailNotificationTool';
+export { default as EmailRegistrationRejectedTool } from './EmailRegistrationRejectedTool';

@@ -517,13 +517,38 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
             </div>
             
             <div className="p-6">
+              {/* Quick Select Reasons */}
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                Common Reasons (Click to use)
+              </label>
+              <div className="grid grid-cols-1 gap-2 mb-4">
+                {[
+                  'The email address provided does not match our institutional domain requirements. Please use your official educational institution email address.',
+                  'The information provided could not be verified. Please ensure all details are accurate and complete.',
+                  'Your registration does not meet the current eligibility criteria for this program.',
+                  'Duplicate account detected. An account with this email address already exists in our system.',
+                  'The submitted documentation is incomplete or does not meet our requirements.',
+                  'Age requirement not met. Applicants must be at least 18 years old.',
+                  'Invalid or incomplete contact information provided.'
+                ].map((reason, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setRejectionReason(reason)}
+                    className="text-left p-3 text-sm bg-neutral-50 dark:bg-neutral-800 hover:bg-red-50 dark:hover:bg-red-950/30 border border-neutral-200 dark:border-neutral-700 hover:border-red-300 dark:hover:border-red-800 rounded-lg transition-all text-neutral-700 dark:text-neutral-300"
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Rejection Reason <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Provide a clear reason for rejecting this application..."
+                placeholder="Select from above or provide your own reason..."
                 rows={4}
                 className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all"
               />

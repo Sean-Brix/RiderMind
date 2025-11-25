@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { sendEmail } from '../../utils/emailService.js';
 
 const prisma = new PrismaClient();
 
@@ -407,13 +408,29 @@ export async function rejectRegistration(req, res) {
       }
     });
 
+    // Send rejection email
+    const fullName = `${request.first_name} ${request.last_name}`.trim();
+    const emailResult = await sendEmail(request.email, 'registrationRejected', {
+      name: fullName,
+      reason: reason || undefined,
+      allowReapply: true,
+      registrationUrl: `${process.env.APP_URL}/register`,
+    });
+
+    if (emailResult.success) {
+      console.log(`✅ Registration rejection email sent to ${request.email}`);
+    } else {
+      console.error(`❌ Failed to send rejection email to ${request.email}:`, emailResult.error);
+    }
+
     res.status(200).json({
       success: true,
-      message: 'Registration rejected',
+      message: 'Registration rejected and notification email sent',
       data: {
         requestId: updatedRequest.id,
         status: updatedRequest.status,
-        rejectionReason: updatedRequest.rejectionReason
+        rejectionReason: updatedRequest.rejectionReason,
+        emailSent: emailResult.success
       }
     });
 
