@@ -5,6 +5,106 @@ function getAuthToken() {
 }
 
 /**
+ * Get accounts analytics
+ */
+export async function getAccountsAnalytics() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/accounts`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch accounts analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching accounts analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get leaderboard analytics
+ */
+export async function getLeaderboardAnalytics(limit = 10) {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/leaderboard-analytics?limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch leaderboard analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching leaderboard analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get quizzes analytics
+ */
+export async function getQuizzesAnalytics() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/quizzes`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch quizzes analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching quizzes analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get modules analytics
+ */
+export async function getModulesAnalytics() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/analytics/modules`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch modules analytics');
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Error fetching modules analytics:', error);
+    throw error;
+  }
+}
+
+/**
  * Get overall system analytics
  */
 export async function getSystemAnalytics() {

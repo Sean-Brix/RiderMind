@@ -3,8 +3,15 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import mockData from '../../../../data/mockAnalytics.json';
-import { getModuleFeedbackAnalytics, getQuizReactions, getAllQuizzes } from '../../../../services/analyticsService';
+import { 
+  getAccountsAnalytics,
+  getLeaderboardAnalytics,
+  getQuizzesAnalytics,
+  getModulesAnalytics,
+  getModuleFeedbackAnalytics, 
+  getQuizReactions, 
+  getAllQuizzes 
+} from '../../../../services/analyticsService';
 
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState('accounts');
@@ -67,26 +74,68 @@ export default function Analytics() {
       </div>
 
       {/* Accounts Tab */}
-      {activeTab === 'accounts' && <AccountsAnalytics data={mockData.accounts} />}
+      {activeTab === 'accounts' && <AccountsAnalytics />}
 
       {/* Leaderboard Tab */}
-      {activeTab === 'leaderboard' && <LeaderboardAnalytics data={mockData.leaderboard} />}
+      {activeTab === 'leaderboard' && <LeaderboardAnalytics />}
 
       {/* Quizzes Tab */}
-      {activeTab === 'quizzes' && <QuizzesAnalytics data={mockData.quizzes} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />}
+      {activeTab === 'quizzes' && <QuizzesAnalytics selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />}
 
       {/* Feedback Tab */}
-      {activeTab === 'feedback' && <FeedbackAnalytics data={mockData.feedback} />}
+      {activeTab === 'feedback' && <FeedbackAnalytics />}
 
       {/* Modules Tab */}
-      {activeTab === 'modules' && <ModulesAnalytics data={mockData.modules} />}
+      {activeTab === 'modules' && <ModulesAnalytics />}
     </div>
   );
 }
 
 // Accounts Analytics Component
-function AccountsAnalytics({ data }) {
+function AccountsAnalytics() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getAccountsAnalytics();
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching accounts analytics:', err);
+        setError('Failed to load accounts analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-3"></div>
+          <p className="text-xs text-neutral-600 dark:text-neutral-400">Loading accounts data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
   
   return (
     <div className="space-y-4">
@@ -98,6 +147,16 @@ function AccountsAnalytics({ data }) {
         <StatCard title="New This Month" value={`+${data.newThisMonth}`} icon="📈" color="purple" />
       </div>
 
+      {data.total === 0 ? (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-8">
+          <div className="text-center">
+            <div className="text-5xl mb-3">📊</div>
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Data</h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">Not enough data to display graphs yet. Add more users to see visualizations.</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Growth Chart */}
       <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
         <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">User Growth Over Time</h3>
@@ -160,12 +219,55 @@ function AccountsAnalytics({ data }) {
           </ResponsiveContainer>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
 
 // Leaderboard Analytics Component
-function LeaderboardAnalytics({ data }) {
+function LeaderboardAnalytics() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getLeaderboardAnalytics(10);
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching leaderboard analytics:', err);
+        setError('Failed to load leaderboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-3"></div>
+          <p className="text-xs text-neutral-600 dark:text-neutral-400">Loading leaderboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
       <div className="p-3 border-b border-neutral-200 dark:border-neutral-700">
@@ -185,7 +287,17 @@ function LeaderboardAnalytics({ data }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
-            {data.map((student) => (
+            {!data || data.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-3 py-12">
+                  <div className="text-center">
+                    <div className="text-4xl mb-3">🏆</div>
+                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Data</h3>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">No student activity to display yet.</p>
+                  </div>
+                </td>
+              </tr>
+            ) : data.map((student) => (
               <tr key={student.rank} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
                 <td className="px-3 py-2.5 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
@@ -223,12 +335,33 @@ function LeaderboardAnalytics({ data }) {
 }
 
 // Quizzes Analytics Component
-function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
+function QuizzesAnalytics({ selectedQuizId, setSelectedQuizId }) {
+  const [data, setData] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
   const [quizReactions, setQuizReactions] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [loadingQuizzes, setLoadingQuizzes] = useState(true);
   const [loadingReactions, setLoadingReactions] = useState(false);
   const [error, setError] = useState(null);
+
+  // Fetch quiz analytics overview
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getQuizzesAnalytics();
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching quizzes analytics:', err);
+        setError('Failed to load quizzes analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Fetch all quizzes on mount
   useEffect(() => {
@@ -275,7 +408,7 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
     fetchQuizReactions();
   }, [selectedQuizId]);
 
-  if (loadingQuizzes) {
+  if (loading || loadingQuizzes) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -293,6 +426,8 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
       </div>
     );
   }
+
+  if (!data) return null;
   
   return (
     <div className="flex gap-4">
@@ -356,6 +491,16 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
               <StatCard title="Pass Rate" value={`${data.passRate}%`} icon="✅" color="orange" />
             </div>
 
+            {data.totalQuizzes === 0 ? (
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-8">
+                <div className="text-center">
+                  <div className="text-5xl mb-3">📝</div>
+                  <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Data</h3>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Not enough quiz data to display visualizations yet.</p>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Attempts Over Time */}
@@ -408,6 +553,8 @@ function QuizzesAnalytics({ data, selectedQuizId, setSelectedQuizId }) {
                 ))}
               </div>
             </div>
+              </>
+            )}
           </div>
         ) : (
           // Individual Quiz Stats
@@ -555,6 +702,16 @@ function FeedbackAnalytics({ data }) {
         <StatCard title="Negative" value={moduleFeedbackData.negative.toLocaleString()} icon="👎" color="red" />
       </div>
 
+      {moduleFeedbackData.totalFeedback === 0 ? (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-8">
+          <div className="text-center">
+            <div className="text-5xl mb-3">💬</div>
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Data</h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">No module feedback has been submitted yet.</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Average Rating and Sentiment Pie */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
@@ -647,13 +804,57 @@ function FeedbackAnalytics({ data }) {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
 
 // Modules Analytics Component
-function ModulesAnalytics({ data }) {
+function ModulesAnalytics() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getModulesAnalytics();
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching modules analytics:', err);
+        setError('Failed to load modules analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-3"></div>
+          <p className="text-xs text-neutral-600 dark:text-neutral-400">Loading modules data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   return (
     <div className="space-y-4">
@@ -665,6 +866,16 @@ function ModulesAnalytics({ data }) {
         <StatCard title="Avg Time" value={data.avgTimeToComplete} icon="⏱️" color="orange" />
       </div>
 
+      {data.totalModules === 0 ? (
+        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-8">
+          <div className="text-center">
+            <div className="text-5xl mb-3">📚</div>
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Data</h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">Not enough module data to display visualizations yet.</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Enrollment Trend */}
       <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
         <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Enrollment Trend Over Time</h3>
@@ -747,6 +958,8 @@ function ModulesAnalytics({ data }) {
           ))}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
