@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/faqs';
+const API_URL = '/api/faqs';
 
 // Helper to get auth token
 const getAuthToken = () => {

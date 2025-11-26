@@ -23,7 +23,7 @@ export async function validateResetToken(req, res) {
     // Find user with this token
     const user = await prisma.user.findFirst({
       where: {
-        resetToken: token,
+        resetToken: token,  
         resetTokenExpiry: {
           gte: new Date(), // Token not expired
         },

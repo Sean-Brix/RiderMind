@@ -9,25 +9,32 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Create reusable transporter
+// Use port 465 (SSL) as fallback for cloud platforms that block port 587
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // use TLS
+  port: process.env.SMTP_PORT || 465, // Default to 465 for better cloud compatibility
+  secure: process.env.SMTP_PORT === '465' || !process.env.SMTP_PORT, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD, // Use App Password for Gmail
   },
   tls: {
     rejectUnauthorized: false
-  }
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 // Verify transporter configuration
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ Email service error:', error);
+    console.log('💡 Tip: If deployed on Render/Heroku, try setting SMTP_PORT=465 in environment variables');
+    console.log('💡 Or consider using SendGrid/Resend for cloud deployments');
   } else {
     console.log('✅ Email service ready');
+    console.log(`📧 Using SMTP: ${process.env.EMAIL_USER} on port ${process.env.SMTP_PORT || 465}`);
   }
 });
 

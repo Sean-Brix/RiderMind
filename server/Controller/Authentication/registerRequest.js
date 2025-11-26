@@ -196,6 +196,8 @@ export async function getRegistrationRequests(req, res) {
         reviewedAt: true,
         reviewedBy: true,
         rejectionReason: true,
+        paymentReceiptUrl: true,
+        orNumber: true,
         reviewer: {
           select: {
             id: true,
@@ -275,7 +277,16 @@ export async function getRegistrationRequest(req, res) {
 export async function approveRegistration(req, res) {
   try {
     const { id } = req.params;
+    const { receiptUrl, orNumber } = req.body;
     const adminId = req.user.id; // From authentication middleware
+
+    // Validate payment information
+    if (!receiptUrl || !orNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment receipt and OR number are required'
+      });
+    }
 
     // Get the registration request
     const request = await prisma.registrationRequest.findUnique({
@@ -310,7 +321,7 @@ export async function approveRegistration(req, res) {
 
     // Create user account and update registration request in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create the user account
+      // Create the user account with payment information
       const newUser = await tx.user.create({
         data: {
           email: request.email,
@@ -339,7 +350,9 @@ export async function approveRegistration(req, res) {
           emergency_contact_name: request.emergency_contact_name,
           emergency_contact_relationship: request.emergency_contact_relationship,
           emergency_contact_number: request.emergency_contact_number,
-          student_type: request.student_type
+          student_type: request.student_type,
+          paymentReceiptUrl: receiptUrl,
+          orNumber: orNumber
         }
       });
 
@@ -349,7 +362,9 @@ export async function approveRegistration(req, res) {
         data: {
           status: 'APPROVED',
           reviewedAt: new Date(),
-          reviewedBy: adminId
+          reviewedBy: adminId,
+          paymentReceiptUrl: receiptUrl,
+          orNumber: orNumber
         }
       });
 

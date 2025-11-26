@@ -55,6 +55,10 @@ model User {
   // Profile Picture
   profilePictureUrl String?
 
+  // Payment Information
+  paymentReceiptUrl String?  // URL to receipt image (PDF/JPEG)
+  orNumber          String?  // Official Receipt Number
+
   // Password Reset
   resetToken       String?
   resetTokenExpiry DateTime?
@@ -114,6 +118,10 @@ model RegistrationRequest {
   reviewedAt    DateTime?
   reviewedBy    Int?               // Admin who approved/rejected
   rejectionReason String?          @db.Text
+  
+  // Payment Information (for approved requests)
+  paymentReceiptUrl String?        // URL to receipt image
+  orNumber          String?        // Official Receipt Number
 
   // Relations
   reviewer User? @relation("ReviewedBy", fields: [reviewedBy], references: [id], onDelete: SetNull)
