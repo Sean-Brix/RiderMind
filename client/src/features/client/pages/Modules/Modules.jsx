@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { RoadTimeline } from './components/RoadTimeline';
 import { FeedbackProvider } from './contexts/FeedbackContext';
 import Navbar from '../../../../components/Navbar';
@@ -55,19 +55,36 @@ function Modules() {
   const user = useMemo(() => {
     try {
       const userData = JSON.parse(localStorage.getItem('user') || 'null');
-      console.log('👤 User from localStorage:', userData);
       return userData;
     } catch {
       return null;
     }
   }, []);
 
-  const [userDetails, setUserDetails] = useState(null);
+  const [userDetails, setUserDetails] = useState(() => {
+    // Try to get cached user details first
+    try {
+      const cached = sessionStorage.getItem(`userDetails_${user?.id}`);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Fetch complete user details from API
+  // Fetch complete user details from API with caching
   useEffect(() => {
     const fetchUserDetails = async () => {
       if (!user?.id) return;
+      
+      // Check if already cached in session
+      const cacheKey = `userDetails_${user.id}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          setUserDetails(JSON.parse(cached));
+          return;
+        } catch {}
+      }
       
       try {
         const token = localStorage.getItem('token');
@@ -80,11 +97,13 @@ function Modules() {
         
         if (res.ok) {
           const data = await res.json();
-          console.log('✅ Fetched user details:', data);
-          setUserDetails(data.user || data);
+          const details = data.user || data;
+          setUserDetails(details);
+          // Cache for session
+          sessionStorage.setItem(cacheKey, JSON.stringify(details));
         }
       } catch (error) {
-        console.error('❌ Error fetching user details:', error);
+        console.error('Error fetching user details:', error);
       }
     };
 
@@ -97,58 +116,74 @@ function Modules() {
     }
   }, [user]);
 
-  // Scroll detection for scroll-to-top button
+  // Scroll detection for scroll-to-top button (throttled)
   useEffect(() => {
+    let timeoutId = null;
     const handleScroll = () => {
-      // Show button when scrolled down more than 300px (navbar typically out of view)
-      setShowScrollTop(window.scrollY > 300);
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        setShowScrollTop(window.scrollY > 300);
+        timeoutId = null;
+      }, 100);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const loadModules = async () => {
+  const loadModules = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Loading modules...');
+      // Check session cache first
+      const cacheKey = `modules_${user?.id}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { modules: cachedModules, category, timestamp } = JSON.parse(cached);
+          // Cache valid for 2 minutes
+          if (Date.now() - timestamp < 120000) {
+            setModules(cachedModules);
+            setCategoryInfo(category);
+            setLoading(false);
+            return;
+          }
+        } catch {}
+      }
+      
       const response = await getMyModules(null, true);
-      console.log('📦 Modules response:', response);
       
       if (response.success) {
         if (response.data.modules && response.data.modules.length > 0) {
-          console.log('✅ Setting modules:', response.data.modules.map(m => ({
-            id: m.id,
-            moduleId: m.module.id,
-            title: m.module.title,
-            isCompleted: m.isCompleted,
-            progress: m.progress,
-            quizPassed: m.quizPassed
-          })));
           setModules(response.data.modules);
           setCategoryInfo(response.data.category);
+          // Cache the data
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            modules: response.data.modules,
+            category: response.data.category,
+            timestamp: Date.now()
+          }));
         } else {
-          // No modules found - show course selection
           setShowCourseSelection(true);
         }
       } else {
-        // Error or no enrollment - show course selection
         setShowCourseSelection(true);
       }
     } catch (err) {
       console.error('Error loading modules:', err);
-      // On error, show course selection to allow enrollment
       setShowCourseSelection(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Auto-scroll to finish line when all modules completed
   useEffect(() => {
@@ -162,9 +197,7 @@ function Modules() {
     }
   }, [modules]);
 
-  const handleModuleClick = (studentModule) => {
-    console.log('Module clicked:', studentModule.module.title);
-    
+  const handleModuleClick = useCallback((studentModule) => {
     let currentSlideIndex = 0;
     if (studentModule.currentSlideId && studentModule.module.slides) {
       const slideIndex = studentModule.module.slides.findIndex(s => s.id === studentModule.currentSlideId);
@@ -201,13 +234,10 @@ function Modules() {
       progress: studentModule.progress,
     };
 
-    console.log('📚 Lesson data:', lessonData);
     modalManager.openModal(ModalType.LESSON, lessonData);
-  };
+  }, [modalManager]);
 
-  const handleQuizClick = (studentModule) => {
-    console.log('🎯 Quiz clicked:', studentModule.module.title);
-    
+  const handleQuizClick = useCallback((studentModule) => {
     const quiz = studentModule.module.quizzes?.[0];
     const quizData = {
       id: quiz?.id,
@@ -218,24 +248,23 @@ function Modules() {
       studentModuleId: studentModule.id,
     };
 
-    console.log('📝 Quiz data:', quizData);
     modalManager.openModal(ModalType.QUIZ, quizData);
-  };
+  }, [modalManager]);
 
-  const handleStopSignClick = (previousModule) => {
-    console.log('Stop sign clicked:', previousModule.module.title);
+  const handleStopSignClick = useCallback((previousModule) => {
     alert(`Viewing feedback for: ${previousModule.module.title}`);
-  };
+  }, []);
 
-  const handleShowCompletionModal = () => {
+  const handleShowCompletionModal = useCallback(() => {
     setShowCompletionModal(true);
-  };
+  }, []);
 
-  const handleCourseEnrollment = async () => {
-    // Reload modules after enrollment
+  const handleCourseEnrollment = useCallback(async () => {
+    // Clear cache and reload modules after enrollment
+    sessionStorage.removeItem(`modules_${user?.id}`);
     await loadModules();
     setShowCourseSelection(false);
-  };
+  }, [loadModules, user?.id]);
 
   // Get stats from useProgress hook
   const { totalXP, level, xpProgress, xpForNextLevel } = progressTracker;

@@ -1,4 +1,4 @@
-import { useRef, useEffect, memo } from 'react';
+import { useRef, useEffect, memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ModuleCard from './ModuleCard';
 import DiamondPin from './DiamondPin';
@@ -35,19 +35,24 @@ const RoadTimeline = memo(function RoadTimeline({
 }) {
   const roadRef = useRef(null);
 
-  // Smooth scroll when component mounts
+  // Memoize first incomplete index to prevent recalculation
+  const firstIncompleteIndex = useMemo(() => 
+    modules.findIndex(m => !m.isCompleted),
+    [modules]
+  );
+
+  // Smooth scroll when component mounts (only once)
   useEffect(() => {
-    // Find first incomplete module and scroll to it
-    const firstIncomplete = modules.findIndex(m => !m.isCompleted);
-    if (firstIncomplete > 0) {
-      const element = document.querySelector(`[data-module-index="${firstIncomplete}"]`);
+    if (firstIncompleteIndex > 0) {
+      const element = document.querySelector(`[data-module-index="${firstIncompleteIndex}"]`);
       if (element) {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 500);
+        return () => clearTimeout(timeoutId);
       }
     }
-  }, [modules]);
+  }, []); // Run only once on mount
 
   if (modules.length === 0) {
     return (
@@ -64,7 +69,7 @@ const RoadTimeline = memo(function RoadTimeline({
         className="text-3xl font-black text-center mb-8 text-neutral-800 dark:text-white flex items-center justify-center gap-3"
         aria-label="Your learning road with available modules"
       >
-        <img src="/logo.png" alt="RiderMind" className="w-10 h-10 rounded-lg object-cover" />
+        <img src="/logo.png" alt="RiderMind" className="w-10 h-10 rounded-lg object-cover" loading="lazy" />
         <span>Your Learning Road</span>
         <span aria-hidden="true">🚦</span>
       </h2>
@@ -92,9 +97,9 @@ const RoadTimeline = memo(function RoadTimeline({
               key={studentModule.id}
               data-module-index={index}
               className={`relative ${index === modules.length - 1 ? 'mb-0' : 'mb-20'}`}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: Math.min(index * 0.05, 0.5), duration: 0.3 }}
             >
               {/* Stop Sign (before each module except first) */}
               {index > 0 && (

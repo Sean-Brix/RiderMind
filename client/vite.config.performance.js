@@ -1,13 +1,27 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
+// Production optimizations
+const dropConsole = () => {
+  return {
+    name: 'drop-console',
+    transform(code, id) {
+      if (process.env.NODE_ENV === 'production') {
+        return code
+          .replace(/console\.(log|info|debug|warn)\(.*?\);?/g, '')
+          .replace(/console\.(log|info|debug|warn)\([^)]*\)/g, '');
+      }
+      return code;
+    }
+  };
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    dropConsole()
+  ],
   build: {
-    outDir: path.resolve(__dirname, '../server/public/build'),
-    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -30,17 +44,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion']
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/profile-pictures': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-    },
-  },
-})
+  }
+});

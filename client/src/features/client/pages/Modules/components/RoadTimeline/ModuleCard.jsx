@@ -168,6 +168,10 @@ const ModuleCard = memo(function ModuleCard({
               {/* Continue/Start/Review Button */}
               <motion.button
                 onClick={() => onModuleClick?.(studentModule)}
+                onMouseEnter={() => {
+                  // Preload modal component on hover
+                  import('../LessonViewer').catch(() => {});
+                }}
                 aria-label={`${isCompleted ? 'Review' : hasViewedLessons ? 'Continue' : 'Start'} ${title} lessons`}
                 className="w-full py-3 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-brand-600 to-brand-800 hover:from-brand-700 hover:to-brand-900 shadow-lg transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
                 whileHover={{ scale: 1.02 }}
@@ -183,6 +187,10 @@ const ModuleCard = memo(function ModuleCard({
               {canTakeQuiz && !isCompleted && (
                 <motion.button
                   onClick={() => onQuizClick?.(studentModule)}
+                  onMouseEnter={() => {
+                    // Preload quiz modal component on hover
+                    import('../QuizViewer').catch(() => {});
+                  }}
                   aria-label={`Take quiz for ${title}${quizAttempts > 0 ? `. Previous attempts: ${quizAttempts}` : ''}`}
                   className="w-full py-3 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   whileHover={{ scale: 1.02 }}
