@@ -1,132 +1,172 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { RoadTimeline } from './components/RoadTimeline';
+import { FeedbackProvider } from './contexts/FeedbackContext';
 import Navbar from '../../../../components/Navbar';
-import LessonModal from '../../../../components/LessonModal';
-import CongratulationsModal from '../../../../components/CongratulationsModal';
+import HeaderJourney from './components/HeaderJourney';
 import CourseSelection from './CourseSelection';
-import { getMyModules, updateModuleProgress } from '../../../../services/studentModuleService';
+import { getMyModules, completeModule, updateModuleProgress } from '../../../../services/studentModuleService';
+import { useModalManager, ModalType } from './hooks/useModalManager';
+import { useProgress } from './hooks/useProgress';
+import { Zap, ArrowUp } from 'lucide-react';
 
-export default function Modules() {
-  const location = useLocation();
-  const navigate = useNavigate();
+// Lazy load modal components for better performance
+const LessonViewer = lazy(() => import('./components/LessonViewer').then(module => ({ default: module.LessonViewer })));
+const QuizViewer = lazy(() => import('./components/QuizViewer').then(module => ({ default: module.QuizViewer })));
+const CongratulationsModal = lazy(() => import('./components/Modals/CongratulationsModal').then(module => ({ default: module.CongratulationsModal })));
+const CompletionModal = lazy(() => import('./components/Modals/CompletionModal').then(module => ({ default: module.CompletionModal })));
+const ConfirmationModal = lazy(() => import('./components/Modals/ConfirmationModal').then(module => ({ default: module.ConfirmationModal })));
+
+/**
+ * Modules Component
+ * Main module learning page with course enrollment and progress tracking
+ */
+function Modules() {
+  // Modal Management
+  const modalManager = useModalManager();
+
+  // Real database data
   const [modules, setModules] = useState([]);
   const [categoryInfo, setCategoryInfo] = useState(null);
-  const [progress, setProgress] = useState({ total: 0, completed: 0, completionPercentage: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isLessonOpen, setIsLessonOpen] = useState(false);
-  const [currentLesson, setCurrentLesson] = useState(null);
-  const [showCourseSelection, setShowCourseSelection] = useState(false);
-  const [showCongratulations, setShowCongratulations] = useState(false);
   
-  // Check if user is authenticated - useMemo to prevent re-parsing on every render
+  // Course selection state
+  const [showCourseSelection, setShowCourseSelection] = useState(false);
+  
+  // Completion modal state
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning'
+  });
+  
+  // Scroll to top button state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Progress Tracking
+  const progressTracker = useProgress(modules);
+
+  // Check if user is authenticated
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('user') || 'null');
+      const userData = JSON.parse(localStorage.getItem('user') || 'null');
+      console.log('👤 User from localStorage:', userData);
+      return userData;
     } catch {
       return null;
     }
   }, []);
-  
-  // Calculate XP and level
-  const totalXP = modules.reduce((sum, m) => sum + (m.isCompleted ? 100 : Math.floor(m.progress)), 0);
-  const level = Math.floor(totalXP / 100) + 1;
-  const xpForNextLevel = level * 100;
-  const xpProgress = ((totalXP % 100) / 100) * 100;
+
+  const [userDetails, setUserDetails] = useState(null);
+
+  // Fetch complete user details from API
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/account/${user.id}`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          console.log('✅ Fetched user details:', data);
+          setUserDetails(data.user || data);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {
       loadModules();
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, [user]);
 
-  // Auto-open quiz modal if navigated from DevTools QuizSimulator
+  // Scroll detection for scroll-to-top button
   useEffect(() => {
-    if (location.state?.openQuiz && modules.length > 0) {
-      const { moduleId, studentModuleId } = location.state;
-      
-      // Find the student module
-      const studentModule = modules.find(m => 
-        m.moduleId === moduleId || m.id === studentModuleId
-      );
-      
-      if (studentModule && studentModule.module.quizzes?.[0]) {
-        // Open quiz modal with skipToQuiz flag
-        const lessonData = {
-          moduleId: studentModule.module.id,
-          studentModuleId: studentModule.id,
-          categoryId: studentModule.categoryId,
-          title: studentModule.module.title,
-          description: studentModule.module.description,
-          objectives: studentModule.module.objectives.map(obj => obj.objective),
-          slides: [],
-          quiz: studentModule.module.quizzes[0],
-          progress: studentModule.progress,
-          onProgressUpdate: async () => {},
-          onQuizComplete: async (passed) => {
-            await loadModules();
-            setIsLessonOpen(false);
-          },
-          skipToQuiz: true
-        };
-        setCurrentLesson(lessonData);
-        setIsLessonOpen(true);
-        
-        // Clear navigation state to prevent reopening on refresh
-        window.history.replaceState({}, document.title);
-      }
-    }
-  }, [location.state, modules]);
+    const handleScroll = () => {
+      // Show button when scrolled down more than 300px (navbar typically out of view)
+      setShowScrollTop(window.scrollY > 300);
+    };
 
-  const loadModules = async (skipCheck = false) => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const loadModules = async () => {
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
+      setError(null);
       
-      // After enrollment, we want to load the actual modules (skipCheck=true means don't use checkOnly)
-      // On initial load, we use checkOnly=true to prevent auto-enrollment
-      const response = await getMyModules(null, !skipCheck); // Pass checkOnly based on skipCheck parameter
+      console.log('🔄 Loading modules...');
+      const response = await getMyModules(null, true);
+      console.log('📦 Modules response:', response);
       
       if (response.success) {
-        // Check if user has any modules
-        if (!response.data.modules || response.data.modules.length === 0) {
-          setShowCourseSelection(true);
-        } else {
+        if (response.data.modules && response.data.modules.length > 0) {
+          console.log('✅ Setting modules:', response.data.modules.map(m => ({
+            id: m.id,
+            moduleId: m.module.id,
+            title: m.module.title,
+            isCompleted: m.isCompleted,
+            progress: m.progress,
+            quizPassed: m.quizPassed
+          })));
           setModules(response.data.modules);
           setCategoryInfo(response.data.category);
-          setProgress(response.data.progress);
-          setShowCourseSelection(false);
+        } else {
+          // No modules found - show course selection
+          setShowCourseSelection(true);
         }
+      } else {
+        // Error or no enrollment - show course selection
+        setShowCourseSelection(true);
       }
     } catch (err) {
       console.error('Error loading modules:', err);
-      
-      // Check if it's a network error (server not running)
-      if (err.message.includes('Failed to fetch') || err.message.includes('Network')) {
-        setError('Unable to connect to server. Please make sure the server is running.');
-      } else {
-        // For other errors (like 404, no auth), assume no modules and show course selection
-        setShowCourseSelection(true);
-        setError(null); // Don't show error, just show course selection
-      }
+      // On error, show course selection to allow enrollment
+      setShowCourseSelection(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleModuleClick = (studentModule, isUnlocked) => {
-    if (!isUnlocked) return;
+  // Auto-scroll to finish line when all modules completed
+  useEffect(() => {
+    if (modules.length > 0 && modules.every(m => m.isCompleted)) {
+      setTimeout(() => {
+        const finishLine = document.getElementById('finish-line');
+        if (finishLine) {
+          finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 1000);
+    }
+  }, [modules]);
+
+  const handleModuleClick = (studentModule) => {
+    console.log('Module clicked:', studentModule.module.title);
     
-    console.log('🎯 Module clicked:', {
-      studentModule,
-      hasSlides: !!studentModule.module.slides,
-      slideCount: studentModule.module.slides?.length,
-      slides: studentModule.module.slides
-    });
-    
-    // Calculate current slide index from currentSlideId
     let currentSlideIndex = 0;
-    if (studentModule.currentSlideId) {
+    if (studentModule.currentSlideId && studentModule.module.slides) {
       const slideIndex = studentModule.module.slides.findIndex(s => s.id === studentModule.currentSlideId);
       if (slideIndex !== -1) {
         currentSlideIndex = slideIndex;
@@ -134,12 +174,13 @@ export default function Modules() {
     }
     
     const lessonData = {
+      id: studentModule.module.id,
       moduleId: studentModule.module.id,
       studentModuleId: studentModule.id,
       categoryId: studentModule.categoryId,
       title: studentModule.module.title,
       description: studentModule.module.description,
-      objectives: studentModule.module.objectives.map(obj => obj.objective),
+      objectives: studentModule.module.objectives?.map(obj => obj.objective) || [],
       currentSlideIndex,
       slides: studentModule.module.slides?.map(slide => {
         let content = slide.content;
@@ -158,204 +199,104 @@ export default function Modules() {
       }) || [],
       quiz: studentModule.module.quizzes?.[0] || null,
       progress: studentModule.progress,
-      onProgressUpdate: async (moduleId, slideId, progressPercent) => {
-        const sm = modules.find(m => m.module.id === moduleId);
-        if (!sm) return;
-        await updateModuleProgress(moduleId, {
-          categoryId: sm.categoryId,
-          currentSlideId: slideId,
-          progress: progressPercent,
-        });
-        setModules(prev => prev.map(m => 
-          m.module.id === moduleId ? { ...m, progress: progressPercent } : m
-        ));
-      },
-      onQuizComplete: async (passed) => {
-        const updatedModules = await loadModules();
-        // Note: Modal is already closed by QuizModalNew.handleCloseResults calling onClose first
-        // No need to call setIsLessonOpen(false) here as it will close too late
-        
-        if (passed) {
-          const currentIndex = modules.findIndex(m => m.module.id === studentModule.module.id);
-          const isLastModule = currentIndex === modules.length - 1;
-          
-          // Check if this was the last module and all are now completed
-          if (isLastModule) {
-            // Small delay to allow the modal to close first
-            setTimeout(() => {
-              setShowCongratulations(true);
-            }, 500);
-          } else {
-            // Find the next module
-            setTimeout(() => {
-              const nextModule = modules[currentIndex + 1];
-              
-              if (nextModule) {
-                // Find the next module card element and scroll to it
-                const moduleElements = document.querySelectorAll('[data-module-id]');
-                const nextElement = Array.from(moduleElements).find(
-                  el => el.getAttribute('data-module-id') === nextModule.id.toString()
-                );
-                
-                if (nextElement) {
-                  nextElement.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                  });
-                  
-                  // Add a brief animation/flash to highlight the unlocked module
-                  nextElement.classList.add('animate-pulse');
-                  setTimeout(() => {
-                    nextElement.classList.remove('animate-pulse');
-                  }, 2000);
-                }
-              }
-            }, 500);
-          }
-        }
-      },
     };
 
-    console.log('📚 Setting lessonData:', {
-      ...lessonData,
-      slideCount: lessonData.slides?.length,
-      hasSlides: !!lessonData.slides?.length,
-      firstSlide: lessonData.slides?.[0],
-      hasQuiz: !!lessonData.quiz
-    });
-
-    setCurrentLesson(lessonData);
-    setIsLessonOpen(true);
+    console.log('📚 Lesson data:', lessonData);
+    modalManager.openModal(ModalType.LESSON, lessonData);
   };
 
-  const handleStopSignClick = (lastCompletedModule) => {
-    if (!lastCompletedModule) return;
+  const handleQuizClick = (studentModule) => {
+    console.log('🎯 Quiz clicked:', studentModule.module.title);
     
-    // Open quiz directly for the last completed module
-    const lessonData = {
-      moduleId: lastCompletedModule.module.id,
-      studentModuleId: lastCompletedModule.id,
-      categoryId: lastCompletedModule.categoryId,
-      title: lastCompletedModule.module.title,
-      description: lastCompletedModule.module.description,
-      objectives: lastCompletedModule.module.objectives.map(obj => obj.objective),
-      slides: [], // No slides, go straight to quiz
-      quiz: lastCompletedModule.module.quizzes?.[0] || null,
-      progress: 100,
-      startAtQuiz: true, // Flag to start at quiz
-      onProgressUpdate: async () => {},
-      onQuizComplete: async (passed) => {
-        await loadModules();
-        setIsLessonOpen(false);
-        
-        if (passed) {
-          // Find the next module
-          setTimeout(() => {
-            const currentIndex = modules.findIndex(m => m.module.id === lastCompletedModule.module.id);
-            const nextModule = modules[currentIndex + 1];
-            
-            if (nextModule) {
-              // Find the next module card element and scroll to it
-              const moduleElements = document.querySelectorAll('[data-module-id]');
-              const nextElement = Array.from(moduleElements).find(
-                el => el.getAttribute('data-module-id') === nextModule.id.toString()
-              );
-              
-              if (nextElement) {
-                nextElement.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
-                
-                // Add a brief animation/flash to highlight the unlocked module
-                nextElement.classList.add('animate-pulse');
-                setTimeout(() => {
-                  nextElement.classList.remove('animate-pulse');
-                }, 2000);
-              }
-            }
-          }, 500);
-        }
-      },
+    const quiz = studentModule.module.quizzes?.[0];
+    const quizData = {
+      id: quiz?.id,
+      title: quiz?.title || `${studentModule.module.title} Quiz`,
+      description: quiz?.description,
+      questions: quiz?.questions || [],
+      moduleId: studentModule.module.id,
+      studentModuleId: studentModule.id,
     };
 
-    setCurrentLesson(lessonData);
-    setIsLessonOpen(true);
+    console.log('📝 Quiz data:', quizData);
+    modalManager.openModal(ModalType.QUIZ, quizData);
   };
 
-  // If not authenticated, show login prompt
-  if (!user) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-4">
-          <div className="max-w-md w-full text-center">
-            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700">
-              <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
-                Login Required
-              </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                Please log in to access learning modules and track your progress.
-              </p>
-              <div className="space-y-3">
-                <Link
-                  to="/login"
-                  className="block w-full px-6 py-3 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 rounded-lg transition-colors"
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/register"
-                  className="block w-full px-6 py-3 text-sm font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 dark:hover:bg-brand-900/50 rounded-lg transition-colors"
-                >
-                  Create Account
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  const handleStopSignClick = (previousModule) => {
+    console.log('Stop sign clicked:', previousModule.module.title);
+    alert(`Viewing feedback for: ${previousModule.module.title}`);
+  };
 
+  const handleShowCompletionModal = () => {
+    setShowCompletionModal(true);
+  };
+
+  const handleCourseEnrollment = async () => {
+    // Reload modules after enrollment
+    await loadModules();
+    setShowCourseSelection(false);
+  };
+
+  // Get stats from useProgress hook
+  const { totalXP, level, xpProgress, xpForNextLevel } = progressTracker;
+  
+  const completedCount = useMemo(() => 
+    modules.filter(m => m.isCompleted).length, 
+    [modules]
+  );
+  
+  const overallProgress = useMemo(() => 
+    modules.length > 0 ? (completedCount / modules.length) * 100 : 0,
+    [modules.length, completedCount]
+  );
+
+  // Loading state
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-600"></div>
-        </div>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={loadModules} className="px-6 py-2 bg-brand-600 text-white rounded-lg">
-              Try Again
-            </button>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-600 border-t-transparent mb-4"></div>
+            <p className="text-neutral-600 dark:text-neutral-400">Loading modules...</p>
           </div>
         </div>
       </>
     );
   }
 
-  // Show course selection if user has no modules
+  // Show course selection if no modules
   if (showCourseSelection) {
     return (
       <>
         <Navbar />
-        <CourseSelection onComplete={() => loadModules(true)} />
+        <CourseSelection onComplete={handleCourseEnrollment} />
+      </>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+              <svg className="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-lg font-bold text-red-900 dark:text-red-100 mb-2">Error Loading Modules</h3>
+              <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
+              <button
+                onClick={loadModules}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
       </>
     );
   }
@@ -363,410 +304,341 @@ export default function Modules() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
-        {/* Road Journey Header */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-brand-600 to-brand-800 text-white">
-          {/* Road Lines Animation */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-full h-full">
-              <div className="absolute left-1/2 top-0 w-1 h-full bg-white transform -translate-x-1/2 animate-pulse"></div>
-            </div>
-          </div>
+      
+      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
+        <HeaderJourney
+          progress={overallProgress}
+          level={level}
+          xp={totalXP}
+          routesCompleted={{ completed: completedCount, total: modules.length }}
+        />
 
-          <div className="relative max-w-7xl mx-auto px-4 py-12">
-            {/* Driver Level Badge */}
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shadow-2xl border-4 border-white/30">
-                  <div className="text-center">
-                    <div className="text-xs font-bold text-amber-900">LEVEL</div>
-                    <div className="text-4xl font-black text-white">{level}</div>
-                  </div>
-                </div>
-                {/* Car Icon */}
-                <div className="absolute -top-2 -right-2 text-3xl">🚗</div>
-                <div className="absolute -bottom-2 -left-2 text-3xl">�</div>
-              </div>
-            </div>
+        <main id="main-content" role="main">
+          <RoadTimeline
+            modules={modules}
+            onModuleClick={handleModuleClick}
+            onQuizClick={handleQuizClick}
+            onStopSignClick={handleStopSignClick}
+            onShowCompletionModal={handleShowCompletionModal}
+          />
+        </main>
 
-            {/* Title & Subtitle */}
-            <div className="max-w-2xl mx-auto text-center mb-6">
-              <h1 className="text-5xl font-black mb-2">
-                {categoryInfo?.name || 'Road Safety Journey'}
-              </h1>
-              <p className="text-xl text-brand-100 mb-4">Keep driving toward your goals! 🚗💨</p>
-              
-              {/* Distance Progress Bar (styled like odometer) */}
-              <div className="bg-neutral-900/30 backdrop-blur-sm rounded-lg p-3 mb-2 border-2 border-white/20">
-                <div className="flex justify-between items-center mb-2 text-sm">
-                  <span className="font-bold">Distance Traveled</span>
-                  <span className="text-yellow-300">{totalXP % 100} / 100 km</span>
-                </div>
-                <div className="relative h-6 bg-neutral-800/50 rounded-full overflow-hidden border-2 border-white/10">
-                  <div 
-                    className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 transition-all duration-500 flex items-center justify-end px-3"
-                    style={{ width: `${xpProgress}%` }}
-                  >
-                    <span className="text-xs font-bold text-neutral-900">🚗</span>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-brand-100">
-                {xpForNextLevel - totalXP} km to Level {level + 1}
-              </p>
-            </div>
-
-            {/* Journey Stats Dashboard */}
-            <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border-2 border-white/20 hover:scale-105 transition-transform">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">🏆</div>
-                  <div className="text-3xl font-black text-yellow-300">{progress.completed}</div>
-                  <div className="text-sm text-brand-100">Routes Mastered</div>
-                </div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border-2 border-white/20 hover:scale-105 transition-transform">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">📍</div>
-                  <div className="text-3xl font-black text-amber-300">{totalXP} km</div>
-                  <div className="text-sm text-brand-100">Total Distance</div>
-                </div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border-2 border-white/20 hover:scale-105 transition-transform">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">⚡</div>
-                  <div className="text-3xl font-black text-green-300">{progress.completionPercentage}%</div>
-                  <div className="text-sm text-brand-100">Journey Progress</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Learning Road Map */}
+        {/* Debug Info */}
         <div className="max-w-5xl mx-auto px-4 py-12">
-          <h2 className="text-3xl font-black text-center mb-8 text-neutral-800 dark:text-white flex items-center justify-center gap-3">
-            <span>�️</span>
-            <span>Your Learning Road</span>
-            <span>🚦</span>
-          </h2>
-
-          <div className="relative">
-            {/* Straight Road Path - Vertical road with dashed lines */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-24 bg-neutral-700 dark:bg-neutral-600 transform -translate-x-1/2 z-0">
-              {/* Road markings */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-1 border-l-4 border-dashed border-yellow-400 transform -translate-x-1/2"></div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6 border border-neutral-200 dark:border-neutral-700">
+            <h3 className="text-lg font-bold mb-4 text-neutral-900 dark:text-white">
+              🔧 Debug Info
+            </h3>
+            <div className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <p>✅ Total Modules: {modules.length}</p>
+              <p>✅ Completed: {completedCount}</p>
+              <p>✅ Course: {categoryInfo?.name || 'N/A'}</p>
             </div>
 
-            {modules.map((studentModule, index) => {
-              const module = studentModule.module;
-              const isUnlocked = index === 0 || modules[index - 1]?.isCompleted;
-              const status = studentModule.isCompleted ? 'completed' : (isUnlocked ? 'unlocked' : 'locked');
-              const isLeft = index % 2 === 0;
-              
-              // Find last completed module for stop sign
-              const lastCompletedIndex = modules.findIndex((m, i) => i < index && m.isCompleted && !modules[i + 1]?.isCompleted);
-              const lastCompletedModule = lastCompletedIndex >= 0 ? modules[lastCompletedIndex] : null;
-              
-              return (
-                <div key={studentModule.id} className="relative mb-20">
-                  {/* Stop Sign between every module (except before first) */}
-                  {index > 0 && (
-                    <div 
-                      className="absolute left-1/2 -top-12 transform -translate-x-1/2 z-20 cursor-pointer hover:scale-110 transition-transform"
-                      onClick={() => {
-                        // Find the last completed module before this one
-                        const prevCompleted = modules.slice(0, index).reverse().find(m => m.isCompleted);
-                        if (prevCompleted) {
-                          handleStopSignClick(prevCompleted);
+            {/* Super Admin Dev Button */}
+            {(user?.role === 'super_admin' || user?.role === 'admin' || import.meta.env.DEV) && modules.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                <button
+                  onClick={async () => {
+                    setConfirmationModal({
+                      isOpen: true,
+                      title: '🔧 DEV MODE',
+                      message: `Auto-complete all modules except the last one?\n\nThis will mark ${modules.length - 1} modules as completed with 100% score.`,
+                      type: 'dev',
+                      confirmText: 'Auto-Complete',
+                      cancelText: 'Cancel',
+                      onConfirm: async () => {
+                        try {
+                          setLoading(true);
+                          for (let i = 0; i < modules.length - 1; i++) {
+                            await completeModule(modules[i].id, {
+                              categoryId: categoryInfo?.id || modules[i].categoryId,
+                              quizScore: 100,
+                              quizPassed: true
+                            });
+                          }
+                          await loadModules();
+                          setConfirmationModal({
+                            isOpen: true,
+                            title: '✅ Success',
+                            message: `Auto-completed ${modules.length - 1} modules!`,
+                            type: 'dev',
+                            confirmText: 'Got it!',
+                            onConfirm: () => {}
+                          });
+                        } catch (error) {
+                          console.error('Error auto-completing modules:', error);
+                        } finally {
+                          setLoading(false);
                         }
-                      }}
-                    >
-                      <div className="relative">
-                        {/* Stop sign octagon */}
-                        <div className="w-16 h-16 bg-red-600 border-4 border-white shadow-2xl flex items-center justify-center" 
-                             style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)' }}>
-                          <span className="text-white font-black text-xs">STOP</span>
-                        </div>
-                        {/* Sign post */}
-                        <div className="absolute left-1/2 top-full w-2 h-8 bg-neutral-500 transform -translate-x-1/2"></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Road Sign/Checkpoint - centered on road */}
-                  <div className="absolute left-1/2 top-8 transform -translate-x-1/2 z-10">
-                    <div className={`w-20 h-20 rounded-lg rotate-45 border-4 flex items-center justify-center font-black text-2xl shadow-2xl transition-transform hover:scale-110 ${
-                      status === 'completed' 
-                        ? 'bg-green-500 border-green-700 text-white' 
-                        : isUnlocked
-                        ? 'bg-brand-500 border-brand-700 text-white'
-                        : 'bg-neutral-400 dark:bg-neutral-600 border-neutral-500 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'
-                    }`}>
-                      <div className="-rotate-45">
-                        {status === 'completed' ? (
-                          <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          index + 1
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Module Card - positioned on alternating sides */}
-                  <div
-                    data-module-id={studentModule.id}
-                    onClick={() => handleModuleClick(studentModule, isUnlocked)}
-                    className={`relative bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 border-l-8 transition-all w-5/12 ${
-                      status === 'completed'
-                        ? 'border-green-500 hover:shadow-xl hover:-translate-y-1'
-                        : isUnlocked
-                        ? 'border-brand-600 hover:shadow-xl hover:-translate-y-1 cursor-pointer'
-                        : 'border-neutral-300 dark:border-neutral-700 opacity-70'
-                    } ${isLeft ? 'mr-auto' : 'ml-auto'}`}
-                  >
-                    {/* Distance Badge */}
-                    <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-500 to-yellow-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-                      <span>📍</span>
-                      <span>{status === 'completed' ? '+100 km' : '100 km'}</span>
-                    </div>
-
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-black shadow-md ${
-                        status === 'completed' ? 'bg-green-100 dark:bg-green-900/30' 
-                        : isUnlocked ? 'bg-brand-100 dark:bg-brand-900/30'
-                        : 'bg-neutral-200 dark:bg-neutral-700'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-black text-neutral-900 dark:text-white mb-1">
-                          {module.title}
-                        </h3>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {module.objectives?.length || 0} Learning Points • {module.slides?.length || 0} Lessons
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-neutral-700 dark:text-neutral-300 mb-4">
-                      {module.description}
-                    </p>
-
-                    {isUnlocked && !studentModule.isCompleted && (
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm font-bold">
-                          <span className="text-neutral-700 dark:text-neutral-300">Route Progress</span>
-                          <span className="text-brand-600 dark:text-brand-400">
-                            {Math.round(studentModule.progress)}%
-                          </span>
-                        </div>
-                        <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden border border-neutral-300 dark:border-neutral-600">
-                          <div
-                            className="h-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500"
-                            style={{ width: `${studentModule.progress}%` }}
-                          />
-                        </div>
-                        
-                        {/* Show quiz attempts */}
-                        {studentModule.quizAttempts > 0 && (
-                          <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>Quiz Attempts: {studentModule.quizAttempts}</span>
-                            {studentModule.quizScore && (
-                              <span className="ml-2 font-bold text-brand-600 dark:text-brand-400">
-                                Best Score: {Math.round(studentModule.quizScore)}%
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {status === 'completed' && (
-                      <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>Route Complete! Score: {studentModule.quizScore ? `${Math.round(studentModule.quizScore)}%` : '100%'}</span>
-                      </div>
-                    )}
-
-                    {isUnlocked && !studentModule.isCompleted && (
-                      <div className="mt-4 space-y-2">
-                        <button 
-                          onClick={() => handleModuleClick(studentModule, isUnlocked)}
-                          className="w-full bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition-all flex items-center justify-center gap-2"
-                        >
-                          <span>{studentModule.progress > 0 ? '🚗 Continue Driving' : '🚦 Start Route'}</span>
-                        </button>
-                        
-                        {/* Show "Take Quiz" button if all slides viewed (90% progress) */}
-                        {studentModule.progress >= 90 && module.quizzes?.[0] && (
-                          <button 
-                            onClick={() => {
-                              // Open lesson modal directly to quiz
-                              const lessonData = {
-                                moduleId: studentModule.module.id,
-                                studentModuleId: studentModule.id,
-                                categoryId: studentModule.categoryId,
-                                title: studentModule.module.title,
-                                description: studentModule.module.description,
-                                objectives: studentModule.module.objectives.map(obj => obj.objective),
-                                slides: [],
-                                quiz: studentModule.module.quizzes?.[0] || null,
-                                progress: studentModule.progress,
-                                onProgressUpdate: async () => {},
-                                onQuizComplete: async (passed) => {
-                                  // Modal already closed by QuizModal, just refresh data
-                                  await loadModules();
-                                },
-                                skipToQuiz: true
-                              };
-                              setCurrentLesson(lessonData);
-                              setIsLessonOpen(true);
-                            }}
-                            className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition-all flex items-center justify-center gap-2"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>📝 Take Quiz Now</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Finish Line / Destination */}
-            <div className="relative mt-20">
-              {/* Final Road Section */}
-              <div className="absolute left-1/2 -top-20 w-24 h-32 bg-neutral-700 dark:bg-neutral-600 transform -translate-x-1/2 z-0">
-                <div className="absolute left-1/2 top-0 bottom-0 w-1 border-l-4 border-dashed border-yellow-400 transform -translate-x-1/2"></div>
+                      }
+                    });
+                  }}
+                  disabled={loading}
+                  className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>🔧 DEV: Auto-Complete All Modules (Except Last)</span>
+                </button>
               </div>
-
-              {/* Finish Line Banner */}
-              <div className="relative z-10 bg-gradient-to-br from-brand-600 via-brand-500 to-red-600 rounded-2xl shadow-2xl overflow-hidden border-8 border-white dark:border-neutral-800">
-                {/* Checkered Pattern Background */}
-                <div className="absolute inset-0 opacity-20" style={{
-                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(0,0,0,0.3) 20px, rgba(0,0,0,0.3) 40px), repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(0,0,0,0.3) 20px, rgba(0,0,0,0.3) 40px)'
-                }}></div>
-                
-                <div className="relative p-12 text-center">
-                  {/* Trophy and Flags */}
-                  <div className="flex justify-center gap-8 mb-6">
-                    <div className="text-6xl animate-bounce">🏁</div>
-                    <div className="text-7xl animate-pulse">🏆</div>
-                    <div className="text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>🏁</div>
-                  </div>
-
-                  <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
-                    FINISH LINE
-                  </h2>
-                  <p className="text-2xl text-red-100 font-bold mb-6 drop-shadow">
-                    Complete all modules to earn your certificate!
-                  </p>
-
-                  {/* Progress Stats */}
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 max-w-md mx-auto border-2 border-white/30">
-                    <div className="flex justify-between items-center">
-                      <div className="text-left">
-                        <div className="text-4xl font-black text-white">{progress.completed}</div>
-                        <div className="text-sm text-red-100">Completed</div>
-                      </div>
-                      <div className="text-3xl">➡️</div>
-                      <div className="text-right">
-                        <div className="text-4xl font-black text-white">{progress.total}</div>
-                        <div className="text-sm text-red-100">Total Modules</div>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mt-4 h-4 bg-white/30 rounded-full overflow-hidden border-2 border-white/50">
-                      <div
-                        className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500"
-                        style={{ width: `${progress.completionPercentage}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 text-center text-white font-bold text-lg">
-                      {progress.completionPercentage}% Complete
-                    </div>
-                  </div>
-
-                  {/* Completion Message or Next Steps */}
-                  {progress.completionPercentage === 100 ? (
-                    <div className="mt-8">
-                      <button
-                        onClick={() => setShowCongratulations(true)}
-                        className="px-12 py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-2xl font-black rounded-xl shadow-2xl transform hover:scale-105 transition-all animate-pulse"
-                      >
-                        🎉 Claim Your Certificate! 🎉
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="mt-8 text-white text-lg font-semibold">
-                      Keep going! You're {progress.total - progress.completed} module{progress.total - progress.completed !== 1 ? 's' : ''} away from glory! 💪
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Road End Marker */}
-              <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2 text-4xl z-20">
-                🎯
-              </div>
-            </div>
+            )}
           </div>
-
-          {/* Achievement Banner */}
-          {progress.completed > 0 && progress.completionPercentage < 100 && (
-            <div className="mt-16 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-xl p-8 text-center shadow-xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-white/10"></div>
-              <div className="relative">
-                <div className="text-6xl mb-4">🏆🎉</div>
-                <h3 className="text-3xl font-black text-white mb-2">Great Driving!</h3>
-                <p className="text-xl text-green-50">You've mastered {progress.completed} route{progress.completed !== 1 ? 's' : ''}! Keep up the safe driving! 🚗💨</p>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Lesson Viewer Modal */}
+        {modalManager.activeModal === ModalType.LESSON && (
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading...</div></div>}>
+            <LessonViewer
+              isOpen={true}
+              onClose={modalManager.closeModal}
+              lesson={modalManager.modalData}
+              initialSlide={modalManager.modalData?.currentSlideIndex || 0}
+              onSlideChange={async (slideIndex) => {
+                const moduleId = modalManager.modalData?.moduleId;
+                const studentModuleId = modalManager.modalData?.studentModuleId;
+                const totalSlides = modalManager.modalData?.slides?.length || 1;
+                const progressPercentage = ((slideIndex + 1) / totalSlides) * 100;
+                
+                if (moduleId && categoryInfo?.id) {
+                  try {
+                    await updateModuleProgress(moduleId, {
+                      categoryId: categoryInfo.id,
+                      progress: progressPercentage,
+                      currentSlideId: modalManager.modalData?.slides?.[slideIndex]?.id
+                    });
+                    
+                    setModules(prevModules =>
+                      prevModules.map(m =>
+                        m.id === studentModuleId
+                          ? { ...m, progress: progressPercentage }
+                          : m
+                      )
+                    );
+                  } catch (error) {
+                    console.error('❌ Error updating progress:', error);
+                  }
+                }
+              }}
+              onComplete={async (lessonId) => {
+                const studentModuleId = modalManager.modalData?.studentModuleId;
+                const moduleId = modalManager.modalData?.moduleId;
+                
+                if (moduleId && categoryInfo?.id) {
+                  try {
+                    await updateModuleProgress(moduleId, {
+                      categoryId: categoryInfo.id,
+                      progress: 100
+                    });
+                    
+                    setModules(prevModules =>
+                      prevModules.map(m =>
+                        m.id === studentModuleId
+                          ? { ...m, progress: 100 }
+                          : m
+                      )
+                    );
+                  } catch (error) {
+                    console.error('❌ Error updating progress:', error);
+                  }
+                }
+              }}
+              onStartQuiz={(quiz, moduleId, studentModuleId) => {
+                const quizData = { ...quiz, moduleId, studentModuleId };
+                modalManager.openModal(ModalType.QUIZ, quizData);
+              }}
+            />
+          </Suspense>
+        )}
+
+        {/* Quiz Viewer Modal */}
+        {modalManager.activeModal === ModalType.QUIZ && (
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading...</div></div>}>
+            <QuizViewer
+              isOpen={true}
+              onClose={modalManager.closeModal}
+              quiz={modalManager.modalData}
+              moduleId={modalManager.modalData?.moduleId}
+              studentModuleId={modalManager.modalData?.studentModuleId}
+              onQuizComplete={async (result) => {
+                if (result.passed) {
+                  try {
+                    const studentModuleId = modalManager.modalData?.studentModuleId;
+                    
+                    if (studentModuleId && categoryInfo?.id) {
+                      await completeModule(studentModuleId, {
+                        categoryId: categoryInfo.id,
+                        quizScore: result.score,
+                        quizAttemptId: result.attempt
+                      });
+                      
+                      const currentModule = modules.find(m => m.id === studentModuleId);
+                      const completedCount = modules.filter(m => m.isCompleted).length + 1;
+                      
+                      const xpEarned = Math.round((result.score / 100) * 500);
+                      const currentLevel = progressTracker.level;
+                      const newXP = progressTracker.totalXP + xpEarned;
+                      const newLevel = Math.floor(newXP / 1000) + 1;
+                      const leveledUp = newLevel > currentLevel;
+
+                      setModules(prevModules =>
+                        prevModules.map(m => 
+                          m.id === studentModuleId 
+                            ? { 
+                                ...m,
+                                isCompleted: true,
+                                completedAt: new Date().toISOString(),
+                                progress: 100,
+                                quizScore: result.score,
+                                quizPassed: true,
+                                quizAttempts: (m.quizAttempts || 0) + 1,
+                                lastQuizAttemptId: result.attempt
+                              }
+                            : m
+                        )
+                      );
+
+                      modalManager.closeModal();
+                      
+                      setTimeout(() => {
+                        modalManager.openModal(ModalType.CONGRATULATIONS, {
+                          moduleTitle: currentModule?.module?.title || 'Module',
+                          score: result.score,
+                          xpEarned,
+                          newLevel,
+                          leveledUp,
+                          completedModulesCount: completedCount,
+                          totalModulesCount: modules.length
+                        });
+                      }, 100);
+                    }
+                  } catch (error) {
+                    console.error('❌ Error completing module:', error);
+                  }
+                }
+              }}
+            />
+          </Suspense>
+        )}
+
+        {/* Congratulations Modal */}
+        {modalManager.activeModal === ModalType.CONGRATULATIONS && (
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading...</div></div>}>
+            <CongratulationsModal
+              isOpen={true}
+              onClose={modalManager.closeModal}
+              moduleTitle={modalManager.modalData?.moduleTitle}
+              score={modalManager.modalData?.score}
+              xpEarned={modalManager.modalData?.xpEarned}
+              newLevel={modalManager.modalData?.newLevel}
+              leveledUp={modalManager.modalData?.leveledUp}
+              completedModulesCount={modalManager.modalData?.completedModulesCount}
+              totalModulesCount={modalManager.modalData?.totalModulesCount}
+              onContinue={() => {
+                const nextIncomplete = modules.findIndex(m => !m.isCompleted);
+                if (nextIncomplete !== -1) {
+                  const element = document.querySelector(`[data-module-index="${nextIncomplete}"]`);
+                  if (element) {
+                    setTimeout(() => {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                  }
+                }
+              }}
+            />
+          </Suspense>
+        )}
+
+        {/* Completion Modal */}
+        {showCompletionModal && (
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading...</div></div>}>
+            <CompletionModal
+              isOpen={showCompletionModal}
+              onClose={() => setShowCompletionModal(false)}
+              userData={{
+                userName: userDetails 
+                  ? (userDetails.first_name && userDetails.last_name 
+                      ? `${userDetails.first_name} ${userDetails.last_name}` 
+                      : userDetails.displayName || userDetails.username || userDetails.name || 'Student')
+                  : (user?.first_name && user?.last_name 
+                      ? `${user.first_name} ${user.last_name}` 
+                      : user?.displayName || user?.username || user?.name || 'Student'),
+                userId: user?.id
+              }}
+              completionData={{
+                courseName: categoryInfo?.name || 'Driver Education Course',
+                totalModules: modules.length,
+                completedModules: completedCount,
+                totalQuizzes: modules.length,
+                passedQuizzes: modules.filter(m => m.quizPassed).length,
+                averageScore: (() => {
+                  const modulesWithScores = modules.filter(m => 
+                    (m.highestQuizScore && m.highestQuizScore > 0) ||
+                    (m.quizScore && m.quizScore > 0) ||
+                    (m.score && m.score > 0)
+                  );
+                  
+                  if (modulesWithScores.length === 0) return 0;
+                  
+                  const totalScore = modulesWithScores.reduce((sum, m) => {
+                    const score = m.highestQuizScore || m.quizScore || m.score || 0;
+                    return sum + score;
+                  }, 0);
+                  
+                  return Math.round(totalScore / modulesWithScores.length);
+                })(),
+                totalTimeSpent: 120,
+                completionDate: new Date(),
+                certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`
+              }}
+              leaderboardData={{
+                rank: 1,
+                totalUsers: 100,
+                topPerformers: [
+                  { name: 'Top Student 1', score: 98 },
+                  { name: 'Top Student 2', score: 95 },
+                  { name: 'Top Student 3', score: 92 },
+                ]
+              }}
+            />
+          </Suspense>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmationModal.isOpen && (
+          <Suspense fallback={null}>
+            <ConfirmationModal
+              isOpen={confirmationModal.isOpen}
+              onClose={() => setConfirmationModal({ ...confirmationModal, isOpen: false })}
+              onConfirm={confirmationModal.onConfirm}
+              title={confirmationModal.title}
+              message={confirmationModal.message}
+              type={confirmationModal.type}
+              confirmText={confirmationModal.confirmText}
+              cancelText={confirmationModal.cancelText}
+            />
+          </Suspense>
+        )}
+
+        {/* Scroll to Top Button */}
+        {showScrollTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-8 z-40 bg-brand-600/30 hover:bg-brand-600/50 backdrop-blur-sm text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 group animate-in fade-in slide-in-from-bottom-4"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-6 h-6 group-hover:animate-bounce" />
+          </button>
+        )}
       </div>
-
-      <LessonModal 
-        isOpen={isLessonOpen} 
-        onClose={() => setIsLessonOpen(false)} 
-        lesson={currentLesson} 
-      />
-
-      <CongratulationsModal
-        isOpen={showCongratulations}
-        onClose={() => setShowCongratulations(false)}
-        studentData={{
-          fullName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'Student',
-          accountId: user?.id ? `ACC-${String(user.id).padStart(6, '0')}` : 'ACC-000000'
-        }}
-        categoryData={{
-          name: categoryInfo?.name || 'Course',
-          modules: modules.map(sm => ({
-            id: sm.id,
-            title: sm.module.title,
-            isCompleted: sm.isCompleted,
-            quiz: sm.module.quizzes?.[0] || null,
-            quizScore: sm.quizScore
-          }))
-        }}
-        onDownloadCertificate={() => {
-          console.log('Certificate downloaded!');
-        }}
-      />
     </>
   );
 }
 
+// Wrap with FeedbackProvider
+const ModulesWithFeedback = () => (
+  <FeedbackProvider>
+    <Modules />
+  </FeedbackProvider>
+);
+
+export default ModulesWithFeedback;

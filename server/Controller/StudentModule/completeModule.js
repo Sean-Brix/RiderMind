@@ -4,14 +4,22 @@ const prisma = new PrismaClient();
 
 /**
  * Mark a module as completed (after passing the quiz)
- * POST /api/student-modules/:moduleId/complete
+ * POST /api/student-modules/:studentModuleId/complete
  * Body: { categoryId, quizScore, quizAttemptId }
  */
 export default async function completeModule(req, res) {
   try {
     const userId = req.user.id;
-    const { moduleId } = req.params;
+    const { moduleId } = req.params; // Actually studentModuleId, but route param is named moduleId
     const { categoryId, quizScore, quizAttemptId } = req.body;
+
+    console.log('🔧 Complete Module Request:', {
+      userId,
+      studentModuleId: req.params.moduleId,
+      categoryId,
+      quizScore,
+      quizAttemptId
+    });
 
     if (!categoryId) {
       return res.status(400).json({
@@ -20,12 +28,10 @@ export default async function completeModule(req, res) {
       });
     }
 
-    // Find the student module record
-    const studentModule = await prisma.studentModule.findFirst({
+    // Find the student module record by ID directly
+    const studentModule = await prisma.studentModule.findUnique({
       where: {
-        userId,
-        moduleId: parseInt(moduleId),
-        categoryId: parseInt(categoryId)
+        id: parseInt(moduleId) // This is actually the studentModuleId
       },
       include: {
         module: {
@@ -39,10 +45,25 @@ export default async function completeModule(req, res) {
       }
     });
 
+    console.log('🔍 Found studentModule:', {
+      id: studentModule?.id,
+      moduleId: studentModule?.moduleId,
+      isCompleted: studentModule?.isCompleted,
+      progress: studentModule?.progress
+    });
+
     if (!studentModule) {
       return res.status(404).json({
         success: false,
         error: 'Student module not found'
+      });
+    }
+
+    // Verify this belongs to the requesting user
+    if (studentModule.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized'
       });
     }
 

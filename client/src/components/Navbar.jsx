@@ -92,7 +92,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 flex-1">
           {/* Logo/Brand */}
           <div className={`flex items-center ${isAdminPanel ? 'w-64 px-4 border-r border-neutral-200 dark:border-neutral-800' : ''}`}>
-            <Link to="/" className="text-xl font-bold text-brand-700 dark:text-brand-400">
+            <Link to="/" className="flex gap-3 justify-center items-center text-xl font-bold text-brand-700 dark:text-brand-400">
+              <img src="/logo.png" alt="RiderMind" className="w-8 h-8 rounded-lg" />
               RiderMind
             </Link>
           </div>

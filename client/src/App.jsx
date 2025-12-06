@@ -21,6 +21,7 @@ import AccountList from './features/admin/features/account-management/pages/Acco
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
 import Register from './features/auth/pages/Register.jsx';
 import DevTools from './features/client/pages/DevTools.jsx';
+import ModulesTest from './features/client/pages/Modules/ModulesTest.jsx';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -74,6 +75,7 @@ function App() {
       </Route>
 
       <Route path="/dev" element={<Protected><DevTools /></Protected>} />
+      <Route path="/modules-test" element={<ModulesTest />} />
       
       {/* FALLBACK */}
       <Route path="*" element={<Navigate to={user ? (user.role === 'ADMIN' ? '/admin' : '/') : '/login'} replace />} />

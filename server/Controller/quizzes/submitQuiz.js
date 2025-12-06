@@ -81,6 +81,10 @@ export default async function submitQuiz(req, res) {
     let maxScore = 0;
     const answersToCreate = [];
 
+    console.log('=== GRADING DEBUG ===');
+    console.log('Total questions:', quiz.questions.length);
+    console.log('Total answers submitted:', answers.length);
+
     for (const answer of answers) {
       const question = quiz.questions.find(q => q.id === answer.questionId);
       
@@ -91,11 +95,20 @@ export default async function submitQuiz(req, res) {
       let isCorrect = false;
       let pointsEarned = 0;
 
+      console.log(`\n--- Question ${question.id} (${question.type}) ---`);
+      console.log('Question text:', question.question);
+      console.log('Points:', question.points);
+
       // Check answer based on question type
       if (question.type === 'MULTIPLE_CHOICE' || question.type === 'TRUE_FALSE') {
         const selectedOption = question.options.find(opt => opt.id === answer.selectedOptionId);
         isCorrect = selectedOption?.isCorrect || false;
         pointsEarned = isCorrect ? question.points : 0;
+        
+        console.log('User selected option ID:', answer.selectedOptionId);
+        console.log('Selected option:', selectedOption?.optionText);
+        console.log('Is correct:', selectedOption?.isCorrect);
+        console.log('All options:', question.options.map(o => ({ id: o.id, text: o.optionText, isCorrect: o.isCorrect })));
       } 
       else if (question.type === 'MULTIPLE_ANSWER') {
         // For multiple answer, all correct options must be selected
@@ -105,17 +118,34 @@ export default async function submitQuiz(req, res) {
         isCorrect = correctOptionIds.length === selectedIds.length && 
                     correctOptionIds.every(id => selectedIds.includes(id));
         pointsEarned = isCorrect ? question.points : 0;
+        
+        console.log('Correct option IDs:', correctOptionIds);
+        console.log('Selected option IDs:', selectedIds);
       }
       else if (question.type === 'IDENTIFICATION' || question.type === 'FILL_BLANK') {
         // Get correct answer from options (first correct option's text)
         const correctOption = question.options.find(opt => opt.isCorrect);
         
-        if (correctOption && answer.answerText) {
-          const userAnswer = question.caseSensitive ? answer.answerText : answer.answerText.toLowerCase();
-          const correctAnswer = question.caseSensitive ? correctOption.optionText : correctOption.optionText.toLowerCase();
-          
-          isCorrect = userAnswer.trim() === correctAnswer.trim();
-          pointsEarned = isCorrect ? question.points : 0;
+        console.log('User answer text:', answer.answerText);
+        console.log('Correct option:', correctOption);
+        
+        if (correctOption) {
+          if (answer.answerText) {
+            const userAnswer = question.caseSensitive ? answer.answerText : answer.answerText.toLowerCase();
+            const correctAnswer = question.caseSensitive ? correctOption.optionText : correctOption.optionText.toLowerCase();
+            
+            isCorrect = userAnswer.trim() === correctAnswer.trim();
+            pointsEarned = isCorrect ? question.points : 0;
+            
+            console.log('Correct answer:', correctOption.optionText);
+            console.log('Case sensitive:', question.caseSensitive);
+            console.log('After processing - User:', userAnswer.trim(), 'Correct:', correctAnswer.trim());
+            console.log('Match:', isCorrect);
+          } else {
+            console.log('ERROR: No answerText provided');
+          }
+        } else {
+          console.log('ERROR: No correct option found for this question');
         }
       }
       else if (question.type === 'ESSAY') {
@@ -124,6 +154,7 @@ export default async function submitQuiz(req, res) {
         pointsEarned = 0; // Will be set during manual grading
       }
 
+      console.log('Points earned:', pointsEarned);
       totalScore += pointsEarned;
 
       answersToCreate.push({
@@ -145,6 +176,14 @@ export default async function submitQuiz(req, res) {
     const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
     const passed = scorePercentage >= quiz.passingScore;
 
+    console.log('\n=== FINAL SCORE ===');
+    console.log('Total score:', totalScore);
+    console.log('Max score:', maxScore);
+    console.log('Percentage:', scorePercentage);
+    console.log('Passing score required:', quiz.passingScore);
+    console.log('Passed:', passed);
+    console.log('==================\n');
+
     // Update attempt with final score and status
     const finalAttempt = await prisma.quizAttempt.update({
       where: { id: attempt.id },
@@ -162,14 +201,14 @@ export default async function submitQuiz(req, res) {
                 question: true,
                 type: true,
                 points: true,
-                explanation: quiz.showResults
+                description: true
               }
             },
             selectedOption: {
               select: {
                 id: true,
                 optionText: true,
-                isCorrect: quiz.showResults
+                isCorrect: true
               }
             }
           }
@@ -177,9 +216,45 @@ export default async function submitQuiz(req, res) {
       }
     });
 
+    // Build feedback array for client
+    const feedback = finalAttempt.answers.map(answer => {
+      const question = quiz.questions.find(q => q.id === answer.questionId);
+      
+      // Get correct answer based on question type
+      let correctAnswer = null;
+      if (question.type === 'MULTIPLE_CHOICE' || question.type === 'TRUE_FALSE' || question.type === 'MULTIPLE_ANSWER') {
+        const correctOption = question.options.find(opt => opt.isCorrect);
+        correctAnswer = correctOption?.id;
+      } else if (question.type === 'IDENTIFICATION' || question.type === 'FILL_BLANK') {
+        const correctOption = question.options.find(opt => opt.isCorrect);
+        correctAnswer = correctOption?.id;
+      }
+      
+      return {
+        questionId: answer.questionId,
+        question: answer.question.question,
+        questionText: answer.question.question,
+        userAnswer: answer.selectedOptionId || answer.answerText,
+        correctAnswer: correctAnswer,
+        isCorrect: answer.isCorrect,
+        explanation: answer.question.description,
+        options: question.options
+      };
+    });
+
+    // Count correct answers
+    const correctCount = finalAttempt.answers.filter(a => a.isCorrect === true).length;
+
     res.status(201).json({
       success: true,
       message: passed ? 'Quiz passed!' : 'Quiz submitted',
+      score: scorePercentage,
+      passed,
+      feedback,
+      correctCount,
+      totalQuestions: quiz.questions.length,
+      attempt: finalAttempt.id,
+      completedModule: false,
       data: {
         attemptId: finalAttempt.id,
         score: scorePercentage,
@@ -188,8 +263,7 @@ export default async function submitQuiz(req, res) {
         passed,
         passingScore: quiz.passingScore,
         timeSpent: finalAttempt.timeSpent,
-        showResults: quiz.showResults,
-        answers: quiz.showResults ? finalAttempt.answers : undefined
+        showResults: quiz.showResults
       }
     });
 

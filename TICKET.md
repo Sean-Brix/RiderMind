@@ -51,6 +51,6 @@
 
 - # Require 10 Modules per classification
 
-- Add 1 medal badge per module
-
 - # feedback statistics per quiz
+
+- # lessonviewer modal height is dependent on the sidebar height
