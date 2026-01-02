@@ -303,6 +303,7 @@ export async function seedModules(prisma) {
           title: template.title,
           description: template.description,
           position: i + 1,
+          isActive: true, // Set modules as active by default
           objectives: {
             create: template.objectives.map((text, idx) => ({
               objective: text,

@@ -13,8 +13,10 @@ import Leaderboard from './features/client/pages/Leaderboard';
 import FAQ from './features/client/pages/FAQ';
 import AdminLayout from './features/admin/layout/AdminLayout.jsx';
 import Analytics from './features/admin/pages/Analytics';
-import Modules from './features/admin/pages/Modules';
+import ModulesListView from './features/admin/modules/pages/ModulesListView.jsx';
+import ModuleEditor from './features/admin/modules/pages/ModuleEditor.jsx';
 import Quizes from './features/admin/pages/Quizes';
+import QuizEditor from './features/admin/quizzes/pages/QuizEditor.jsx';
 import FAQs from './features/admin/pages/FAQs/FAQs';
 import Certificate from './components/Certificate.jsx';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
@@ -22,6 +24,9 @@ import EditAccount from './features/admin/features/account-management/pages/Edit
 import Register from './features/auth/pages/Register.jsx';
 import DevTools from './features/client/pages/DevTools.jsx';
 import ModulesTest from './features/client/pages/Modules/ModulesTest.jsx';
+import TestPhase1 from './features/admin/pages/TestPhase1.jsx';
+import CategoriesListView from './features/admin/categories/pages/CategoriesListView.jsx';
+import CategoryEditorView from './features/admin/categories/pages/CategoryEditorView.jsx';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -67,10 +72,17 @@ function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="accounts" element={<AccountList />} />
         <Route path="accounts/:id/edit" element={<EditAccount />} />
-        <Route path="modules" element={<Modules />} />
+        <Route path="categories" element={<CategoriesListView />} />
+        <Route path="categories/:categoryId/edit" element={<CategoryEditorView />} />
+        <Route path="modules" element={<ModulesListView />} />
+        <Route path="modules/new" element={<ModuleEditor />} />
+        <Route path="modules/:moduleId/edit" element={<ModuleEditor />} />
         <Route path="quizes" element={<Quizes />} />
+        <Route path="quizes/new" element={<QuizEditor />} />
+        <Route path="quizes/:quizId/edit" element={<QuizEditor />} />
         <Route path="faqs" element={<FAQs />} />
         <Route path="certificate" element={<Certificate />} />
+        <Route path="test-phase1" element={<TestPhase1 />} />
 
       </Route>
 

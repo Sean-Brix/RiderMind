@@ -44,6 +44,30 @@ export default async function getModules(req, res) {
         }
       };
     }
+    
+    // Always include category assignments
+    include.categoryModules = {
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            vehicleType: true,
+            isActive: true
+          }
+        }
+      },
+      orderBy: { position: 'asc' }
+    };
+    
+    // Always include quizzes to check if module has quiz
+    include.quizzes = {
+      select: {
+        id: true,
+        title: true,
+        isActive: true
+      }
+    };
 
     const modules = await prisma.module.findMany({
       where,

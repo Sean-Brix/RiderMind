@@ -27,6 +27,21 @@ export default {
       borderRadius: {
         xl: '0.9rem',
       },
+      animation: {
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
+        'spin': 'spin 1s linear infinite',
+      },
+      keyframes: {
+        slideInRight: {
+          from: { transform: 'translateX(100%)', opacity: '0' },
+          to: { transform: 'translateX(0)', opacity: '1' },
+        },
+        scaleIn: {
+          from: { transform: 'scale(0.95)', opacity: '0' },
+          to: { transform: 'scale(1)', opacity: '1' },
+        },
+      },
     },
   },
   plugins: [],

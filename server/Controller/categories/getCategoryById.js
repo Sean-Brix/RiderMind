@@ -21,7 +21,16 @@ export default async function getCategoryById(req, res) {
                 title: true,
                 description: true,
                 isActive: true,
-                position: true
+                position: true,
+                objectives: true,
+                slides: true,
+                quizzes: {
+                  select: {
+                    id: true,
+                    title: true,
+                    isActive: true
+                  }
+                }
               }
             }
           },

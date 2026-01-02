@@ -40,9 +40,15 @@ export default async function getCategories(req, res) {
       ]
     });
 
+    // Add module count to each category
+    const categoriesWithCount = categories.map(category => ({
+      ...category,
+      moduleCount: category.modules.length
+    }));
+
     res.status(200).json({
       success: true,
-      data: categories
+      data: categoriesWithCount
     });
 
   } catch (error) {

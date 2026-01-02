@@ -5,7 +5,7 @@ import {
   updateFAQ,
   deleteFAQ
 } from '../../../../services/faqService';
-import PageHeader from '../../components/PageHeader';
+import { Search, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const FAQ_CATEGORIES = ['General', 'System', 'Module', 'Quiz'];
 
@@ -14,9 +14,12 @@ const FAQs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [currentFAQ, setCurrentFAQ] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [selectedFAQs, setSelectedFAQs] = useState([]);
+  const [expandedFAQ, setExpandedFAQ] = useState(null);
 
   const [formData, setFormData] = useState({
     question: '',
@@ -107,117 +110,256 @@ const FAQs = () => {
     }));
   };
 
-  const filteredFAQs = selectedCategory === 'All'
-    ? faqs
-    : faqs.filter(faq => faq.category === selectedCategory);
+  const toggleFAQSelection = (id) => {
+    setSelectedFAQs(prev =>
+      prev.includes(id) ? prev.filter(faqId => faqId !== id) : [...prev, id]
+    );
+  };
 
-  const groupedFAQs = FAQ_CATEGORIES.reduce((acc, category) => {
-    acc[category] = filteredFAQs.filter(faq => faq.category === category);
-    return acc;
-  }, {});
+  const toggleAllFAQs = () => {
+    if (selectedFAQs.length === filteredFAQs.length) {
+      setSelectedFAQs([]);
+    } else {
+      setSelectedFAQs(filteredFAQs.map(faq => faq.id));
+    }
+  };
+
+  const filteredFAQs = faqs.filter(faq => {
+    const matchesCategory = selectedCategory === 'All' || faq.category === selectedCategory;
+    const matchesSearch = !searchQuery || 
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const getCategoryCount = (category) => {
+    return category === 'All' 
+      ? faqs.length 
+      : faqs.filter(faq => faq.category === category).length;
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      
-
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex justify-between items-center">
-          <span>{error}</span>
-          <button 
-            onClick={() => setError(null)}
-            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xl leading-none"
-          >
-            ×
-          </button>
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar - Category Filter */}
+      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categories</h2>
         </div>
-      )}
+        
+        <nav className="p-2">
+          <button
+            onClick={() => setSelectedCategory('All')}
+            className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition-colors flex items-center justify-between ${
+              selectedCategory === 'All'
+                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <span>All FAQs</span>
+            <span className={`text-sm px-2 py-0.5 rounded-full ${
+              selectedCategory === 'All'
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            }`}>
+              {getCategoryCount('All')}
+            </span>
+          </button>
 
-      {/* Category Filter */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-          <div className="flex gap-2 flex-wrap">
+          <div className="mt-4 mb-2 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+            By Category
+          </div>
+
+          {FAQ_CATEGORIES.map(category => (
             <button
-              onClick={() => setSelectedCategory('All')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                selectedCategory === 'All'
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition-colors flex items-center justify-between ${
+                selectedCategory === category
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              All Categories
+              <span>{category}</span>
+              <span className={`text-sm px-2 py-0.5 rounded-full ${
+                selectedCategory === category
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}>
+                {getCategoryCount(category)}
+              </span>
             </button>
-            {FAQ_CATEGORIES.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-
-            {/* Add FAQ Button */}
-            <div className="justify-self-end ml-auto">
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowForm(true);
-                }}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add New FAQ
-              </button>
-            </div>
-          </div>
+          ))}
+        </nav>
       </div>
 
-      {/* FAQ List */}
-      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
-          {loading ? (
-            <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">Loading FAQs...</div>
-          ) : selectedCategory === 'All' ? (
-            FAQ_CATEGORIES.map(category => (
-              groupedFAQs[category].length > 0 && (
-                <div key={category} className="mb-8">
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 pb-2 border-b-2 border-brand-500">
-                    {category}
-                  </h2>
-                  <div className="space-y-3">
-                    {groupedFAQs[category].map(faq => (
-                      <FAQItem
-                        key={faq.id}
-                        faq={faq}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                  </div>
-                )
-              ))
-            ) : (
-              <div className="space-y-3">
-                {filteredFAQs.length === 0 ? (
-                  <p className="text-center py-12 text-neutral-500 dark:text-neutral-400">No FAQs found for {selectedCategory}</p>
-                ) : (
-                  filteredFAQs.map(faq => (
-                    <FAQItem
-                      key={faq.id}
-                      faq={faq}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                )}
-              </div>
-            )}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">FAQs</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Manage frequently asked questions
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New FAQ
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search FAQs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
+
+        {error && (
+          <div className="mx-6 mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex justify-between items-center">
+            <span>{error}</span>
+            <button 
+              onClick={() => setError(null)}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xl leading-none"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="flex-1 overflow-auto px-6 py-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {loading ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading FAQs...</div>
+            ) : filteredFAQs.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                {searchQuery ? 'No FAQs match your search' : `No FAQs in ${selectedCategory}`}
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <tr>
+                    <th className="w-12 px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedFAQs.length === filteredFAQs.length && filteredFAQs.length > 0}
+                        onChange={toggleAllFAQs}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                      Question
+                    </th>
+                    <th className="w-32 px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="w-24 px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="w-28 px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredFAQs.map(faq => (
+                    <React.Fragment key={faq.id}>
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedFAQs.includes(faq.id)}
+                            onChange={() => toggleFAQSelection(faq.id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
+                            className="flex items-center gap-2 text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-full"
+                          >
+                            {expandedFAQ === faq.id ? (
+                              <ChevronUp className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                            )}
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {faq.question}
+                            </span>
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-left">
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full font-medium">
+                            {faq.category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-left">
+                          {faq.isActive ? (
+                            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-medium">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full font-medium">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-left">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEdit(faq)}
+                              className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(faq.id)}
+                              className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedFAQ === faq.id && (
+                        <tr className="bg-gray-50 dark:bg-gray-900/50">
+                          <td colSpan="5" className="px-4 py-4">
+                            <div className="ml-8">
+                              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Answer:</h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                                {faq.answer}
+                              </p>
+                              <div className="flex gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                                <span>Created: {new Date(faq.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* FAQ Form Modal */}
       {showForm && (
@@ -321,62 +463,6 @@ const FAQs = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const FAQItem = ({ faq, onEdit, onDelete }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden transition-shadow hover:shadow-md ${!faq.isActive ? 'opacity-60' : ''}`}>
-      <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-3 flex-1">
-          <span className="text-brand-600 dark:text-brand-400 text-xl font-bold">
-            {isExpanded ? '−' : '+'}
-          </span>
-          <span className="font-medium text-neutral-900 dark:text-neutral-100">
-            {faq.question}
-          </span>
-          {!faq.isActive && (
-            <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded-full font-medium">
-              Inactive
-            </span>
-          )}
-        </div>
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => onEdit(faq)}
-            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => onDelete(faq.id)}
-            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      {isExpanded && (
-        <div className="px-4 pb-4 pt-2 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-200 dark:border-neutral-700">
-          <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">{faq.answer}</p>
-          <div className="flex gap-4 mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-700 text-xs text-neutral-500 dark:text-neutral-400">
-            <span>Category: <span className="font-medium">{faq.category}</span></span>
-            <span>Created: <span className="font-medium">{new Date(faq.createdAt).toLocaleDateString()}</span></span>
           </div>
         </div>
       )}

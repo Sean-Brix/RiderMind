@@ -13,6 +13,7 @@ import deleteQuiz from '../../Controller/quizzes/deleteQuiz.js';
 import addQuestion from '../../Controller/quizzes/addQuestion.js';
 import updateQuestion from '../../Controller/quizzes/updateQuestion.js';
 import deleteQuestion from '../../Controller/quizzes/deleteQuestion.js';
+import reorderQuestions from '../../Controller/quizzes/reorderQuestions.js';
 
 // Question media controllers
 import uploadQuestionVideoController from '../../Controller/quizzes/uploadQuestionVideo.js';
@@ -73,6 +74,9 @@ router.put('/questions/:questionId', authenticate, requireRole('ADMIN'), updateQ
 
 // Delete question (ADMIN only)
 router.delete('/questions/:questionId', authenticate, requireRole('ADMIN'), deleteQuestion);
+
+// Reorder questions (ADMIN only)
+router.patch('/:quizId/questions/reorder', authenticate, requireRole('ADMIN'), reorderQuestions);
 
 /**
  * QUESTION MEDIA ROUTES
