@@ -139,7 +139,7 @@ export default function Landing() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 dark:from-brand-900 dark:via-brand-950 dark:to-black py-24 md:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 dark:from-brand-900 dark:via-brand-950 dark:to-black py-24 md:py-32 overflow-hidden mt-16">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{

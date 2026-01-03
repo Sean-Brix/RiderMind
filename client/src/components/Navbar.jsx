@@ -18,6 +18,7 @@ function toggleDark() {
 export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +26,18 @@ export default function Navbar() {
   
   // Check if we're in the admin panel
   const isAdminPanel = location.pathname.startsWith('/admin');
+
+  // Handle scroll animation
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isAdminPanel) {
+        setIsScrolled(window.scrollY > 50);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isAdminPanel]);
 
   // Fetch and cache profile picture
   useEffect(() => {
@@ -87,13 +100,17 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-      <div className={isAdminPanel ? "flex items-center justify-between h-16" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
-        <div className="flex items-center justify-between h-16 flex-1">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-1000 ease-out ${
+      isScrolled 
+        ? 'mt-4 mx-auto max-w-6xl px-4 rounded-2xl border border-neutral-300/50 dark:border-neutral-700/50 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-2xl' 
+        : 'mt-0 mx-0 rounded-none border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900'
+    }`}>
+      <div className={isAdminPanel ? `flex items-center justify-between transition-all duration-1000 ease-out ${isScrolled ? 'h-14 px-6' : 'h-16'}` : `transition-all duration-1000 ease-out ${isScrolled ? 'max-w-6xl mx-auto px-6' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
+        <div className={`flex items-center justify-between flex-1 transition-all duration-1000 ease-out ${isScrolled ? 'h-14' : 'h-16'}`}>
           {/* Logo/Brand */}
-          <div className={`flex items-center ${isAdminPanel ? 'w-64 px-4 border-r border-neutral-200 dark:border-neutral-800' : ''}`}>
-            <Link to="/" className="flex gap-3 justify-center items-center text-xl font-bold text-brand-700 dark:text-brand-400">
-              <img src="/logo.png" alt="RiderMind" className="w-8 h-8 rounded-lg" />
+          <div className={`flex items-center transition-all duration-1000 ease-out ${isAdminPanel ? `border-r border-neutral-200 dark:border-neutral-800 ${isScrolled ? 'w-56 px-3' : 'w-64 px-4'}` : ''}`}>
+            <Link to="/" className={`flex gap-3 justify-center items-center font-bold text-brand-700 dark:text-brand-400 transition-all duration-1000 ease-out ${isScrolled ? 'text-lg' : 'text-xl'}`}>
+              <img src="/logo.png" alt="RiderMind" className={`rounded-lg transition-all duration-1000 ease-out ${isScrolled ? 'w-7 h-7' : 'w-8 h-8'}`} />
               RiderMind
             </Link>
           </div>
@@ -142,16 +159,6 @@ export default function Navbar() {
                 Modules
               </Link>
               <Link
-                to="/progress"
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  location.pathname === '/progress' 
-                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
-                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                }`}
-              >
-                Progress
-              </Link>
-              <Link
                 to="/leaderboard"
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   location.pathname === '/leaderboard' 
@@ -166,16 +173,6 @@ export default function Navbar() {
 
           {/* Profile Dropdown */}
           <div className={`flex items-center gap-3 ${isAdminPanel ? 'px-4' : ''}`}>
-            <button
-              onClick={toggleDark}
-              className="p-2 rounded-md text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-              title="Toggle theme"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </button>
-
             {!user && !isAdminPanel && (
               <Link
                 to="/login"
@@ -286,15 +283,15 @@ export default function Navbar() {
                       )}
 
                       <Link
-                        to="/settings"
+                        to="/progress"
                         onClick={() => setDropdownOpen(false)}
                         className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                       >
                         <div className="flex items-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
-                          Settings
+                          Progress
                         </div>
                       </Link>
 

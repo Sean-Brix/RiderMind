@@ -11,7 +11,7 @@ export default async function deleteModule(req, res) {
   try {
     const { id } = req.params;
 
-    // Check if module exists and get associated videos
+    // Check if module exists and get associated videos and category assignments
     const module = await prisma.module.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -21,6 +21,13 @@ export default async function deleteModule(req, res) {
             videoPath: { not: null }
           },
           select: { videoPath: true }
+        },
+        categoryModules: {
+          include: {
+            category: {
+              select: { name: true }
+            }
+          }
         }
       }
     });
@@ -29,6 +36,16 @@ export default async function deleteModule(req, res) {
       return res.status(404).json({
         success: false,
         error: 'Module not found'
+      });
+    }
+
+    // Check if module is assigned to any categories
+    if (module.categoryModules && module.categoryModules.length > 0) {
+      const categoryNames = module.categoryModules.map(cm => cm.category.name).join(', ');
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete module that is assigned to categories',
+        message: `This module is currently assigned to the following categories: ${categoryNames}. Please remove it from these categories before deleting.`
       });
     }
 

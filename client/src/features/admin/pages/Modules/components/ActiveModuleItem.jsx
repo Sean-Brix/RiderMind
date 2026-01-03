@@ -26,7 +26,7 @@ export default function ActiveModuleItem({ module, index, isEditMode }) {
       <div
         {...attributes}
         {...(isEditMode ? listeners : {})}
-        className={`bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-md transition-all overflow-hidden ${
+        className={`bg-white dark:bg-gray-900 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-md transition-all overflow-hidden ${
           isEditMode ? 'cursor-move' : ''
         }`}
       >
@@ -71,3 +71,4 @@ export default function ActiveModuleItem({ module, index, isEditMode }) {
     </div>
   );
 }
+

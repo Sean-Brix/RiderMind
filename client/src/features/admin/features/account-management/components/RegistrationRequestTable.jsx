@@ -47,7 +47,7 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
 
   if (!requests || requests.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-gray-900">
         <div className="px-6 py-16 text-center">
           <svg className="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -64,7 +64,7 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-        <thead className="bg-neutral-50 dark:bg-neutral-800/50">
+        <thead className="bg-neutral-50 dark:bg-gray-900/50">
           <tr>
             <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
               ID
@@ -83,7 +83,7 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700/50 bg-white dark:bg-neutral-800">
+        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700/50 bg-white dark:bg-gray-900">
           {requests.map((request) => {
             // Build full name properly - name_extension might contain full name, so check if it's actually an extension
             const nameExtension = request.name_extension;
@@ -168,3 +168,4 @@ export default function RegistrationRequestTable({ requests, onViewDetails }) {
     </div>
   );
 }
+

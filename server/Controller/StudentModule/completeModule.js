@@ -81,7 +81,8 @@ export default async function completeModule(req, res) {
       });
     }
 
-    // Update student module
+    // Update student module - mark this individual module as completed
+    // but keep StudentModule status as ONGOING (only changes when "Get Another Module" is clicked)
     const updated = await prisma.studentModule.update({
       where: { id: studentModule.id },
       data: {
@@ -93,6 +94,7 @@ export default async function completeModule(req, res) {
         quizAttempts: studentModule.quizAttempts + 1,
         lastQuizAttemptId: quizAttemptId || null,
         startedAt: studentModule.startedAt || new Date()
+        // status remains ONGOING - only set to COMPLETED when "Get Another Module" is clicked
       },
       include: {
         module: true,

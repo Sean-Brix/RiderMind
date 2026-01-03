@@ -18,27 +18,10 @@ async function enrollStudentInCategory(userId, categoryId, skillLevel = 'Beginne
   try {
     console.log('🔍 SERVICE: Starting enrollment for user', userId, 'in category', categoryId);
     
-    // 1. Check if student is already enrolled in this category
-    const existingEnrollment = await prisma.studentModule.findFirst({
-      where: { userId, categoryId }
-    });
-
-    console.log('🔍 SERVICE: Existing enrollment?', existingEnrollment ? 'YES' : 'NO');
+    // Note: Removed unique constraint check - users can now re-enroll in same modules
+    // Old COMPLETED modules remain for analytics, new enrollment creates fresh ONGOING records
     
-    // Check for ANY existing records
-    const allExisting = await prisma.studentModule.findMany({
-      where: { userId, categoryId }
-    });
-    console.log('🔍 SERVICE: Found', allExisting.length, 'existing StudentModule records for this user+category');
-    if (allExisting.length > 0) {
-      console.log('🔍 SERVICE: Existing module IDs:', allExisting.map(sm => sm.moduleId));
-    }
-
-    if (existingEnrollment) {
-      throw new Error('Student is already enrolled in this category');
-    }
-
-    // 2. Get all modules for this category
+    // 1. Get all modules for this category
     // DYNAMIC APPROACH: Query moduleCategoryModule OR fall back to all active modules
     let categoryModules = await prisma.moduleCategoryModule.findMany({
       where: { categoryId },

@@ -192,6 +192,11 @@ export default async function updateQuiz(req, res) {
             description: true
           }
         },
+        _count: {
+          select: {
+            questions: true
+          }
+        },
         questions: {
           orderBy: { position: 'asc' },
           include: {

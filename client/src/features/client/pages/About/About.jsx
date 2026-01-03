@@ -4,7 +4,7 @@ export default function About() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 mt-16">
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-brand-600 to-brand-800 text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

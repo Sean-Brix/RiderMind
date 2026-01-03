@@ -105,8 +105,8 @@ export const ModulesProvider = ({ children }) => {
         setSelectedModule(null);
       }
     } catch (err) {
-      setError(err.message || 'Failed to delete module');
-      console.error('Error deleting module:', err);
+      // Don't set error state for validation errors (handled by caller with toast)
+      // Only set error for unexpected failures
       throw err;
     } finally {
       setLoading(false);

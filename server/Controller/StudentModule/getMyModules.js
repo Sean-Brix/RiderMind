@@ -15,17 +15,20 @@ export default async function getMyModules(req, res) {
     let { categoryId, checkOnly } = req.query;
     const shouldCheckOnly = checkOnly === 'true';
 
-    // If no categoryId provided, check if user has modules in ANY category first
+    // If no categoryId provided, check if user has ONGOING modules in ANY category first
     if (!categoryId) {
       const anyEnrollment = await prisma.studentModule.findFirst({
-        where: { userId },
+        where: { 
+          userId,
+          status: 'ONGOING' // Only find ONGOING modules
+        },
         include: { category: true }
       });
 
       if (anyEnrollment) {
-        // User is enrolled somewhere, use that category
+        // User has ongoing enrollment, use that category
         categoryId = anyEnrollment.categoryId;
-        console.log(`📚 User ${userId} has enrollment in category ${categoryId}`);
+        console.log(`📚 User ${userId} has ONGOING enrollment in category ${categoryId}`);
       } else {
         // User has no enrollments, use default category for checking
         const defaultCategory = await prisma.moduleCategory.findFirst({
@@ -56,11 +59,12 @@ export default async function getMyModules(req, res) {
       }
     }
 
-    // Check if student is enrolled in this category
+    // Check if student has ONGOING modules in this category
     let studentModules = await prisma.studentModule.findMany({
       where: {
         userId,
-        categoryId: parseInt(categoryId)
+        categoryId: parseInt(categoryId),
+        status: 'ONGOING' // Only return ONGOING modules
       },
       orderBy: { position: 'asc' },
       include: {

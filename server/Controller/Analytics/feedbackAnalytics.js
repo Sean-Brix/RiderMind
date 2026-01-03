@@ -156,11 +156,8 @@ export const getQuizReactionAnalytics = async (req, res) => {
   try {
     // Get all quiz reactions with quiz and question details
     const reactions = await prisma.quizQuestionReaction.findMany({
-      where: {
-        isActive: true
-      },
       include: {
-        quizQuestion: {
+        question: {
           include: {
             quiz: {
               select: {
@@ -195,8 +192,8 @@ export const getQuizReactionAnalytics = async (req, res) => {
     // Group by quiz
     const quizStats = {};
     reactions.forEach(r => {
-      const quizId = r.quizQuestion?.quiz?.id;
-      const quizName = r.quizQuestion?.quiz?.title || `Quiz ${quizId}`;
+      const quizId = r.question?.quiz?.id;
+      const quizName = r.question?.quiz?.title || `Quiz ${quizId}`;
       
       if (!quizId) return;
       

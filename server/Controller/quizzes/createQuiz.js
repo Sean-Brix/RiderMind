@@ -23,38 +23,42 @@ export default async function createQuiz(req, res) {
     } = req.body;
 
     // Validation
-    if (!moduleId || !title) {
+    if (!title) {
       return res.status(400).json({
         success: false,
-        error: 'Module ID and title are required'
+        error: 'Title is required'
       });
     }
 
-    // Verify module exists
-    const module = await prisma.module.findUnique({
-      where: { id: parseInt(moduleId) }
-    });
-
-    if (!module) {
-      return res.status(404).json({
-        success: false,
-        error: 'Module not found'
+    // Verify module exists if moduleId provided
+    if (moduleId) {
+      const module = await prisma.module.findUnique({
+        where: { id: parseInt(moduleId) }
       });
-    }
 
-    // Check for duplicate title in same module
-    const existing = await prisma.quiz.findFirst({
-      where: {
-        moduleId: parseInt(moduleId),
-        title
+      if (!module) {
+        return res.status(404).json({
+          success: false,
+          error: 'Module not found'
+        });
       }
-    });
+    }
 
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        error: 'Quiz with this title already exists in this module'
+    // Check for duplicate title in same module (if module provided)
+    if (moduleId) {
+      const existing = await prisma.quiz.findFirst({
+        where: {
+          moduleId: parseInt(moduleId),
+          title
+        }
       });
+
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          error: 'Quiz with this title already exists in this module'
+        });
+      }
     }
 
     // Prepare quiz data
@@ -67,14 +71,21 @@ export default async function createQuiz(req, res) {
       shuffleQuestions: shuffleQuestions !== undefined ? shuffleQuestions : false,
       showResults: showResults !== undefined ? showResults : true,
       createdBy: req.user?.id || null,
-      updatedBy: req.user?.id || null,
-      module: {
-        connect: { id: parseInt(moduleId) }
-      }
+      updatedBy: req.user?.id || null
     };
+
+    // Connect to module if provided
+    if (moduleId) {
+      quizData.module = {
+        connect: { id: parseInt(moduleId) }
+      };
+    }
 
     // Add questions if provided
     if (questions && Array.isArray(questions)) {
+      console.log('📝 Creating quiz with questions:', questions.length);
+      console.log('First question:', JSON.stringify(questions[0], null, 2));
+      
       quizData.questions = {
         create: questions.map((q, qIndex) => {
           const questionData = {
@@ -124,6 +135,11 @@ export default async function createQuiz(req, res) {
             id: true,
             title: true,
             description: true
+          }
+        },
+        _count: {
+          select: {
+            questions: true
           }
         },
         questions: {

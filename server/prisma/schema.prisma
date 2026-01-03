@@ -231,6 +231,9 @@ model StudentModule {
   moduleId        Int
   position        Int      @default(0)
   
+  // Enrollment status
+  status          StudentModuleStatus @default(ONGOING)
+  
   // Skill level - determines which slides are shown
   skillLevel      SkillLevel @default(Beginner)
   
@@ -255,7 +258,6 @@ model StudentModule {
   category ModuleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   module   Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, categoryId, moduleId])
   @@index([userId])
   @@index([categoryId])
   @@index([moduleId])
@@ -263,6 +265,8 @@ model StudentModule {
   @@index([isCompleted])
   @@index([quizPassed])
   @@index([skillLevel])
+  @@index([status])
+  @@index([userId, status])
   @@map("student_modules")
 }
 
@@ -316,6 +320,11 @@ enum SkillLevel {
   Beginner
   Intermediate
   Expert
+}
+
+enum StudentModuleStatus {
+  ONGOING
+  COMPLETED
 }
 
 enum StudentType {

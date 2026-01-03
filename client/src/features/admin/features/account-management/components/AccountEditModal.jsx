@@ -99,7 +99,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
       {/* Success Toast */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-[70] animate-slide-in-right">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-2xl border border-green-200 dark:border-green-800 p-4 min-w-[300px] max-w-md">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-green-200 dark:border-green-800 p-4 min-w-[300px] max-w-md">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
 
               <div className="space-y-6">
                 {/* Account Information */}
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-brand-50 to-brand-100/50 dark:from-brand-950/50 dark:to-brand-900/30 border-b border-brand-200 dark:border-brand-800">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +241,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
                 </section>
 
                 {/* Personal Information */}
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/50 dark:to-purple-900/30 border-b border-purple-200 dark:border-purple-800">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +340,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
                 </section>
 
                 {/* Address Information */}
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-950/50 dark:to-green-900/30 border-b border-green-200 dark:border-green-800">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,7 +375,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
                 </section>
 
                 {/* Contact Information */}
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30 border-b border-blue-200 dark:border-blue-800">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
                 </section>
 
                 {/* Emergency Contact */}
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/50 dark:to-red-900/30 border-b border-red-200 dark:border-red-800">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +435,7 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -466,3 +466,4 @@ export default function AccountEditModal({ user, onClose, onSuccess }) {
     </>
   );
 }
+

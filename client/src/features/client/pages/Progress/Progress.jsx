@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../../../components/Navbar';
-import { getMyModules } from '../../../../services/studentModuleService';
+import { getProgressModules } from '../../../../services/studentModuleService';
 
 export default function Progress() {
   const [modules, setModules] = useState([]);
@@ -30,10 +30,13 @@ export default function Progress() {
   const loadModules = async () => {
     try {
       setLoading(true);
-      const response = await getMyModules(null, true); // checkOnly=true to prevent auto-enrollment
+      const response = await getProgressModules(); // Get all modules (ONGOING and COMPLETED)
       if (response.success) {
         setModules(response.data.modules);
-        setCategoryInfo(response.data.category);
+        // Extract category from first module
+        if (response.data.modules.length > 0) {
+          setCategoryInfo(response.data.modules[0].category);
+        }
       }
     } catch (err) {
       setError(err.message);
@@ -164,8 +167,7 @@ export default function Progress() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div className="mt-16 max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-neutral-900 dark:text-white mb-2">
@@ -223,10 +225,10 @@ export default function Progress() {
           <StatCard
             icon="🎯"
             label="Quiz Success"
-            value={`${Math.round((stats.passedQuizzes / stats.total) * 100)}%`}
+            value={`${stats.total > 0 ? Math.round((stats.passedQuizzes / stats.total) * 100) : 0}%`}
             subtitle={`${stats.passedQuizzes} passed`}
             color="bg-purple-500"
-            progress={(stats.passedQuizzes / stats.total) * 100}
+            progress={stats.total > 0 ? (stats.passedQuizzes / stats.total) * 100 : 0}
           />
           <StatCard
             icon="📝"

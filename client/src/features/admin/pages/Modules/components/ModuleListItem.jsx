@@ -23,7 +23,7 @@ export default function ModuleListItem({ module, isEditMode }) {
       style={style}
       {...attributes}
       {...(isEditMode ? listeners : {})}
-      className={`flex items-center gap-3 p-3 rounded-lg border bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all duration-200 ${
+      className={`flex items-center gap-3 p-3 rounded-lg border bg-neutral-50 dark:bg-gray-900/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all duration-200 ${
         isEditMode ? 'cursor-move' : ''
       }`}
     >
@@ -38,3 +38,4 @@ export default function ModuleListItem({ module, isEditMode }) {
     </div>
   );
 }
+

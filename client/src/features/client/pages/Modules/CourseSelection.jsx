@@ -169,7 +169,7 @@ export default function CourseSelection({ onComplete }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 pt-16">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Progress Indicator */}
         <div className="mb-12">

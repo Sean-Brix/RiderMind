@@ -334,7 +334,7 @@ function Modules() {
     <>
       <Navbar />
       
-      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
+      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 mt-16">
         <HeaderJourney
           progress={overallProgress}
           level={level}
@@ -379,18 +379,38 @@ function Modules() {
                       onConfirm: async () => {
                         try {
                           setLoading(true);
+                          const results = [];
                           for (let i = 0; i < modules.length - 1; i++) {
-                            await completeModule(modules[i].id, {
-                              categoryId: categoryInfo?.id || modules[i].categoryId,
-                              quizScore: 100,
-                              quizPassed: true
-                            });
+                            try {
+                              const result = await completeModule(modules[i].id, {
+                                categoryId: categoryInfo?.id || modules[i].categoryId,
+                                quizScore: 100,
+                                quizPassed: true,
+                                quizAttemptId: null
+                              });
+                              results.push({ module: i + 1, success: true });
+                              console.log(`✅ Completed module ${i + 1}/${modules.length - 1}`);
+                            } catch (error) {
+                              console.error(`❌ Failed to complete module ${i + 1}:`, error);
+                              results.push({ module: i + 1, success: false, error: error.message });
+                            }
                           }
+                          
+                          const successCount = results.filter(r => r.success).length;
+                          const failCount = results.filter(r => !r.success).length;
+                          
+                          // Clear cache to force fresh data load
+                          const cacheKey = `modules_${user?.id}`;
+                          sessionStorage.removeItem(cacheKey);
+                          
                           await loadModules();
+                          
                           setConfirmationModal({
                             isOpen: true,
-                            title: '✅ Success',
-                            message: `Auto-completed ${modules.length - 1} modules!`,
+                            title: successCount > 0 ? '✅ Success' : '❌ Error',
+                            message: failCount > 0 
+                              ? `Completed ${successCount} modules, ${failCount} failed. Check console for details.`
+                              : `Auto-completed ${successCount} modules!`,
                             type: 'dev',
                             confirmText: 'Got it!',
                             onConfirm: () => {}
@@ -494,6 +514,10 @@ function Modules() {
                     const studentModuleId = modalManager.modalData?.studentModuleId;
                     
                     if (studentModuleId && categoryInfo?.id) {
+                      // Clear cache to ensure fresh data after completion
+                      const cacheKey = `modules_${user?.id}`;
+                      sessionStorage.removeItem(cacheKey);
+                      
                       await completeModule(studentModuleId, {
                         categoryId: categoryInfo.id,
                         quizScore: result.score,
@@ -509,23 +533,9 @@ function Modules() {
                       const newLevel = Math.floor(newXP / 1000) + 1;
                       const leveledUp = newLevel > currentLevel;
 
-                      setModules(prevModules =>
-                        prevModules.map(m => 
-                          m.id === studentModuleId 
-                            ? { 
-                                ...m,
-                                isCompleted: true,
-                                completedAt: new Date().toISOString(),
-                                progress: 100,
-                                quizScore: result.score,
-                                quizPassed: true,
-                                quizAttempts: (m.quizAttempts || 0) + 1,
-                                lastQuizAttemptId: result.attempt
-                              }
-                            : m
-                        )
-                      );
-
+                      // Reload from server to get accurate state
+                      await loadModules();
+                      
                       modalManager.closeModal();
                       
                       setTimeout(() => {

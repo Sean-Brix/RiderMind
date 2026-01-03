@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Filter } from 'lucide-react';
 import { useModules, useToast } from '../../shared';
 import { LoadingSpinner, SearchBar } from '../../shared';
+import CreateModuleModal from '../components/CreateModuleModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 export default function ModulesListView() {
   const navigate = useNavigate();
@@ -12,6 +14,8 @@ export default function ModulesListView() {
   const [searchValue, setSearchValue] = useState('');
   const [filters, setFilters] = useState({});
   const [selectedModules, setSelectedModules] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, moduleId: null, errorMessage: null });
 
   console.log('ModulesListView: Rendering', { modules, loading, error });
 
@@ -95,20 +99,26 @@ export default function ModulesListView() {
   }, [modules, searchValue, filters]);
 
   const handleCreateModule = () => {
-    navigate('/admin/modules/new');
+    setIsCreateModalOpen(true);
   };
 
   const handleEditModule = (moduleId) => {
     navigate(`/admin/modules/${moduleId}/edit`);
   };
 
-  const handleDeleteModule = async (moduleId) => {
+  const handleDeleteModule = (moduleId) => {
+    setDeleteConfirm({ isOpen: true, moduleId, errorMessage: null });
+  };
+
+  const confirmDelete = async () => {
     try {
-      await deleteModule(moduleId);
+      await deleteModule(deleteConfirm.moduleId);
       showToast({ type: 'success', message: 'Module deleted successfully' });
-      setSelectedModules((prev) => prev.filter((id) => id !== moduleId));
+      setSelectedModules((prev) => prev.filter((id) => id !== deleteConfirm.moduleId));
+      setDeleteConfirm({ isOpen: false, moduleId: null, errorMessage: null });
     } catch (err) {
-      showToast({ type: 'error', message: 'Failed to delete module' });
+      // Show error in modal
+      setDeleteConfirm(prev => ({ ...prev, errorMessage: err.message || 'Failed to delete module' }));
     }
   };
 
@@ -159,8 +169,8 @@ export default function ModulesListView() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-neutral-50 dark:bg-neutral-900 p-6">
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
+    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-neutral-900 p-6">
+      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
         {/* Search and Filters */}
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3">
@@ -241,7 +251,7 @@ export default function ModulesListView() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-                <thead className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+                <thead className="bg-neutral-50 dark:bg-gray-900/50 border-b border-neutral-200 dark:border-neutral-700">
                   <tr>
                     <th className="w-12 px-4 py-3 text-left">
                       <input
@@ -302,16 +312,20 @@ export default function ModulesListView() {
                       <td className="px-4 py-4 text-left">
                         {module.quizzes && module.quizzes.length > 0 ? (
                           <button
-                            onClick={() => navigate('/admin/quizes')}
+                            onClick={() => navigate(`/admin/quizes/${module.quizzes[0].id}/edit`)}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors cursor-pointer"
                             title="View quiz"
                           >
                             Has Quiz
                           </button>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300">
+                          <button
+                            onClick={() => navigate('/admin/quizes', { state: { createQuizForModule: module.id } })}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                            title="Create quiz for this module"
+                          >
                             No Quiz
-                          </span>
+                          </button>
                         )}
                       </td>
                       <td className="px-4 py-4 text-left">
@@ -359,6 +373,21 @@ export default function ModulesListView() {
             </div>
           )}
       </div>
+
+      {/* Create Module Modal */}
+      <CreateModuleModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, moduleId: null, errorMessage: null })}
+        onConfirm={confirmDelete}
+        message={deleteConfirm.errorMessage || 'Are you sure you want to delete this module? This action cannot be undone.'}
+      />
     </div>
   );
 }
+

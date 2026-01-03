@@ -53,7 +53,7 @@ export default function QuizAnalytics({ statistics }) {
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Attempts */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@ export default function QuizAnalytics({ statistics }) {
         </div>
 
         {/* Pass Rate */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@ export default function QuizAnalytics({ statistics }) {
         </div>
 
         {/* Average Score */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export default function QuizAnalytics({ statistics }) {
         </div>
 
         {/* Average Time */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@ export default function QuizAnalytics({ statistics }) {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Score Distribution */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Score Distribution
           </h3>
@@ -149,7 +149,7 @@ export default function QuizAnalytics({ statistics }) {
         </div>
 
         {/* Performance Metrics */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Performance Metrics
           </h3>
@@ -180,7 +180,7 @@ export default function QuizAnalytics({ statistics }) {
 
       {/* Question Performance */}
       {statistics.questionStats && statistics.questionStats.length > 0 && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Question-by-Question Performance
           </h3>
@@ -232,7 +232,7 @@ export default function QuizAnalytics({ statistics }) {
 
       {/* Recent Attempts */}
       {statistics.recentAttempts && statistics.recentAttempts.length > 0 && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Recent Attempts
           </h3>
@@ -316,3 +316,4 @@ function MetricItem({ label, value, icon }) {
     </div>
   );
 }
+

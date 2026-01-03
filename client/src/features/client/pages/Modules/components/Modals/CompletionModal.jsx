@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { BaseModal } from '../Modals/BaseModal';
 import Certificate from '../Certificate/Certificate';
 import { Download, Trophy, TrendingUp, Users, Award, Share2, X } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import { markModulesCompleted } from '../../../../../../services/studentModuleService';
 
 /**
  * CompletionModal Component
@@ -29,7 +31,9 @@ export function CompletionModal({
   leaderboardData = {}
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const certificateRef = useRef(null);
+  const navigate = useNavigate();
 
   const {
     userName = 'Student',
@@ -129,6 +133,7 @@ export function CompletionModal({
   };
 
   return (
+    <>
     <BaseModal open={isOpen} onClose={onClose} size="full" showClose={true}>
       <div className="bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-950">
         <div className="max-w-6xl mx-auto px-6 py-12">
@@ -433,14 +438,24 @@ export function CompletionModal({
               <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-6">
                 Continue your learning journey with more courses!
               </p>
-              <motion.button
-                onClick={onClose}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 rounded-lg font-semibold transition-all"
-              >
-                Back to Dashboard
-              </motion.button>
+              <div className="flex items-center justify-center gap-4">
+                <motion.button
+                  onClick={() => setShowConfirmation(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-3 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-lg font-semibold transition-all shadow-lg"
+                >
+                  Get Another Module
+                </motion.button>
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-3 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 rounded-lg font-semibold transition-all"
+                >
+                  Back to Dashboard
+                </motion.button>
+              </div>
             </motion.div>
           </div>
 
@@ -458,6 +473,67 @@ export function CompletionModal({
         </div>
       </div>
     </BaseModal>
+    
+    {/* Confirmation Modal */}
+    <BaseModal open={showConfirmation} onClose={() => setShowConfirmation(false)} size="sm">
+      <div className="p-6 text-center">
+        <div className="mb-4">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
+            <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
+          </div>
+        </div>
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+          Start a New Learning Journey?
+        </h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+          This will mark your current modules as completed and allow you to enroll in new courses. Your progress will be saved for records.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <motion.button
+            onClick={async () => {
+              try {
+                // Mark current modules as completed
+                await markModulesCompleted();
+                
+                // Clear all module caches to force fresh load
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                if (user?.id) {
+                  sessionStorage.removeItem(`modules_${user.id}`);
+                  sessionStorage.removeItem(`userDetails_${user.id}`);
+                }
+                
+                // Close both modals
+                setShowConfirmation(false);
+                onClose();
+                
+                // Refresh the page
+                window.location.reload();
+              } catch (error) {
+                console.error('Failed to mark modules as completed:', error);
+                // Still refresh even if API fails
+                setShowConfirmation(false);
+                onClose();
+                window.location.reload();
+              }
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-2 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-lg font-medium transition-all"
+          >
+            Yes, Continue
+          </motion.button>
+          <motion.button
+            onClick={() => setShowConfirmation(false)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-2 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 rounded-lg font-medium transition-all"
+          >
+            Cancel
+          </motion.button>
+        </div>
+      </div>
+    </BaseModal>
+    </>
   );
 }
 

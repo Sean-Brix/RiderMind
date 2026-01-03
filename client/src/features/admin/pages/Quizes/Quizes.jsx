@@ -1,22 +1,51 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { useQuizzes, useToast } from '../../shared';
 import { LoadingSpinner, SearchBar } from '../../shared';
+import CreateQuizModal from '../../quizzes/components/CreateQuizModal';
 
 export default function Quizes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { quizzes, loading, error, fetchQuizzes, deleteQuiz } = useQuizzes();
   const { showToast } = useToast();
 
   const [searchValue, setSearchValue] = useState('');
   const [filters, setFilters] = useState({});
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [preSelectedModuleId, setPreSelectedModuleId] = useState(null);
+
+  // Check if we should open modal with pre-selected module
+  useEffect(() => {
+    if (location.state?.createQuizForModule) {
+      setPreSelectedModuleId(location.state.createQuizForModule);
+      setIsCreateModalOpen(true);
+      // Clear the state so it doesn't reopen on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Load quizzes on mount
   useEffect(() => {
+    console.log('🔄 Quizes component: Loading quizzes');
     fetchQuizzes();
   }, [fetchQuizzes]);
+
+  useEffect(() => {
+    console.log('📊 Quizes component: Quizzes updated:', quizzes?.length);
+    if (quizzes && quizzes.length > 0) {
+      console.log('📝 First quiz:', quizzes[0]);
+    }
+  }, [quizzes]);
+
+  useEffect(() => {
+    console.log('📊 Quizes component: Quizzes updated:', quizzes?.length);
+    if (quizzes && quizzes.length > 0) {
+      console.log('📝 First quiz:', quizzes[0]);
+    }
+  }, [quizzes]);
 
   const availableFilters = [
     {
@@ -73,10 +102,6 @@ export default function Quizes() {
 
     return result;
   }, [quizzes, searchValue, filters]);
-
-  const handleCreateQuiz = () => {
-    navigate('/admin/quizes/new');
-  };
 
   const handleEditQuiz = (quizId) => {
     navigate(`/admin/quizes/${quizId}/edit`);
@@ -143,8 +168,8 @@ export default function Quizes() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-neutral-50 dark:bg-neutral-900 p-6">
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
+    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-neutral-900 p-6">
+      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
         {/* Search and Filters */}
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3">
@@ -159,7 +184,7 @@ export default function Quizes() {
               />
             </div>
             <button
-              onClick={handleCreateQuiz}
+              onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
@@ -199,33 +224,21 @@ export default function Quizes() {
           </div>
         ) : filteredQuizzes.length === 0 ? (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full mb-4">
-              <Plus className="w-8 h-8 text-neutral-400" />
-            </div>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               {searchValue || Object.keys(filters).length > 0
                 ? 'No quizzes match your filters'
-                : 'No quizzes yet'}
+                : 'No quizzes available'}
             </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+            <p className="text-neutral-600 dark:text-neutral-400">
               {searchValue || Object.keys(filters).length > 0
                 ? 'Try adjusting your search or filters'
-                : 'Get started by creating your first quiz'}
+                : 'Quizzes will appear here once created'}
             </p>
-            {!searchValue && Object.keys(filters).length === 0 && (
-              <button
-                onClick={handleCreateQuiz}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700"
-              >
-                <Plus className="w-4 h-4" />
-                Create your first quiz
-              </button>
-            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+              <thead className="bg-neutral-50 dark:bg-gray-900/50 border-b border-neutral-200 dark:border-neutral-700">
                 <tr>
                   <th className="w-12 px-4 py-3 text-left">
                     <input
@@ -283,7 +296,7 @@ export default function Quizes() {
                     </td>
                     <td className="px-4 py-4 text-left">
                       <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                        {quiz.questions?.length || 0}
+                        {quiz._count?.questions || quiz.questions?.length || 0}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-left">
@@ -338,6 +351,17 @@ export default function Quizes() {
           </div>
         )}
       </div>
+
+      {/* Create Quiz Modal */}
+      <CreateQuizModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setPreSelectedModuleId(null);
+        }}
+        preSelectedModuleId={preSelectedModuleId}
+      />
     </div>
   );
 }
+

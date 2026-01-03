@@ -233,7 +233,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
       {/* Success Toast */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-[70] animate-slide-in-right">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-2xl border border-green-200 dark:border-green-800 p-4 min-w-[300px] max-w-md">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-green-200 dark:border-green-800 p-4 min-w-[300px] max-w-md">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,7 +347,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                     />
                     <label
                       htmlFor="receipt-upload"
-                      className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-xl cursor-pointer bg-neutral-50 dark:bg-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+                      className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-xl cursor-pointer bg-neutral-50 dark:bg-gray-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
                     >
                       {receiptPreview ? (
                         <div className="relative w-full h-full p-3">
@@ -415,7 +415,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                     onChange={(e) => setOrNumber(e.target.value)}
                     placeholder="Enter OR number (e.g., OR-2024-00123)"
                     disabled={loading}
-                    className="w-full px-4 py-3.5 text-base border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono disabled:opacity-50"
+                    className="w-full px-4 py-3.5 text-base border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-gray-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono disabled:opacity-50"
                   />
                   <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                     This will be stored with the user's account information
@@ -435,7 +435,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                       setOrNumber('');
                     }}
                     disabled={loading}
-                    className="px-6 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg transition-colors disabled:opacity-50"
+                    className="px-6 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-gray-900 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -544,7 +544,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
 
             <div className="space-y-6">
               {/* Personal Information */}
-              <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gradient-to-r from-brand-50 to-brand-100/50 dark:from-brand-950/50 dark:to-brand-900/30 border-b border-brand-200 dark:border-brand-800">
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,7 +582,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
               </section>
 
               {/* Physical Attributes */}
-              <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/50 dark:to-purple-900/30 border-b border-purple-200 dark:border-purple-800">
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -612,7 +612,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
               </section>
 
               {/* Address Information */}
-              <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-950/50 dark:to-green-900/30 border-b border-green-200 dark:border-green-800">
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -647,7 +647,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
               </section>
 
               {/* Contact Information */}
-              <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30 border-b border-blue-200 dark:border-blue-800">
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -673,7 +673,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
               </section>
 
               {/* Emergency Contact */}
-              <section className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/50 dark:to-red-900/30 border-b border-red-200 dark:border-red-800">
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,7 +700,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
 
               {/* Review Information */}
               {request.status !== 'PENDING' && (
-                <section className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-neutral-300 dark:border-neutral-600 overflow-hidden">
+                <section className="bg-white dark:bg-gray-900 rounded-xl border-2 border-neutral-300 dark:border-neutral-600 overflow-hidden">
                   <div className="px-6 py-4 bg-gradient-to-r from-neutral-100 to-neutral-50 dark:from-neutral-800 dark:to-neutral-800/50 border-b border-neutral-300 dark:border-neutral-600">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -745,7 +745,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                                 className="w-full h-auto object-cover"
                                 onError={(e) => {
                                   e.target.parentElement.innerHTML = `
-                                    <div class="flex items-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-neutral-800">
+                                    <div class="flex items-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-gray-900">
                                       <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                       </svg>
@@ -755,7 +755,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                                 }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <div className="bg-white/90 dark:bg-neutral-800/90 rounded-full p-3 backdrop-blur-sm">
+                                <div className="bg-white/90 dark:bg-gray-900/90 rounded-full p-3 backdrop-blur-sm">
                                   <svg className="w-6 h-6 text-neutral-700 dark:text-neutral-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                   </svg>
@@ -784,7 +784,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
               <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-neutral-800 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -869,7 +869,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                     key={index}
                     type="button"
                     onClick={() => setRejectionReason(reason)}
-                    className="text-left p-3 text-sm bg-neutral-50 dark:bg-neutral-800 hover:bg-red-50 dark:hover:bg-red-950/30 border border-neutral-200 dark:border-neutral-700 hover:border-red-300 dark:hover:border-red-800 rounded-lg transition-all text-neutral-700 dark:text-neutral-300"
+                    className="text-left p-3 text-sm bg-neutral-50 dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-950/30 border border-neutral-200 dark:border-neutral-700 hover:border-red-300 dark:hover:border-red-800 rounded-lg transition-all text-neutral-700 dark:text-neutral-300"
                   >
                     {reason}
                   </button>
@@ -884,7 +884,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Select from above or provide your own reason..."
                 rows={4}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all"
+                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-gray-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all"
               />
               <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                 The applicant will receive this reason via email.
@@ -930,7 +930,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-md w-full border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full border border-neutral-200 dark:border-neutral-700">
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -1030,7 +1030,7 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowReceiptModal(false)}>
           <div className="relative max-w-4xl w-full max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-gray-900">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                   <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1160,3 +1160,4 @@ export default function RegistrationRequestDetailModal({ request, onClose, onSuc
     </>
   );
 }
+

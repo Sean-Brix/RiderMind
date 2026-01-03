@@ -9,6 +9,7 @@ function getAuthToken() {
 
 /**
  * Get student's modules for a category (or default category)
+ * Returns only ONGOING modules for the learning page
  * @param {number} categoryId - Optional category ID
  * @param {boolean} checkOnly - If true, don't auto-enroll, just check if modules exist
  */
@@ -71,6 +72,31 @@ export async function getMyModules(categoryId = null, checkOnly = false) {
         }
       };
     }
+    throw error;
+  }
+}
+
+/**
+ * Get all student modules for progress tracking (both ONGOING and COMPLETED)
+ */
+export async function getProgressModules() {
+  try {
+    const response = await fetch(`${API_BASE}/progress`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch progress modules');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch progress modules:', error);
     throw error;
   }
 }
@@ -176,6 +202,26 @@ export async function submitQuizAttempt(moduleId, data) {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to submit quiz');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Mark current ongoing modules as completed (to enroll in a new module)
+ */
+export async function markModulesCompleted() {
+  const response = await fetch(`${API_BASE}/mark-completed`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getAuthToken()}`
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to mark modules as completed');
   }
 
   return await response.json();

@@ -136,7 +136,7 @@ export default function Leaderboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 mt-16">
         {/* Header */}
         <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

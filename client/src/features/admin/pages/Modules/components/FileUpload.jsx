@@ -91,7 +91,7 @@ export default function FileUpload({ type, file, onChange, onRemove }) {
       
       {/* Preview */}
       {file && (
-        <div className="mt-4 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+        <div className="mt-4 p-4 bg-neutral-100 dark:bg-gray-900 rounded-lg">
           <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">Preview:</p>
           {type === 'image' ? (
             <img
@@ -111,3 +111,4 @@ export default function FileUpload({ type, file, onChange, onRemove }) {
     </div>
   );
 }
+

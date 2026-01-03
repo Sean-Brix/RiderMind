@@ -6,6 +6,7 @@ import {
   deleteFAQ
 } from '../../../../services/faqService';
 import { Search, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import ConfirmDeleteModal from '../../modules/components/ConfirmDeleteModal';
 
 const FAQ_CATEGORIES = ['General', 'System', 'Module', 'Quiz'];
 
@@ -20,6 +21,8 @@ const FAQs = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedFAQs, setSelectedFAQs] = useState([]);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [faqToDelete, setFaqToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     question: '',
@@ -77,14 +80,19 @@ const FAQs = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this FAQ?')) {
-      return;
-    }
+  const handleDelete = (id) => {
+    setFaqToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!faqToDelete) return;
 
     try {
-      await deleteFAQ(id);
+      await deleteFAQ(faqToDelete);
       await fetchFAQs();
+      setDeleteConfirmOpen(false);
+      setFaqToDelete(null);
     } catch (err) {
       setError(err.error || 'Failed to delete FAQ');
       console.error('Error deleting FAQ:', err);
@@ -139,9 +147,9 @@ const FAQs = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-gray-900">
       {/* Sidebar - Category Filter */}
-      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+      <div className="w-64 bg-gradient-to-b from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 overflow-y-auto backdrop-blur-sm">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categories</h2>
         </div>
@@ -195,7 +203,7 @@ const FAQs = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">FAQs</h1>
@@ -242,7 +250,7 @@ const FAQs = () => {
 
         {/* Table */}
         <div className="flex-1 overflow-auto px-6 py-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
             {loading ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading FAQs...</div>
             ) : filteredFAQs.length === 0 ? (
@@ -364,7 +372,7 @@ const FAQs = () => {
       {/* FAQ Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 {isEditing ? 'Edit FAQ' : 'Add New FAQ'}
@@ -466,8 +474,20 @@ const FAQs = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setFaqToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        message="Are you sure you want to delete this FAQ? This action cannot be undone."
+      />
     </div>
   );
 };
 
 export default FAQs;
+

@@ -145,7 +145,26 @@ export async function uploadQuestionImage(questionId, imageFile) {
   const formData = new FormData();
   formData.append('image', imageFile);
   const token = getAuthToken();
-  const response = await axios.post(`${API_BASE_URL}/questions/${questionId}/image`, formData, {
+  const response = await axios.put(`${API_BASE_URL}/questions/${questionId}/upload-image`, formData, {
+    headers: { 
+      'Content-Type': 'multipart/form-data',
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
+  });
+  return response.data;
+}
+
+/**
+ * Upload video for question
+ * @param {number} questionId - Question ID
+ * @param {File} videoFile - Video file
+ * @returns {Promise} Upload result
+ */
+export async function uploadQuestionVideo(questionId, videoFile) {
+  const formData = new FormData();
+  formData.append('video', videoFile);
+  const token = getAuthToken();
+  const response = await axios.put(`${API_BASE_URL}/questions/${questionId}/upload-video`, formData, {
     headers: { 
       'Content-Type': 'multipart/form-data',
       'Authorization': token ? `Bearer ${token}` : ''

@@ -456,7 +456,7 @@ export default function AccountForm({ mode = 'create', initialValues, onSuccess 
           type="button"
           onClick={prevStep}
           disabled={currentStep === 1}
-          className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← Previous
         </button>
@@ -497,3 +497,4 @@ export default function AccountForm({ mode = 'create', initialValues, onSuccess 
     </form>
   );
 }
+

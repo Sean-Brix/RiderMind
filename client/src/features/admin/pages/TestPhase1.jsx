@@ -193,7 +193,7 @@ function ContextProvidersTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Click "Fetch Modules" → Should load modules and show count</li>
@@ -282,7 +282,7 @@ function CustomHooksTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• useConfirm: Dialogs should appear and return true/false</li>
@@ -368,7 +368,7 @@ function UtilityFunctionsTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Validators return true for valid data</li>
@@ -416,7 +416,7 @@ function LoadingSpinnerTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Small, medium, large spinners display correctly</li>
@@ -461,7 +461,7 @@ function ToastSystemTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Toasts slide in from the right</li>
@@ -517,7 +517,7 @@ function ToastSystemTest() {
 // 6. ConfirmDialog Test (covered in Custom Hooks Test)
 function ConfirmDialogTest() {
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+    <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
         ℹ️ ConfirmDialog is tested in the "Custom Hooks" section above using useConfirm.
       </p>
@@ -538,7 +538,7 @@ function ErrorBoundaryTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Click button to trigger error</li>
@@ -568,7 +568,7 @@ function MediaUploaderTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Click to browse files or drag-drop files</li>
@@ -609,7 +609,7 @@ function SearchBarTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Search input debounces after 300ms</li>
@@ -647,7 +647,7 @@ function ListViewTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Toggle between grid and list view</li>
@@ -670,7 +670,7 @@ function ListViewTest() {
         {items.map((item) => (
           <div
             key={item.id}
-            className="p-4 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800"
+            className="p-4 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-gray-900"
           >
             <h3 className="font-semibold">{item.title}</h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">ID: {item.id}</p>
@@ -698,7 +698,7 @@ function EditorViewTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Split panel layout (form left, preview right)</li>
@@ -750,7 +750,7 @@ function EditorViewTest() {
         rightPanel={
           <div className="space-y-2">
             <h3 className="font-semibold">Preview</h3>
-            <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded">
+            <div className="p-4 bg-neutral-50 dark:bg-gray-900 rounded">
               <p className="font-semibold">{formData.title || 'No title'}</p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {formData.description || 'No description'}
@@ -767,7 +767,7 @@ function EditorViewTest() {
 function NavigationHeaderTest() {
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Breadcrumbs show navigation path</li>
@@ -828,7 +828,7 @@ function QuickActionsTest() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded">
+      <div className="bg-neutral-50 dark:bg-gray-900 p-4 rounded">
         <h3 className="font-semibold mb-2">Expected Behavior:</h3>
         <ul className="text-sm space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>• Buttons display with correct variant colors</li>
@@ -843,3 +843,4 @@ function QuickActionsTest() {
     </div>
   );
 }
+

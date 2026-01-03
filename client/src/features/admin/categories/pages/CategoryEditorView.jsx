@@ -43,7 +43,7 @@ function SortableModuleItem({ module, index, onRemove }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-gray-800 rounded-lg border ${
+      className={`bg-white dark:bg-gray-900 rounded-lg border ${
         isDragging
           ? 'border-blue-500 shadow-2xl scale-105'
           : 'border-gray-200 dark:border-gray-700 shadow-sm'
@@ -240,7 +240,7 @@ export default function CategoryEditorView() {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => navigate('/admin/categories')}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -269,7 +269,7 @@ export default function CategoryEditorView() {
 
         {/* Modules List */}
         {categoryModules.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               No modules assigned to this category yet
             </p>
@@ -331,3 +331,4 @@ export default function CategoryEditorView() {
     </div>
   );
 }
+

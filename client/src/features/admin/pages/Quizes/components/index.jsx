@@ -8,7 +8,7 @@ export function ModuleListItem({ module, isSelected, onClick }) {
       className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
         isSelected
           ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 shadow-md'
-          : 'bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
+          : 'bg-neutral-50 dark:bg-gray-900/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
       }`}
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
@@ -260,3 +260,4 @@ export function FileUpload({ type, file, onChange, onRemove }) {
 
 export { ModuleListItem as default };
 export { default as QuizAnalytics } from './QuizAnalytics';
+

@@ -121,7 +121,7 @@ export async function deleteModule(moduleId) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to delete module');
+    throw new Error(error.message || error.error || 'Failed to delete module');
   }
 
   return response.json();
