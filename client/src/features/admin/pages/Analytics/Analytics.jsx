@@ -5,8 +5,10 @@ import {
 } from 'recharts';
 import { 
   Users, TrendingUp, Award, BookOpen, MessageSquare, ThumbsUp, 
-  Target, CheckCircle, Clock, Trophy, ChevronDown, Activity, Heart, ThumbsDown
+  Target, CheckCircle, Clock, Trophy, ChevronDown, Activity, Heart, ThumbsDown, FileDown
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   getAccountsAnalytics,
   getLeaderboardAnalytics,
@@ -83,6 +85,147 @@ export default function Analytics() {
     );
   }
 
+  const exportLeaderboardToPDF = async (leaderboard, accounts, quizzes, modules) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setTextColor(239, 68, 68); // Brand red color
+    doc.text('RiderMind Analytics Report', 14, 20);
+    
+    // Add date
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 14, 28);
+    
+    // Add summary statistics
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text('Summary Statistics', 14, 40);
+    
+    const summaryData = [
+      ['Total Users', String(accounts?.total || 0)],
+      ['Active Users', String(accounts?.active || 0)],
+      ['Module Completion Rate', `${(modules?.completionRate || 0).toFixed(1)}%`],
+      ['Quiz Pass Rate', `${(quizzes?.passRate || 0).toFixed(1)}%`],
+      ['Average Quiz Score', `${(quizzes?.averageScore || 0).toFixed(1)}%`],
+    ];
+    
+    autoTable(doc, {
+      startY: 45,
+      head: [['Metric', 'Value']],
+      body: summaryData,
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+      margin: { left: 14 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 100 },
+        1: { cellWidth: 80 }
+      }
+    });
+    
+    // Add leaderboard table
+    doc.setFontSize(12);
+    doc.text('Student Leaderboard', 14, doc.lastAutoTable.finalY + 15);
+    
+    if (leaderboard && leaderboard.length > 0) {
+      const tableData = leaderboard.map(student => [
+        String(student.rank),
+        student.name,
+        String(student.score),
+        `Level ${student.level}`,
+        String(student.modules),
+        String(student.quizzes),
+        `${student.avgScore}%`
+      ]);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [['Rank', 'Student', 'Score', 'Level', 'Modules', 'Quizzes', 'Avg Score']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 9 },
+        columnStyles: {
+          0: { cellWidth: 15, halign: 'center' },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 20, halign: 'center' },
+          3: { cellWidth: 20, halign: 'center' },
+          4: { cellWidth: 20, halign: 'center' },
+          5: { cellWidth: 20, halign: 'center' },
+          6: { cellWidth: 25, halign: 'center' }
+        }
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text('No leaderboard data available', 14, doc.lastAutoTable.finalY + 25);
+    }
+    
+    // Add student modules enrollments from already loaded data
+    const studentModules = modules?.studentModules || [];
+    
+    console.log('Student modules data:', studentModules);
+    console.log('Full modules data:', modules);
+    
+    // Add new page for student modules
+    doc.addPage();
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text('Student Module Enrollments', 14, 20);
+    
+    if (studentModules && studentModules.length > 0) {
+      const enrollmentData = studentModules.map(sm => [
+        sm.studentName || 'N/A',
+        sm.moduleTitle || 'N/A',
+        `${sm.progress || 0}%`,
+        sm.isCompleted ? 'Completed' : 'In Progress',
+        sm.skillLevel || 'N/A',
+        sm.completedAt ? new Date(sm.completedAt).toLocaleDateString() : 'N/A'
+      ]);
+      
+      autoTable(doc, {
+        startY: 25,
+        head: [['Student', 'Module', 'Progress', 'Status', 'Skill Level', 'Completed']],
+        body: enrollmentData,
+        theme: 'striped',
+        headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 20, halign: 'center' },
+          3: { cellWidth: 25, halign: 'center' },
+          4: { cellWidth: 25, halign: 'center' },
+          5: { cellWidth: 30, halign: 'center' }
+        }
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text('No student module enrollment data available', 14, 30);
+    }
+    
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+    
+    // Save the PDF
+    doc.save(`RiderMind-Analytics-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header with Filter */}
@@ -94,18 +237,27 @@ export default function Analytics() {
           </p>
         </div>
         
-        <div className="relative">
-          <select
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value)}
-            className="appearance-none px-4 py-2 pr-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent cursor-pointer"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => exportLeaderboardToPDF(leaderboardData, accountsData, quizzesData, modulesData)}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors font-medium"
           >
-            <option value="overview">Overview</option>
-            <option value="users">Users & Accounts</option>
-            <option value="learning">Learning Progress</option>
-            <option value="engagement">Engagement & Feedback</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <FileDown className="w-4 h-4" />
+            Export PDF
+          </button>
+          <div className="relative">
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+              className="appearance-none px-4 py-2 pr-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent cursor-pointer"
+            >
+              <option value="overview">Overview</option>
+              <option value="users">Users & Accounts</option>
+              <option value="learning">Learning Progress</option>
+              <option value="engagement">Engagement & Feedback</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </div>
         </div>
       </div>
 

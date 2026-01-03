@@ -200,17 +200,74 @@ export const getModulesAnalytics = async (req, res) => {
       })
       .slice(0, 5); // Top 5 modules
 
+    // Get all student module enrollments with student details
+    const allStudentModules = [];
+    modules.forEach(m => {
+      m.studentModules.forEach(sm => {
+        allStudentModules.push({
+          moduleTitle: m.title,
+          userId: sm.userId,
+          progress: sm.progress,
+          isCompleted: sm.isCompleted,
+          skillLevel: sm.skillLevel,
+          quizScore: sm.quizScore,
+          startedAt: sm.startedAt,
+          completedAt: sm.completedAt
+        });
+      });
+    });
+
+    // Fetch user details for all enrollments
+    const userIds = [...new Set(allStudentModules.map(sm => sm.userId))];
+    
+    let studentModulesWithNames = allStudentModules;
+    
+    if (userIds.length > 0) {
+      const users = await prisma.user.findMany({
+        where: {
+          id: { in: userIds }
+        },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          middle_name: true,
+          email_address: true
+        }
+      });
+
+      const userMap = {};
+      users.forEach(u => {
+        const fullName = [u.first_name, u.middle_name, u.last_name].filter(Boolean).join(' ');
+        userMap[u.id] = {
+          name: fullName || 'Unknown',
+          email: u.email_address || 'N/A'
+        };
+      });
+
+      // Add student names to enrollments
+      studentModulesWithNames = allStudentModules.map(sm => ({
+        ...sm,
+        studentName: userMap[sm.userId]?.name || 'Unknown',
+        studentEmail: userMap[sm.userId]?.email || 'N/A'
+      }));
+    }
+
     res.status(200).json({
       success: true,
       data: {
         totalModules,
         totalEnrollments,
+        completedModules,
+        completionRate: avgCompletionRate,
         avgCompletionRate,
         avgTimeToComplete,
         enrollmentTrend,
         completionByCategory,
         skillLevelDistribution,
-        topModules
+        modulePerformance: topModules,
+        topModules,
+        studentModules: studentModulesWithNames
       }
     });
 

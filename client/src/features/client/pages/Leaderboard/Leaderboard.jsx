@@ -27,9 +27,12 @@ export default function Leaderboard() {
       setLoading(true);
       setError(null);
       const response = await getLeaderboard(timeFrame, 50);
+      console.log('Leaderboard API Response:', response);
       if (response.success) {
+        console.log('Leaderboard data:', response.data);
         setLeaderboardData(response.data);
       } else {
+        console.error('Leaderboard failed:', response);
         setError('Failed to load leaderboard');
       }
     } catch (err) {

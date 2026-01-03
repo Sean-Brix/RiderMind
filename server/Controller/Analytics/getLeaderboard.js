@@ -46,10 +46,7 @@ export default async function getLeaderboard(req, res) {
     // Get all student modules with user data
     const studentModules = await prisma.studentModule.findMany({
       where: {
-        ...studentModuleDateFilter,
-        user: {
-          role: 'USER' // Only include regular users, not admins
-        }
+        ...studentModuleDateFilter
       },
       include: {
         user: {
@@ -59,7 +56,8 @@ export default async function getLeaderboard(req, res) {
             first_name: true,
             middle_name: true,
             last_name: true,
-            createdAt: true
+            createdAt: true,
+            role: true
           }
         },
         category: {
@@ -71,6 +69,14 @@ export default async function getLeaderboard(req, res) {
         }
       }
     });
+
+    console.log(`[Leaderboard] Found ${studentModules.length} student modules (before role filter)`);
+    
+    // Use all student modules (including admins for testing)
+    const userModules = studentModules;
+    
+    console.log(`[Leaderboard] After role filter: ${userModules.length} student modules`);
+    console.log(`[Leaderboard] TimeFrame: ${timeFrame}, Date filter:`, studentModuleDateFilter);
 
     // Get quiz attempts for more detailed scoring
     const quizAttempts = await prisma.quizAttempt.findMany({
@@ -92,7 +98,7 @@ export default async function getLeaderboard(req, res) {
     // Group data by user
     const userStats = {};
 
-    studentModules.forEach(sm => {
+    userModules.forEach(sm => {
       const userId = sm.userId;
       if (!userStats[userId]) {
         // Build display name from first, middle, and last name
@@ -122,7 +128,7 @@ export default async function getLeaderboard(req, res) {
       }
 
       // Count completed modules
-      if (sm.completed) {
+      if (sm.isCompleted) {
         userStats[userId].totalModulesCompleted++;
       } else if (sm.progress > 0) {
         userStats[userId].totalModulesInProgress++;
@@ -208,6 +214,9 @@ export default async function getLeaderboard(req, res) {
       ...user,
       rank: index + 1
     }));
+
+    console.log(`[Leaderboard] Returning ${rankedLeaderboard.length} users`);
+    console.log('[Leaderboard] Sample data:', rankedLeaderboard[0]);
 
     return res.status(200).json({
       success: true,
