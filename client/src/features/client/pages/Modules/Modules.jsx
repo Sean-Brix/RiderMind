@@ -559,6 +559,10 @@ function Modules() {
                       const newLevel = Math.floor(newXP / 1000) + 1;
                       const leveledUp = newLevel > currentLevel;
 
+                      // Clear module cache to force fresh data on next load
+                      const cacheKey = `modules_${user?.id}`;
+                      sessionStorage.removeItem(cacheKey);
+
                       // Update local state instead of reloading from server
                       setModules(prevModules => 
                         prevModules.map(m => 

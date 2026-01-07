@@ -39,6 +39,8 @@ export function QuizViewer({ isOpen, onClose, quiz, moduleId, studentModuleId, o
       // This prevents re-initialization when modules reload after completion
       if (initializedQuizId.current !== quiz.id) {
         console.log('Initializing quiz:', quiz.id);
+        console.log('Quiz data:', quiz);
+        console.log('First question data:', quiz.questions?.[0]);
         quizManager.initializeQuiz(quiz, moduleId, studentModuleId);
         setCurrentQuestion(0);
         setShowSubmitConfirm(false);
@@ -405,11 +407,29 @@ export function QuizViewer({ isOpen, onClose, quiz, moduleId, studentModuleId, o
                 {currentQuestionData.videoUrl && (
                   <div className="mb-6">
                     <video
+                      key={currentQuestionData.id}
                       src={currentQuestionData.videoUrl}
                       controls
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       preload="metadata"
                       className="w-full max-h-96 object-contain rounded-lg shadow-lg"
-                    />
+                      onError={(e) => {
+                        console.error('Video load error:', {
+                          src: currentQuestionData.videoUrl,
+                          error: e.target.error,
+                          networkState: e.target.networkState,
+                          readyState: e.target.readyState
+                        });
+                      }}
+                      onLoadedMetadata={() => {
+                        console.log('Video loaded successfully:', currentQuestionData.videoUrl);
+                      }}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
                   </div>
                 )}
 
