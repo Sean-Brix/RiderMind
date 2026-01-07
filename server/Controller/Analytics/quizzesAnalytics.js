@@ -41,6 +41,7 @@ export const getQuizzesAnalytics = async (req, res) => {
     const attempts = await prisma.quizAttempt.findMany({
       select: {
         id: true,
+        quizId: true,
         score: true,
         passed: true,
         submittedAt: true,
@@ -152,6 +153,37 @@ export const getQuizzesAnalytics = async (req, res) => {
       .sort((a, b) => b.attempts - a.attempts)
       .slice(0, 5); // Top 5 categories
 
+    // Calculate quiz performance (attempts and passed per quiz)
+    const quizPerformance = quizzes.map(q => ({
+      name: q.title,
+      attempts: q._count.attempts,
+      passed: attempts.filter(a => a.quizId === q.id && a.passed).length
+    })).filter(q => q.attempts > 0).sort((a, b) => b.attempts - a.attempts).slice(0, 10); // Top 10 quizzes
+
+    // Calculate difficulty distribution
+    const difficultyStats = {};
+    quizzes.forEach(q => {
+      // Determine difficulty based on pass rate
+      const quizAttempts = attempts.filter(a => a.quizId === q.id);
+      if (quizAttempts.length > 0) {
+        const quizPassRate = (quizAttempts.filter(a => a.passed).length / quizAttempts.length) * 100;
+        let difficulty;
+        if (quizPassRate >= 80) difficulty = 'Easy';
+        else if (quizPassRate >= 60) difficulty = 'Medium';
+        else if (quizPassRate >= 40) difficulty = 'Hard';
+        else difficulty = 'Very Hard';
+        
+        difficultyStats[difficulty] = (difficultyStats[difficulty] || 0) + 1;
+      }
+    });
+
+    const difficultyDistribution = [
+      { difficulty: 'Easy', count: difficultyStats['Easy'] || 0 },
+      { difficulty: 'Medium', count: difficultyStats['Medium'] || 0 },
+      { difficulty: 'Hard', count: difficultyStats['Hard'] || 0 },
+      { difficulty: 'Very Hard', count: difficultyStats['Very Hard'] || 0 }
+    ];
+
     res.status(200).json({
       success: true,
       data: {
@@ -159,9 +191,12 @@ export const getQuizzesAnalytics = async (req, res) => {
         totalAttempts,
         avgScore,
         passRate,
+        passedAttempts,
         attemptsOverTime,
         scoreDistribution: scoreRanges,
-        categoryPerformance
+        categoryPerformance,
+        quizPerformance,
+        difficultyDistribution
       }
     });
 

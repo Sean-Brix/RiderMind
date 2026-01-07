@@ -18,22 +18,13 @@ export const QuizzesProvider = ({ children }) => {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
 
   const fetchQuizzes = useCallback(async (filters = {}) => {
-    console.log('🔄 QuizzesContext: Fetching quizzes with filters:', filters);
     setLoading(true);
     setError(null);
     try {
       const data = await quizService.getAllQuizzes(filters);
-      console.log('📥 QuizzesContext: Received data:', data);
-      console.log('📊 QuizzesContext: Data type:', typeof data);
-      console.log('📊 QuizzesContext: Is array?', Array.isArray(data));
       
       // Handle both array response and object with data property
       const quizzesArray = Array.isArray(data) ? data : (data?.data || []);
-      console.log('✅ QuizzesContext: Setting quizzes count:', quizzesArray.length);
-      if (quizzesArray.length > 0) {
-        console.log('📝 First quiz:', quizzesArray[0]);
-        console.log('📊 First quiz question count:', quizzesArray[0]._count?.questions);
-      }
       
       setQuizzes(quizzesArray);
       return quizzesArray;
@@ -52,10 +43,10 @@ export const QuizzesProvider = ({ children }) => {
     try {
       const response = await quizService.getQuizById(id, {
         includeQuestions: true,
-        includeOptions: true
+        includeOptions: true,
+        includeCorrectAnswers: true // Admin needs to see correct answers for editing
       });
       const quiz = response.data || response;
-      console.log('📥 fetchQuizById response:', { response, quiz, hasQuestions: !!quiz.questions });
       setSelectedQuiz(quiz);
       return quiz;
     } catch (err) {

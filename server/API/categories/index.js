@@ -12,6 +12,8 @@ import assignModulesToCategory from '../../Controller/categories/assignModulesTo
 import addModuleToCategory from '../../Controller/categories/addModuleToCategory.js';
 import removeModuleFromCategory from '../../Controller/categories/removeModuleFromCategory.js';
 import reorderCategoryModules from '../../Controller/categories/reorderCategoryModules.js';
+import bulkAddModulesToCategory from '../../Controller/categories/bulkAddModulesToCategory.js';
+import bulkRemoveModulesFromCategory from '../../Controller/categories/bulkRemoveModulesFromCategory.js';
 
 const router = Router();
 
@@ -39,6 +41,12 @@ router.put('/:id/modules', authenticate, requireRole('ADMIN'), assignModulesToCa
 
 // Add a single module to category (ADMIN only)
 router.post('/:id/modules', authenticate, requireRole('ADMIN'), addModuleToCategory);
+
+// Bulk add multiple modules to category (ADMIN only)
+router.post('/:id/modules/bulk', authenticate, requireRole('ADMIN'), bulkAddModulesToCategory);
+
+// Bulk remove multiple modules from category (ADMIN only)
+router.delete('/:id/modules/bulk', authenticate, requireRole('ADMIN'), bulkRemoveModulesFromCategory);
 
 // Remove a module from category (ADMIN only)
 router.delete('/:id/modules/:moduleId', authenticate, requireRole('ADMIN'), removeModuleFromCategory);

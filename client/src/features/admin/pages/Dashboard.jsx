@@ -1,11 +1,15 @@
+import { LayoutDashboard } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
+
 export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">Dashboard</h1>
-        <p className="text-neutral-600 dark:text-neutral-400">Welcome{user ? `, ${user.name}` : ''}.</p>
-      </div>
+    <div className="p-6 space-y-6">
+      <PageHeader
+        icon={LayoutDashboard}
+        title="Dashboard"
+        description={`Welcome${user ? `, ${user.name}` : ''}.`}
+      />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card">
           <div className="text-sm text-neutral-500 mb-2">Users</div>

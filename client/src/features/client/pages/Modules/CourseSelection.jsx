@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EnrollmentErrorModal } from './components/Modals/EnrollmentErrorModal';
 
 export default function CourseSelection({ onComplete }) {
   const [step, setStep] = useState('category'); // 'category' or 'skillLevel' or 'terms'
@@ -10,6 +11,8 @@ export default function CourseSelection({ onComplete }) {
   const [isCreating, setIsCreating] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorType, setErrorType] = useState('no_modules');
 
   useEffect(() => {
     fetchCategories();
@@ -63,12 +66,6 @@ export default function CourseSelection({ onComplete }) {
       // Get the user's token
       const token = localStorage.getItem('token');
       
-      console.log('🚀 Sending enrollment request:', {
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        skillLevel: selectedSkillLevel
-      });
-      
       // Enroll in the selected category with the chosen skill level
       const response = await fetch('/api/student-modules/enroll', {
         method: 'POST',
@@ -82,23 +79,31 @@ export default function CourseSelection({ onComplete }) {
         })
       });
 
-      console.log('📡 Response status:', response.status);
       const data = await response.json();
-      console.log('📦 Response data:', data);
       
       if (data.success) {
-        console.log('✅ Enrollment successful!');
         // Wait a bit for success animation
         setTimeout(() => {
           onComplete();
         }, 1500);
       } else {
-        throw new Error(data.message || 'Failed to enroll');
+        // Silently handle enrollment errors
+        throw new Error(data.error || data.message || 'Failed to enroll');
       }
     } catch (error) {
-      console.error('❌ Failed to create student module:', error);
       setIsCreating(false);
-      alert('Failed to start your course. Please try again.');
+      
+      // Determine error type based on error details
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('Unknown field') || 
+          errorMessage.includes('category') || 
+          errorMessage.includes('No modules found')) {
+        setErrorType('no_modules');
+      } else {
+        setErrorType('server_error');
+      }
+      
+      setShowErrorModal(true);
     }
   };
 
@@ -589,6 +594,24 @@ export default function CourseSelection({ onComplete }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Enrollment Error Modal */}
+      <EnrollmentErrorModal
+        isOpen={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false);
+          setStep('category');
+          setSelectedCategory(null);
+          setSelectedSkillLevel(null);
+        }}
+        errorType={errorType}
+        categoryName={selectedCategory?.name || 'this category'}
+        onRetry={() => {
+          setStep('category');
+          setSelectedCategory(null);
+          setSelectedSkillLevel(null);
+        }}
+      />
     </div>
   );
 }

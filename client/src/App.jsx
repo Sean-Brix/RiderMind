@@ -18,6 +18,7 @@ import ModuleEditor from './features/admin/modules/pages/ModuleEditor.jsx';
 import Quizes from './features/admin/pages/Quizes';
 import QuizEditor from './features/admin/quizzes/pages/QuizEditor.jsx';
 import FAQs from './features/admin/pages/FAQs/FAQs';
+import Feedback from './features/admin/pages/Feedback';
 import Certificate from './components/Certificate.jsx';
 import AccountList from './features/admin/features/account-management/pages/AccountList.jsx';
 import EditAccount from './features/admin/features/account-management/pages/EditAccount.jsx';
@@ -81,6 +82,7 @@ function App() {
         <Route path="quizes/new" element={<QuizEditor />} />
         <Route path="quizes/:quizId/edit" element={<QuizEditor />} />
         <Route path="faqs" element={<FAQs />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="certificate" element={<Certificate />} />
         <Route path="test-phase1" element={<TestPhase1 />} />
 

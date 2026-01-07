@@ -14,6 +14,7 @@ import { Trophy, Award, Star } from 'lucide-react';
  * @param {number} props.totalModules - Total number of modules completed
  * @param {number} props.averageScore - Average quiz score percentage
  * @param {string} props.certificateId - Unique certificate identifier
+ * @param {string} props.refId - Reference ID generated from account and student module IDs
  */
 const Certificate = forwardRef(({ 
   userName = 'Student Name',
@@ -21,7 +22,8 @@ const Certificate = forwardRef(({
   completionDate = new Date(),
   totalModules = 0,
   averageScore = 0,
-  certificateId = 'CERT-0000-0000'
+  certificateId = 'CERT-0000-0000',
+  refId = 'REF-0000-0000'
 }, ref) => {
   const formattedDate = new Intl.DateTimeFormat('en-US', { 
     year: 'numeric', 
@@ -330,6 +332,16 @@ const Certificate = forwardRef(({
             margin: '0 0 5px 0'
           }}>
             Certificate ID: {certificateId}
+          </p>
+          <p style={{ 
+            fontSize: '12px', 
+            color: colors.brand,
+            fontFamily: 'monospace',
+            letterSpacing: '0.05em',
+            fontWeight: '600',
+            margin: '0 0 5px 0'
+          }}>
+            Ref ID: {refId}
           </p>
           <p style={{ 
             fontSize: '11px', 

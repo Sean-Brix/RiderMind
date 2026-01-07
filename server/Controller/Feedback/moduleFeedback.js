@@ -344,3 +344,143 @@ export const deleteModuleFeedback = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get All Module Feedback (Admin)
+ * GET /api/module-feedback/all
+ */
+export const getAllModuleFeedback = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', module, rating, sentiment, dateRange } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter conditions
+    const where = {
+      isActive: true
+    };
+
+    // Module filter
+    if (module && module !== 'all') {
+      where.moduleId = parseInt(module);
+    }
+
+    // Rating filter
+    if (rating && rating !== 'all') {
+      where.rating = parseInt(rating);
+    }
+
+    // Sentiment filter
+    if (sentiment === 'positive') {
+      where.rating = { gte: 4 };
+    } else if (sentiment === 'negative') {
+      where.rating = { lte: 2 };
+    }
+
+    // Date range filter
+    if (dateRange && dateRange !== 'all') {
+      const now = new Date();
+      const cutoffDate = new Date();
+      
+      switch (dateRange) {
+        case 'today':
+          cutoffDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          cutoffDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+      
+      where.createdAt = { gte: cutoffDate };
+    }
+
+    // Get total count for pagination
+    const totalCount = await prisma.moduleFeedback.count({ where });
+
+    // Get paginated feedback
+    let feedback = await prisma.moduleFeedback.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            email_address: true,
+            first_name: true,
+            last_name: true,
+            middle_name: true
+          }
+        },
+        module: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take: limitNum
+    });
+
+    // Apply search filter (post-query since it involves multiple fields)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      feedback = feedback.filter(item => {
+        const userName = [item.user?.first_name, item.user?.middle_name, item.user?.last_name]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        const userEmail = (item.user?.email_address || item.user?.email || '').toLowerCase();
+        
+        return item.comment?.toLowerCase().includes(searchLower) ||
+               item.module?.title?.toLowerCase().includes(searchLower) ||
+               userName.includes(searchLower) ||
+               userEmail.includes(searchLower);
+      });
+    }
+
+    // Calculate stats from all feedback (not just current page)
+    const allFeedback = await prisma.moduleFeedback.findMany({
+      where: { isActive: true },
+      select: {
+        rating: true
+      }
+    });
+
+    const stats = {
+      totalFeedback: allFeedback.length,
+      avgRating: allFeedback.length > 0 
+        ? (allFeedback.reduce((sum, f) => sum + f.rating, 0) / allFeedback.length).toFixed(1)
+        : 0,
+      positiveCount: allFeedback.filter(f => f.rating >= 4).length,
+      negativeCount: allFeedback.filter(f => f.rating <= 2).length
+    };
+
+    res.status(200).json({
+      success: true,
+      data: feedback,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
+      },
+      stats
+    });
+
+  } catch (error) {
+    console.error('Get all module feedback error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch feedback',
+      error: error.message
+    });
+  }
+};

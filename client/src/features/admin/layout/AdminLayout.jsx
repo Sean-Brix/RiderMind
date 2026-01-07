@@ -14,7 +14,7 @@ export default function AdminLayout() {
         <ModulesProvider>
           <QuizzesProvider>
             <CategoriesProvider>
-              <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:bg-gray-900">
+              <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
                 <Navbar />
                 <div className="flex flex-1 mt-16">
                   <Sidebar />

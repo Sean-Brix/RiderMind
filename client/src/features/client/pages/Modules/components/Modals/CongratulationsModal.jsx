@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { BaseModal } from './BaseModal';
-import { Trophy, Star, Award, Download, Share2, X } from 'lucide-react';
+import { Trophy, Star, Award, Download, Share2, X, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { getLeaderboard } from '../../../../../../services/leaderboardService';
 
 /**
  * CongratulationsModal - Celebration modal for module completion
@@ -15,6 +16,7 @@ import confetti from 'canvas-confetti';
  * - Download certificate button
  * - Share progress button
  * - Continue to next module
+ * - Real-time leaderboard showing user's rank
  */
 export function CongratulationsModal({ 
   isOpen, 
@@ -26,35 +28,85 @@ export function CongratulationsModal({
   leveledUp = false,
   completedModulesCount,
   totalModulesCount,
-  onContinue
+  onContinue,
+  userId,
+  accountId,
+  studentModuleId
 }) {
   const [showCertificate, setShowCertificate] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
-  // Trigger confetti on modal open (light burst)
+  // Generate RefID from accountId and studentModuleId
+  const refId = accountId && studentModuleId 
+    ? `REF-${String(accountId).padStart(4, '0')}-${String(studentModuleId).padStart(4, '0')}`
+    : 'REF-0000-0000';
+
+  // Trigger confetti on modal open with enhanced celebration
   useEffect(() => {
     if (isOpen) {
-      // Single quick confetti burst
-      const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+      const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
       
-      // Fire once from both sides
-      confetti({
-        particleCount: 30,
-        angle: 60,
-        spread: 45,
-        origin: { x: 0, y: 0.6 },
-        colors: colors,
-        ticks: 100
-      });
-      confetti({
-        particleCount: 30,
-        angle: 120,
-        spread: 45,
-        origin: { x: 1, y: 0.6 },
-        colors: colors,
-        ticks: 100
-      });
+      // Initial burst from both sides
+      const fireBurst = () => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.6 },
+          colors: colors,
+          ticks: 200
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.6 },
+          colors: colors,
+          ticks: 200
+        });
+      };
+
+      // Fire immediately
+      fireBurst();
+      
+      // Fire again after 250ms for extra celebration
+      const timeout = setTimeout(fireBurst, 250);
+      
+      return () => clearTimeout(timeout);
     }
   }, [isOpen]);
+
+  // Fetch leaderboard data when modal opens
+  useEffect(() => {
+    if (isOpen && userId) {
+      setLoadingLeaderboard(true);
+      getLeaderboard('all-time', 100) // Get top 100 to find user's rank
+        .then(response => {
+          if (response.success) {
+            const allUsers = response.data || [];
+            const userRank = allUsers.find(u => u.userId === userId);
+            
+            // Get top 5 and user's position
+            const topFive = allUsers.slice(0, 5);
+            const userIndex = allUsers.findIndex(u => u.userId === userId);
+            
+            setLeaderboardData({
+              topUsers: topFive,
+              currentUser: userRank,
+              userRank: userIndex >= 0 ? userIndex + 1 : null,
+              totalUsers: response.totalUsers || allUsers.length
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Failed to fetch leaderboard:', error);
+        })
+        .finally(() => {
+          setLoadingLeaderboard(false);
+        });
+    }
+  }, [isOpen, userId]);
 
   const progressPercentage = totalModulesCount > 0 
     ? Math.round((completedModulesCount / totalModulesCount) * 100) 
@@ -189,6 +241,111 @@ export function CongratulationsModal({
             </div>
           </motion.div>
         </div>
+
+        {/* Leaderboard Section */}
+        {leaderboardData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="px-8 pb-6"
+          >
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-lg border border-neutral-200 dark:border-neutral-700">
+              {/* Current User Rank Card */}
+              {leaderboardData.currentUser && (
+                <div className="mb-4 bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <TrendingUp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium opacity-90">Your Rank</p>
+                        <p className="text-2xl font-black">
+                          {leaderboardData.userRank 
+                            ? `#${leaderboardData.userRank} of ${leaderboardData.totalUsers}`
+                            : 'Not Ranked'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    {leaderboardData.currentUser.performanceScore && (
+                      <div className="text-right">
+                        <p className="text-sm font-medium opacity-90">Score</p>
+                        <p className="text-xl font-bold">{leaderboardData.currentUser.performanceScore}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Top 5 Leaderboard Table */}
+              <div>
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  Top Performers
+                </h3>
+                <div className="space-y-2">
+                  {leaderboardData.topUsers.map((user, index) => {
+                    const isCurrentUser = user.userId === userId;
+                    return (
+                      <div 
+                        key={user.userId}
+                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                          isCurrentUser 
+                            ? 'bg-brand-50 dark:bg-brand-900/20 border-2 border-brand-500' 
+                            : 'bg-neutral-50 dark:bg-neutral-700/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8">
+                            {index === 0 && <span className="text-xl">🥇</span>}
+                            {index === 1 && <span className="text-xl">🥈</span>}
+                            {index === 2 && <span className="text-xl">🥉</span>}
+                            {index > 2 && (
+                              <span className="text-sm font-bold text-neutral-500 dark:text-neutral-400">
+                                #{user.rank}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-semibold ${
+                              isCurrentUser 
+                                ? 'text-brand-700 dark:text-brand-300' 
+                                : 'text-neutral-900 dark:text-white'
+                            }`}>
+                              {isCurrentUser ? 'You' : (user.displayName || user.name || 'Anonymous')}
+                            </p>
+                            <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                              {user.totalModulesCompleted} modules • {user.averageQuizScore}% avg
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-neutral-900 dark:text-white">
+                            {user.performanceScore}
+                          </p>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400">pts</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {loadingLeaderboard && (
+          <div className="px-8 pb-6">
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">Loading leaderboard...</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Certificate Section */}
         {showCertificate && (

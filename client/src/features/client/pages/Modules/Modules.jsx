@@ -237,8 +237,38 @@ function Modules() {
     modalManager.openModal(ModalType.LESSON, lessonData);
   }, [modalManager]);
 
-  const handleQuizClick = useCallback((studentModule) => {
+  const handleQuizClick = useCallback(async (studentModule) => {
     const quiz = studentModule.module.quizzes?.[0];
+    
+    // If admin/super_admin, fetch quiz with correct answers for auto-fill feature
+    if (quiz?.id && (user?.role === 'ADMIN' || user?.role === 'super_admin')) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/quizzes/${quiz.id}?includeCorrectAnswers=true`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const quizWithAnswers = data.data || data;
+          const quizData = {
+            ...quizWithAnswers,
+            moduleId: studentModule.module.id,
+            studentModuleId: studentModule.id,
+          };
+          modalManager.openModal(ModalType.QUIZ, quizData);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch quiz with answers:', error);
+        // Fall through to use basic quiz data
+      }
+    }
+    
+    // Default: use quiz data from student module (no correct answers)
     const quizData = {
       id: quiz?.id,
       title: quiz?.title || `${studentModule.module.title} Quiz`,
@@ -249,7 +279,7 @@ function Modules() {
     };
 
     modalManager.openModal(ModalType.QUIZ, quizData);
-  }, [modalManager]);
+  }, [modalManager, user?.role]);
 
   const handleStopSignClick = useCallback((previousModule) => {
     alert(`Viewing feedback for: ${previousModule.module.title}`);
@@ -514,10 +544,6 @@ function Modules() {
                     const studentModuleId = modalManager.modalData?.studentModuleId;
                     
                     if (studentModuleId && categoryInfo?.id) {
-                      // Clear cache to ensure fresh data after completion
-                      const cacheKey = `modules_${user?.id}`;
-                      sessionStorage.removeItem(cacheKey);
-                      
                       await completeModule(studentModuleId, {
                         categoryId: categoryInfo.id,
                         quizScore: result.score,
@@ -533,8 +559,14 @@ function Modules() {
                       const newLevel = Math.floor(newXP / 1000) + 1;
                       const leveledUp = newLevel > currentLevel;
 
-                      // Reload from server to get accurate state
-                      await loadModules();
+                      // Update local state instead of reloading from server
+                      setModules(prevModules => 
+                        prevModules.map(m => 
+                          m.id === studentModuleId 
+                            ? { ...m, isCompleted: true, progress: 100, quizPassed: true }
+                            : m
+                        )
+                      );
                       
                       modalManager.closeModal();
                       
@@ -546,8 +578,42 @@ function Modules() {
                           newLevel,
                           leveledUp,
                           completedModulesCount: completedCount,
-                          totalModulesCount: modules.length
+                          totalModulesCount: modules.length,
+                          completedModuleId: studentModuleId,
+                          accountId: user?.id,
+                          studentModuleId: studentModuleId
                         });
+                        
+                        // Auto-scroll to next module after confetti completes
+                        setTimeout(() => {
+                          const completedIndex = modules.findIndex(m => m.id === studentModuleId);
+                          let nextIncompleteIndex = -1;
+                          
+                          if (completedIndex !== -1) {
+                            nextIncompleteIndex = modules.findIndex((m, idx) => 
+                              idx > completedIndex && !m.isCompleted
+                            );
+                            if (nextIncompleteIndex === -1) {
+                              nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                            }
+                          } else {
+                            nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                          }
+                          
+                          if (nextIncompleteIndex !== -1) {
+                            const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
+                            if (element) {
+                              console.log('🎯 Auto-scrolling to next module after confetti:', nextIncompleteIndex);
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          } else {
+                            console.log('🏁 All modules completed, scrolling to finish line');
+                            const finishLine = document.getElementById('finish-line');
+                            if (finishLine) {
+                              finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }
+                        }, 800);
                       }, 100);
                     }
                   } catch (error) {
@@ -564,7 +630,49 @@ function Modules() {
           <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading...</div></div>}>
             <CongratulationsModal
               isOpen={true}
-              onClose={modalManager.closeModal}
+              onClose={() => {
+                modalManager.closeModal();
+                // Auto-scroll to next module after modal closes
+                setTimeout(() => {
+                  const completedModuleId = modalManager.modalData?.completedModuleId;
+                  
+                  // Find the index of the completed module
+                  const completedIndex = modules.findIndex(m => m.id === completedModuleId);
+                  
+                  // Try to find next incomplete module after the completed one
+                  let nextIncompleteIndex = -1;
+                  
+                  if (completedIndex !== -1) {
+                    // Look for next incomplete after current position
+                    nextIncompleteIndex = modules.findIndex((m, idx) => 
+                      idx > completedIndex && !m.isCompleted
+                    );
+                    
+                    // If none found after, look from beginning
+                    if (nextIncompleteIndex === -1) {
+                      nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                    }
+                  } else {
+                    // Fallback: find first incomplete
+                    nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                  }
+                  
+                  if (nextIncompleteIndex !== -1) {
+                    const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
+                    if (element) {
+                      console.log('🎯 Auto-scrolling to module index:', nextIncompleteIndex);
+                      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  } else {
+                    // All modules completed, scroll to finish line
+                    console.log('🏁 All modules completed, scrolling to finish line');
+                    const finishLine = document.getElementById('finish-line');
+                    if (finishLine) {
+                      finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }
+                }, 500);
+              }}
               moduleTitle={modalManager.modalData?.moduleTitle}
               score={modalManager.modalData?.score}
               xpEarned={modalManager.modalData?.xpEarned}
@@ -572,13 +680,37 @@ function Modules() {
               leveledUp={modalManager.modalData?.leveledUp}
               completedModulesCount={modalManager.modalData?.completedModulesCount}
               totalModulesCount={modalManager.modalData?.totalModulesCount}
+              accountId={modalManager.modalData?.accountId}
+              studentModuleId={modalManager.modalData?.studentModuleId}
+              userId={user?.id}
               onContinue={() => {
-                const nextIncomplete = modules.findIndex(m => !m.isCompleted);
-                if (nextIncomplete !== -1) {
-                  const element = document.querySelector(`[data-module-index="${nextIncomplete}"]`);
+                const completedModuleId = modalManager.modalData?.completedModuleId;
+                const completedIndex = modules.findIndex(m => m.id === completedModuleId);
+                
+                let nextIncompleteIndex = -1;
+                if (completedIndex !== -1) {
+                  nextIncompleteIndex = modules.findIndex((m, idx) => 
+                    idx > completedIndex && !m.isCompleted
+                  );
+                  if (nextIncompleteIndex === -1) {
+                    nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                  }
+                } else {
+                  nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                }
+                
+                if (nextIncompleteIndex !== -1) {
+                  const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
                   if (element) {
                     setTimeout(() => {
                       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                  }
+                } else {
+                  const finishLine = document.getElementById('finish-line');
+                  if (finishLine) {
+                    setTimeout(() => {
+                      finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 300);
                   }
                 }
@@ -629,15 +761,7 @@ function Modules() {
                 completionDate: new Date(),
                 certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`
               }}
-              leaderboardData={{
-                rank: 1,
-                totalUsers: 100,
-                topPerformers: [
-                  { name: 'Top Student 1', score: 98 },
-                  { name: 'Top Student 2', score: 95 },
-                  { name: 'Top Student 3', score: 92 },
-                ]
-              }}
+              leaderboardData={{}}
             />
           </Suspense>
         )}

@@ -125,22 +125,37 @@ export function QuizViewer({ isOpen, onClose, quiz, moduleId, studentModuleId, o
     if (!quiz || !quiz.questions) return;
     
     console.log('Auto-filling answers for quiz ID:', quiz.id);
+    console.log('Quiz object:', quiz);
+    console.log('Questions:', quiz.questions);
     
     // Batch all answer updates to avoid multiple re-renders
     const answers = {};
     
     quiz.questions.forEach(question => {
+      console.log(`Question ${question.id}:`, {
+        type: question.type,
+        question: question.question,
+        options: question.options,
+        hasIsCorrect: question.options?.some(o => 'isCorrect' in o)
+      });
+      
       if (question.type === 'IDENTIFICATION' || question.type === 'FILL_BLANK') {
         // For text-based questions, use the correct option's text
         const correctOption = question.options.find(opt => opt.isCorrect);
         if (correctOption) {
           answers[question.id] = correctOption.optionText;
+          console.log(`  ✓ Found correct answer for IDENTIFICATION: ${correctOption.optionText}`);
+        } else {
+          console.log(`  ✗ No correct answer found for IDENTIFICATION`);
         }
       } else if (question.type === 'MULTIPLE_CHOICE' || question.type === 'TRUE_FALSE') {
         // For multiple choice, use the correct option's ID
         const correctOption = question.options.find(opt => opt.isCorrect);
         if (correctOption) {
           answers[question.id] = correctOption.id;
+          console.log(`  ✓ Found correct answer for ${question.type}: ${correctOption.optionText} (ID: ${correctOption.id})`);
+        } else {
+          console.log(`  ✗ No correct answer found for ${question.type}`);
         }
       }
     });

@@ -31,7 +31,7 @@ export default function AccountTable({ users = [], onEdit, onDelete }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-        <thead className="bg-neutral-50 dark:bg-gray-900/50">
+        <thead className="bg-neutral-50 dark:bg-neutral-800/50">
           <tr>
             <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
               User
@@ -53,7 +53,7 @@ export default function AccountTable({ users = [], onEdit, onDelete }) {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700/50 bg-white dark:bg-gray-900">
+        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700/50 bg-white dark:bg-neutral-800">
           {users.map((u) => {
             const displayName = u.displayName || `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email;
             const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);

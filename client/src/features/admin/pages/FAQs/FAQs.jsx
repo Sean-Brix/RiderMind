@@ -5,8 +5,9 @@ import {
   updateFAQ,
   deleteFAQ
 } from '../../../../services/faqService';
-import { Search, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import ConfirmDeleteModal from '../../modules/components/ConfirmDeleteModal';
+import PageHeader from '../../components/PageHeader';
 
 const FAQ_CATEGORIES = ['General', 'System', 'Module', 'Quiz'];
 
@@ -147,10 +148,10 @@ const FAQs = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
       {/* Sidebar - Category Filter */}
-      <div className="w-64 bg-gradient-to-b from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 overflow-y-auto backdrop-blur-sm">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="w-64 bg-gradient-to-b from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 border-r border-gray-200 dark:border-neutral-700 overflow-y-auto backdrop-blur-sm">
+        <div className="p-4 border-b border-gray-200 dark:border-neutral-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Categories</h2>
         </div>
         
@@ -160,14 +161,14 @@ const FAQs = () => {
             className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition-colors flex items-center justify-between ${
               selectedCategory === 'All'
                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
             }`}
           >
             <span>All FAQs</span>
             <span className={`text-sm px-2 py-0.5 rounded-full ${
               selectedCategory === 'All'
                 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-400'
             }`}>
               {getCategoryCount('All')}
             </span>
@@ -184,14 +185,14 @@ const FAQs = () => {
               className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition-colors flex items-center justify-between ${
                 selectedCategory === category
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
               }`}
             >
               <span>{category}</span>
               <span className={`text-sm px-2 py-0.5 rounded-full ${
                 selectedCategory === category
                   ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-400'
               }`}>
                 {getCategoryCount(category)}
               </span>
@@ -203,25 +204,24 @@ const FAQs = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">FAQs</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Manage frequently asked questions
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                resetForm();
-                setShowForm(true);
-              }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              New FAQ
-            </button>
-          </div>
+        <div className="bg-gradient-to-r from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 border-b border-gray-200 dark:border-neutral-700 px-6 py-4 backdrop-blur-sm">
+          <PageHeader
+            icon={HelpCircle}
+            title="FAQs"
+            description="Manage frequently asked questions"
+            action={
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New FAQ
+              </button>
+            }
+          />
 
           {/* Search Bar */}
           <div className="relative">
@@ -231,7 +231,7 @@ const FAQs = () => {
               placeholder="Search FAQs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -250,7 +250,7 @@ const FAQs = () => {
 
         {/* Table */}
         <div className="flex-1 overflow-auto px-6 py-4">
-          <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden backdrop-blur-sm">
             {loading ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading FAQs...</div>
             ) : filteredFAQs.length === 0 ? (
@@ -259,7 +259,7 @@ const FAQs = () => {
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <thead className="bg-gray-50 dark:bg-neutral-700 border-b border-gray-200 dark:border-neutral-600">
                   <tr>
                     <th className="w-12 px-4 py-3 text-left">
                       <input
@@ -286,7 +286,7 @@ const FAQs = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredFAQs.map(faq => (
                     <React.Fragment key={faq.id}>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
@@ -311,7 +311,7 @@ const FAQs = () => {
                           </button>
                         </td>
                         <td className="px-4 py-3 text-left">
-                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full font-medium">
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 text-xs rounded-full font-medium">
                             {faq.category}
                           </span>
                         </td>
@@ -321,7 +321,7 @@ const FAQs = () => {
                               Active
                             </span>
                           ) : (
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full font-medium">
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-400 text-xs rounded-full font-medium">
                               Inactive
                             </span>
                           )}
@@ -346,14 +346,14 @@ const FAQs = () => {
                         </td>
                       </tr>
                       {expandedFAQ === faq.id && (
-                        <tr className="bg-gray-50 dark:bg-gray-900/50">
+                        <tr className="bg-gray-50 dark:bg-neutral-800">
                           <td colSpan="5" className="px-4 py-4">
                             <div className="ml-8">
                               <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Answer:</h4>
                               <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
                                 {faq.answer}
                               </p>
-                              <div className="flex gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                              <div className="flex gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-neutral-700 text-xs text-gray-500 dark:text-gray-400">
                                 <span>Created: {new Date(faq.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
@@ -372,7 +372,7 @@ const FAQs = () => {
       {/* FAQ Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 {isEditing ? 'Edit FAQ' : 'Add New FAQ'}

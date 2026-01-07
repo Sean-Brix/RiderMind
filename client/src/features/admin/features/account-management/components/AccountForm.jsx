@@ -2,14 +2,7 @@ import { useState } from 'react';
 
 const VEHICLE_CATEGORIES = [
   { code: 'A', name: 'Motorcycle', icon: '🏍️', description: 'Two-wheeled motorcycles' },
-  { code: 'A1', name: 'Light Motorcycle', icon: '🛵', description: 'Light motorcycles and scooters' },
   { code: 'B', name: 'Car', icon: '🚗', description: 'Private cars and light vehicles' },
-  { code: 'B1', name: 'Tricycle', icon: '🛺', description: 'Motorized tricycles' },
-  { code: 'B2', name: 'Light Truck', icon: '🚚', description: 'Light trucks up to 4500kg' },
-  { code: 'C', name: 'Heavy Truck', icon: '🚛', description: 'Trucks over 4500kg' },
-  { code: 'D', name: 'Bus/Passenger', icon: '🚌', description: 'Buses and passenger vehicles' },
-  { code: 'BE', name: 'Car with Trailer', icon: '🚙', description: 'Car with attached trailer' },
-  { code: 'CE', name: 'Truck with Trailer', icon: '🚚', description: 'Truck with attached trailer' },
 ];
 
 export default function AccountForm({ mode = 'create', initialValues, onSuccess }) {
@@ -456,7 +449,7 @@ export default function AccountForm({ mode = 'create', initialValues, onSuccess 
           type="button"
           onClick={prevStep}
           disabled={currentStep === 1}
-          className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← Previous
         </button>

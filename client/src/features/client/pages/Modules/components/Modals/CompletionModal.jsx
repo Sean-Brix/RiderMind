@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BaseModal } from '../Modals/BaseModal';
@@ -6,6 +6,7 @@ import Certificate from '../Certificate/Certificate';
 import { Download, Trophy, TrendingUp, Users, Award, Share2, X } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { markModulesCompleted } from '../../../../../../services/studentModuleService';
+import { getLeaderboard } from '../../../../../../services/leaderboardService';
 
 /**
  * CompletionModal Component
@@ -32,6 +33,8 @@ export function CompletionModal({
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [realLeaderboardData, setRealLeaderboardData] = useState(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const certificateRef = useRef(null);
   const navigate = useNavigate();
 
@@ -52,11 +55,47 @@ export function CompletionModal({
     certificateId = `CERT-${Date.now()}`
   } = completionData;
 
+  // Use real leaderboard data if available, otherwise fallback to prop data
   const {
     rank = 0,
     totalUsers = 0,
     topPerformers = []
-  } = leaderboardData;
+  } = realLeaderboardData || leaderboardData;
+
+  // Fetch real leaderboard data when modal opens
+  useEffect(() => {
+    if (isOpen && userId) {
+      setLoadingLeaderboard(true);
+      getLeaderboard('all-time', 100)
+        .then(response => {
+          if (response.success) {
+            const allUsers = response.data || [];
+            const userIndex = allUsers.findIndex(u => u.userId === userId);
+            const userRank = allUsers.find(u => u.userId === userId);
+            
+            // Get top 3 performers
+            const topThree = allUsers.slice(0, 3).map(user => ({
+              name: user.displayName || user.name || 'Anonymous',
+              score: user.averageQuizScore,
+              performanceScore: user.performanceScore
+            }));
+            
+            setRealLeaderboardData({
+              rank: userIndex >= 0 ? userIndex + 1 : 0,
+              totalUsers: response.totalUsers || allUsers.length,
+              topPerformers: topThree,
+              currentUser: userRank
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Failed to fetch leaderboard:', error);
+        })
+        .finally(() => {
+          setLoadingLeaderboard(false);
+        });
+    }
+  }, [isOpen, userId]);
 
   // Calculate statistics
   const completionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
@@ -359,7 +398,25 @@ export function CompletionModal({
             </motion.div>
 
             {/* Leaderboard Section */}
-            {rank > 0 && (
+            {loadingLeaderboard && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.9 }}
+                className="mb-16"
+              >
+                <h3 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200 mb-6 text-center">
+                  Leaderboard Standing
+                </h3>
+                <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-12 border border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-lg text-neutral-600 dark:text-neutral-400">Loading leaderboard...</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            {!loadingLeaderboard && rank > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -506,14 +563,14 @@ export function CompletionModal({
                 setShowConfirmation(false);
                 onClose();
                 
-                // Refresh the page
-                window.location.reload();
+                // Navigate to modules page to show course selection
+                navigate('/modules');
               } catch (error) {
                 console.error('Failed to mark modules as completed:', error);
-                // Still refresh even if API fails
+                // Still navigate even if API fails
                 setShowConfirmation(false);
                 onClose();
-                window.location.reload();
+                navigate('/modules');
               }
             }}
             whileHover={{ scale: 1.05 }}

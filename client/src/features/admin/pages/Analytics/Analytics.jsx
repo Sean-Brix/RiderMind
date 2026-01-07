@@ -5,8 +5,9 @@ import {
 } from 'recharts';
 import { 
   Users, TrendingUp, Award, BookOpen, MessageSquare, ThumbsUp, 
-  Target, CheckCircle, Clock, Trophy, ChevronDown, Activity, Heart, ThumbsDown, FileDown
+  Target, CheckCircle, Clock, Trophy, ChevronDown, Activity, Heart, ThumbsDown, FileDown, BarChart3
 } from 'lucide-react';
+import PageHeader from '../../components/PageHeader';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
@@ -50,6 +51,14 @@ export default function Analytics() {
         getQuizReactionAnalytics()
       ]);
 
+      console.log('📊 Analytics Data:');
+      console.log('Accounts:', accounts);
+      console.log('Leaderboard:', leaderboard);
+      console.log('Quizzes:', quizzes);
+      console.log('Modules:', modules);
+      console.log('Feedback:', feedback);
+      console.log('Reactions:', reactions);
+
       setAccountsData(accounts);
       setLeaderboardData(leaderboard);
       setQuizzesData(quizzes);
@@ -66,10 +75,17 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
+      <div className="p-6">
+        <PageHeader
+          icon={BarChart3}
+          title="Analytics"
+          description="Comprehensive insights into platform performance and user engagement"
+        />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
+          </div>
         </div>
       </div>
     );
@@ -78,6 +94,11 @@ export default function Analytics() {
   if (error) {
     return (
       <div className="p-6">
+        <PageHeader
+          icon={BarChart3}
+          title="Analytics"
+          description="Comprehensive insights into platform performance and user engagement"
+        />
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
@@ -106,9 +127,9 @@ export default function Analytics() {
     const summaryData = [
       ['Total Users', String(accounts?.total || 0)],
       ['Active Users', String(accounts?.active || 0)],
-      ['Module Completion Rate', `${(modules?.completionRate || 0).toFixed(1)}%`],
+      ['Module Completion Rate', `${(modules?.avgCompletionRate || 0).toFixed(1)}%`],
       ['Quiz Pass Rate', `${(quizzes?.passRate || 0).toFixed(1)}%`],
-      ['Average Quiz Score', `${(quizzes?.averageScore || 0).toFixed(1)}%`],
+      ['Average Quiz Score', `${(quizzes?.avgScore || 0).toFixed(1)}%`],
     ];
     
     autoTable(doc, {
@@ -165,9 +186,6 @@ export default function Analytics() {
     
     // Add student modules enrollments from already loaded data
     const studentModules = modules?.studentModules || [];
-    
-    console.log('Student modules data:', studentModules);
-    console.log('Full modules data:', modules);
     
     // Add new page for student modules
     doc.addPage();
@@ -228,7 +246,22 @@ export default function Analytics() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header with Filter */}
+      <PageHeader
+        icon={BarChart3}
+        title="Analytics"
+        description="Comprehensive insights into platform performance and user engagement"
+        action={
+          <button
+            onClick={() => exportLeaderboardToPDF(leaderboardData, accountsData, quizzesData, modulesData)}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"
+          >
+            <FileDown className="w-4 h-4" />
+            Export PDF
+          </button>
+        }
+      />
+      
+      {/* View Mode Filter */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
@@ -299,7 +332,7 @@ function StatCard({ title, value, icon: Icon, change, size = 'default', trend, c
   };
 
   return (
-    <div className="bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all hover:scale-[1.02] backdrop-blur-sm">
+    <div className="bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all hover:scale-[1.02] backdrop-blur-sm">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{title}</p>
@@ -330,9 +363,10 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
   const totalModules = modules?.totalModules || 0;
   const totalQuizzes = quizzes?.totalQuizzes || 0;
   const quizPassRate = quizzes?.passRate || 0;
-  const moduleCompletionRate = modules?.completionRate || 0;
-  const avgQuizScore = quizzes?.averageScore || 0;
+  const moduleCompletionRate = modules?.avgCompletionRate || 0;
+  const avgQuizScore = quizzes?.avgScore || 0;
   const feedbackScore = feedback?.avgRating || 0;
+  const passedAttempts = quizzes?.totalAttempts ? Math.round((quizzes.passRate / 100) * quizzes.totalAttempts) : 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -356,7 +390,7 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
         value={`${quizPassRate.toFixed(1)}%`}
         icon={Target}
         color="purple"
-        trend={`${quizzes?.passedAttempts || 0} passed`}
+        trend={`${passedAttempts} passed`}
       />
       <StatCard
         title="Avg Feedback"
@@ -367,24 +401,43 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
       />
 
       {/* Row 2: Growth Chart (spans 2 columns) + 2 small stats */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">User Growth (12 Months)</h3>
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={accounts?.growth || []}>
-            <defs>
-              <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '12px' }} />
-            <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-            />
-            <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
-          </AreaChart>
+          {(() => {
+            const filteredData = (accounts?.growth || []).filter((d, i, arr) => {
+              const firstNonZeroIndex = arr.findIndex(item => item.users > 0);
+              return firstNonZeroIndex === -1 || i >= firstNonZeroIndex;
+            });
+            
+            return filteredData.length <= 2 ? (
+              <BarChart data={filteredData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Bar dataKey="users" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            ) : (
+              <AreaChart data={filteredData}>
+                <defs>
+                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
+              </AreaChart>
+            );
+          })()}
         </ResponsiveContainer>
       </div>
 
@@ -404,7 +457,7 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
       />
 
       {/* Row 3: Leaderboard (spans 2 columns) + Feedback Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-500" />
           Top Performers
@@ -439,7 +492,7 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
         </div>
       </div>
 
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Feedback Sentiment</h3>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
@@ -470,7 +523,7 @@ function OverviewGrid({ accounts, leaderboard, quizzes, modules, feedback, react
       </div>
 
       {/* Row 4: Quiz Reactions */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-violet-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-violet-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quiz Reactions</h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
@@ -546,29 +599,48 @@ function UsersView({ accounts, leaderboard }) {
       />
 
       {/* User Growth Chart */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">User Growth Trend</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={accounts?.growth || []}>
-            <defs>
-              <linearGradient id="colorUsers2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="month" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-            />
-            <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers2)" />
-          </AreaChart>
+          {(() => {
+            const filteredData = (accounts?.growth || []).filter((d, i, arr) => {
+              const firstNonZeroIndex = arr.findIndex(item => item.users > 0);
+              return firstNonZeroIndex === -1 || i >= firstNonZeroIndex;
+            });
+            
+            return filteredData.length <= 2 ? (
+              <BarChart data={filteredData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Bar dataKey="users" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            ) : (
+              <AreaChart data={filteredData}>
+                <defs>
+                  <linearGradient id="colorUsers2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers2)" />
+              </AreaChart>
+            );
+          })()}
         </ResponsiveContainer>
       </div>
 
       {/* Role Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-blue-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-blue-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Role Distribution</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
@@ -591,7 +663,7 @@ function UsersView({ accounts, leaderboard }) {
       </div>
 
       {/* Status Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status Distribution</h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={accounts?.statusDistribution || []}>
@@ -607,7 +679,7 @@ function UsersView({ accounts, leaderboard }) {
       </div>
 
       {/* Full Leaderboard */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
@@ -680,7 +752,7 @@ function LearningView({ quizzes, modules }) {
       />
       <StatCard
         title="Module Completion"
-        value={`${(modules?.completionRate || 0).toFixed(1)}%`}
+        value={`${(modules?.avgCompletionRate || 0).toFixed(1)}%`}
         icon={CheckCircle}
         color="green"
         trend={`${modules?.completedModules || 0}/${modules?.totalEnrollments || 0}`}
@@ -700,7 +772,7 @@ function LearningView({ quizzes, modules }) {
       />
 
       {/* Module Performance */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Module Performance</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={modules?.modulePerformance || []}>
@@ -718,36 +790,45 @@ function LearningView({ quizzes, modules }) {
       </div>
 
       {/* Quiz Performance */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-purple-50 to-violet-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-purple-50 to-violet-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quiz Performance</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={quizzes?.quizPerformance || []}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="name" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-            />
-            <Legend />
-            <Bar dataKey="attempts" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="passed" fill="#10b981" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {quizzes?.quizPerformance && quizzes.quizPerformance.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={quizzes.quizPerformance}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#6b7280" />
+              <YAxis stroke="#6b7280" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+              />
+              <Legend />
+              <Bar dataKey="attempts" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="passed" fill="#10b981" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400">
+            <div className="text-center">
+              <Award className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No quiz performance data available</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Skill Level Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skill Level Distribution</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
               data={modules?.skillLevelDistribution || []}
-              dataKey="count"
+              dataKey="enrollments"
               nameKey="level"
               cx="50%"
               cy="50%"
               outerRadius={80}
-              label={(entry) => `${entry.level}: ${entry.count}`}
+              label={(entry) => `${entry.level}: ${entry.enrollments}`}
             >
               {(modules?.skillLevelDistribution || []).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -759,38 +840,47 @@ function LearningView({ quizzes, modules }) {
       </div>
 
       {/* Difficulty Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-purple-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-purple-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quiz Difficulty Distribution</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={quizzes?.difficultyDistribution || []}
-              dataKey="count"
-              nameKey="difficulty"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label={(entry) => `${entry.difficulty}: ${entry.count}`}
-            >
-              {(quizzes?.difficultyDistribution || []).map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        {quizzes?.difficultyDistribution && quizzes.difficultyDistribution.some(d => d.count > 0) ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={quizzes.difficultyDistribution.filter(d => d.count > 0)}
+                dataKey="count"
+                nameKey="difficulty"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label={(entry) => `${entry.difficulty}: ${entry.count}`}
+              >
+                {quizzes.difficultyDistribution.filter(d => d.count > 0).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-[250px] text-gray-500 dark:text-gray-400">
+            <div className="text-center">
+              <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No difficulty data available</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Average Stats */}
       <StatCard
         title="Avg Quiz Score"
-        value={`${(quizzes?.averageScore || 0).toFixed(1)}%`}
+        value={`${(quizzes?.avgScore || 0).toFixed(1)}%`}
         icon={Target}
         color="blue"
       />
       <StatCard
         title="Avg Module Progress"
-        value={`${(modules?.averageProgress || 0).toFixed(1)}%`}
+        value={`${(modules?.avgCompletionRate || 0).toFixed(1)}%`}
         icon={Activity}
         color="purple"
       />
@@ -842,26 +932,41 @@ function EngagementView({ feedback, reactions }) {
       />
 
       {/* Sentiment Trend */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-violet-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-violet-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sentiment Trend</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={feedback?.sentimentTrend || []}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="month" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-            />
-            <Legend />
-            <Line type="monotone" dataKey="positive" stroke="#10b981" strokeWidth={2} />
-            <Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} />
-            <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} />
-          </LineChart>
+          {(feedback?.sentimentTrend || []).length > 3 ? (
+            <LineChart data={feedback?.sentimentTrend || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="month" stroke="#6b7280" />
+              <YAxis stroke="#6b7280" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="positive" stroke="#10b981" strokeWidth={2} />
+              <Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} />
+              <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} />
+            </LineChart>
+          ) : (
+            <BarChart data={feedback?.sentimentTrend || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="month" stroke="#6b7280" />
+              <YAxis stroke="#6b7280" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+              />
+              <Legend />
+              <Bar dataKey="positive" fill="#10b981" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="neutral" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="negative" fill="#ef4444" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          )}
         </ResponsiveContainer>
       </div>
 
       {/* Sentiment Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sentiment Distribution</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
@@ -892,23 +997,23 @@ function EngagementView({ feedback, reactions }) {
       </div>
 
       {/* Rating Distribution */}
-      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-blue-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-2 bg-gradient-to-br from-white via-indigo-50 to-blue-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Rating Distribution</h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={feedback?.ratingDistribution || []}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="rating" stroke="#6b7280" />
+            <XAxis dataKey="stars" stroke="#6b7280" />
             <YAxis stroke="#6b7280" />
             <Tooltip 
               contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
             />
-            <Bar dataKey="count" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="count" fill="#f59e0b" radius={[8, 8, 0, 0]} stroke="#d97706" strokeWidth={2} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Category Breakdown */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Feedback by Category</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={feedback?.categoryBreakdown || []}>
@@ -924,17 +1029,17 @@ function EngagementView({ feedback, reactions }) {
       </div>
 
       {/* Top Quizzes by Reactions */}
-      <div className="md:col-span-4 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+      <div className="md:col-span-4 bg-gradient-to-br from-white via-purple-50 to-indigo-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Quizzes by Reactions</h3>
         <div className="space-y-3">
           {reactions?.topQuizzes && reactions.topQuizzes.length > 0 ? (
             reactions.topQuizzes.slice(0, 5).map((quiz, idx) => (
               <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 dark:text-white">{quiz.title}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{quiz.category}</p>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-900 dark:text-white text-left">{quiz.quizName}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-left">{quiz.likePercentage}% positive</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-shrink-0 ml-4">
                   <div className="flex items-center gap-1">
                     <ThumbsUp className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">{quiz.likes}</span>

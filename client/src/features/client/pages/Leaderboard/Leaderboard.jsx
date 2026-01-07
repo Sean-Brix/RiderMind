@@ -99,11 +99,11 @@ export default function Leaderboard() {
   const getPodiumHeight = (rank) => {
     switch (rank) {
       case 1:
-        return 'h-40';
+        return 'h-56';
       case 2:
-        return 'h-32';
+        return 'h-48';
       case 3:
-        return 'h-24';
+        return 'h-40';
       default:
         return 'h-16';
     }
@@ -271,35 +271,48 @@ export default function Leaderboard() {
                         {user.displayName}
                       </h3>
 
-                      {/* Score */}
-                      <div className={`font-bold mb-1 ${user.rank === 1 ? 'text-lg sm:text-xl md:text-2xl text-brand-600 dark:text-brand-400' : 'text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-400'}`}>
-                        {user.averageQuizScore}% avg
-                      </div>
+                      {/* Podium Block with Details Inside */}
+                      <div className={`w-full ${getPodiumHeight(user.rank)} bg-gradient-to-br ${getMedalColor(user.rank)} rounded-t-lg shadow-lg flex flex-col items-center justify-between p-3 md:p-4`}>
+                        {/* Rank Number */}
+                        <span className="text-white font-bold text-3xl md:text-4xl">#{user.rank}</span>
+                        
+                        {/* Stats Container */}
+                        <div className="flex flex-col items-center gap-2 w-full">
+                          {/* Score */}
+                          <div className="font-bold text-white text-base md:text-lg">
+                            {user.averageQuizScore}%
+                          </div>
 
-                      {/* Performance Score */}
-                      <div className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-500 mb-2">
-                        {user.performanceScore} pts
-                      </div>
+                          {/* Performance Score */}
+                          <div className="text-xs text-white/90 font-medium">
+                            {user.performanceScore} pts
+                          </div>
 
-                      {/* Stats */}
-                      <div className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-400 text-center mb-2 md:mb-4 space-y-1">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>📚</span>
-                          <span>{user.totalModulesCompleted}</span>
+                          {/* Stats Grid */}
+                          <div className="text-xs text-white/90 flex flex-col gap-1.5 w-full px-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1">
+                                <span>📚</span>
+                                <span className="text-[10px]">Modules</span>
+                              </span>
+                              <span className="font-semibold">{user.totalModulesCompleted}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1">
+                                <span>✏️</span>
+                                <span className="text-[10px]">Attempts</span>
+                              </span>
+                              <span className="font-semibold">{user.totalQuizAttempts}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1">
+                                <span>✅</span>
+                                <span className="text-[10px]">Pass Rate</span>
+                              </span>
+                              <span className="font-semibold">{user.passRate}%</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <span>✏️</span>
-                          <span>{user.totalQuizAttempts}</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <span>✅</span>
-                          <span>{user.passRate}%</span>
-                        </div>
-                      </div>
-
-                      {/* Podium Block */}
-                      <div className={`w-full sm:w-28 md:w-32 ${getPodiumHeight(user.rank)} bg-gradient-to-br ${getMedalColor(user.rank)} rounded-t-lg shadow-lg flex items-center justify-center`}>
-                        <span className="text-white font-bold text-2xl sm:text-3xl md:text-4xl">#{user.rank}</span>
                       </div>
                     </motion.div>
                   ))}

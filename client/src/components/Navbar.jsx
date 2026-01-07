@@ -109,7 +109,11 @@ export default function Navbar() {
         <div className={`flex items-center justify-between flex-1 transition-all duration-1000 ease-out ${isScrolled ? 'h-14' : 'h-16'}`}>
           {/* Logo/Brand */}
           <div className={`flex items-center transition-all duration-1000 ease-out ${isAdminPanel ? `border-r border-neutral-200 dark:border-neutral-800 ${isScrolled ? 'w-56 px-3' : 'w-64 px-4'}` : ''}`}>
-            <Link to="/" className={`flex gap-3 justify-center items-center font-bold text-brand-700 dark:text-brand-400 transition-all duration-1000 ease-out ${isScrolled ? 'text-lg' : 'text-xl'}`}>
+            <Link 
+              to="/" 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className={`flex gap-3 justify-center items-center font-bold text-brand-700 dark:text-brand-400 transition-all duration-1000 ease-out ${isScrolled ? 'text-lg' : 'text-xl'}`}
+            >
               <img src="/logo.png" alt="RiderMind" className={`rounded-lg transition-all duration-1000 ease-out ${isScrolled ? 'w-7 h-7' : 'w-8 h-8'}`} />
               RiderMind
             </Link>
@@ -120,6 +124,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-8">
               <Link
                 to="/"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   location.pathname === '/' 
                     ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
@@ -139,16 +144,6 @@ export default function Navbar() {
                 About
               </Link>
               <Link
-                to="/faq"
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  location.pathname === '/faq' 
-                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
-                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                }`}
-              >
-                FAQ
-              </Link>
-              <Link
                 to="/modules"
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   location.pathname === '/modules' 
@@ -157,6 +152,16 @@ export default function Navbar() {
                 }`}
               >
                 Modules
+              </Link>
+              <Link
+                to="/faq"
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/faq' 
+                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30' 
+                    : 'text-neutral-700 dark:text-neutral-300 hover:text-brand-700 dark:hover:text-brand-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+              >
+                FAQs
               </Link>
               <Link
                 to="/leaderboard"
@@ -173,6 +178,20 @@ export default function Navbar() {
 
           {/* Profile Dropdown */}
           <div className={`flex items-center gap-3 ${isAdminPanel ? 'px-4' : ''}`}>
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleDark}
+              className="p-2 rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              <svg className="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <svg className="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
+
             {!user && !isAdminPanel && (
               <Link
                 to="/login"

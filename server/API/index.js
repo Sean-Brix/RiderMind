@@ -28,7 +28,7 @@ router.use('/categories', categoriesRouter);
 router.use('/quizzes', quizzesRouter);
 router.use('/faqs', faqsRouter);
 router.use('/student-modules', studentModulesRouter);
-router.use('/modules', moduleFeedbackRouter);
+router.use('/module-feedback', moduleFeedbackRouter);
 router.use('/quiz-questions', quizReactionsRouter);
 router.use('/analytics', analyticsRouter);
 router.use('/dev', devRouter);

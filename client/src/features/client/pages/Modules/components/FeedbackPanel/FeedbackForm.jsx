@@ -5,17 +5,18 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Star, Send, Loader2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Send, Loader2, MessageSquare, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useFeedback } from '../../contexts/FeedbackContext';
 import { formatDistanceToNow } from 'date-fns';
 
 const FeedbackForm = ({ moduleId }) => {
-  const { myFeedback, feedbacks, submitFeedback, loadMyFeedback, loadFeedbacks, loading } = useFeedback();
+  const { myFeedback, feedbacks, submitFeedback, deleteFeedback, loadMyFeedback, loadFeedbacks, loading } = useFeedback();
   
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Load data on mount and when moduleId changes
   useEffect(() => {
@@ -53,6 +54,18 @@ const FeedbackForm = ({ moduleId }) => {
     if (result.success) {
       // Reload feedbacks to show the new one
       loadFeedbacks(moduleId, 1, 50);
+    }
+  };
+  
+  // Handle delete
+  const handleDelete = async () => {
+    const result = await deleteFeedback(moduleId);
+    if (result.success) {
+      // Reload feedbacks to update the list
+      await loadFeedbacks(moduleId, 1, 50);
+      setShowDeleteConfirm(false);
+      setRating(0);
+      setComment('');
     }
   };
   

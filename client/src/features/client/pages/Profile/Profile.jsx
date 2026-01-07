@@ -302,7 +302,7 @@ export default function Profile() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                 isEditing
                   ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                  : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 shadow-md'
               }`}
             >
               {isEditing ? (
@@ -346,7 +346,7 @@ export default function Profile() {
                   <div className="mt-4 space-y-3">
                     <button
                       onClick={handleSave}
-                      className="w-full px-5 py-3 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                      className="w-full px-5 py-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

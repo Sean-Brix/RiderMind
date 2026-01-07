@@ -23,8 +23,6 @@ export const CategoriesProvider = ({ children }) => {
     try {
       const response = await categoryService.getAllCategories(filters);
       const categoriesArray = Array.isArray(response) ? response : (response?.data || []);
-      console.log('CategoriesContext: fetchCategories response:', response);
-      console.log('CategoriesContext: Extracted categories:', categoriesArray);
       setCategories(categoriesArray);
       return categoriesArray;
     } catch (err) {
@@ -41,8 +39,6 @@ export const CategoriesProvider = ({ children }) => {
     try {
       const response = await categoryService.getCategoryById(id);
       const categoryData = response?.data || response;
-      console.log('CategoriesContext: fetchCategoryById response:', response);
-      console.log('CategoriesContext: Extracted category data:', categoryData);
       setSelectedCategory(categoryData);
       return categoryData;
     } catch (err) {
@@ -107,11 +103,47 @@ export const CategoriesProvider = ({ children }) => {
     }
   }, [selectedCategory, fetchCategoryById]);
 
+  const bulkAddModulesToCategory = useCallback(async (categoryId, moduleIds) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await categoryService.bulkAddModulesToCategory(categoryId, moduleIds);
+      // Refresh the selected category
+      if (selectedCategory?.id === categoryId) {
+        await fetchCategoryById(categoryId);
+      }
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCategory, fetchCategoryById]);
+
   const removeModuleFromCategory = useCallback(async (categoryId, moduleId) => {
     setLoading(true);
     setError(null);
     try {
       const data = await categoryService.removeModuleFromCategory(categoryId, moduleId);
+      // Refresh the selected category
+      if (selectedCategory?.id === categoryId) {
+        await fetchCategoryById(categoryId);
+      }
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCategory, fetchCategoryById]);
+
+  const bulkRemoveModulesFromCategory = useCallback(async (categoryId, moduleIds) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await categoryService.bulkRemoveModulesFromCategory(categoryId, moduleIds);
       // Refresh the selected category
       if (selectedCategory?.id === categoryId) {
         await fetchCategoryById(categoryId);
@@ -135,7 +167,9 @@ export const CategoriesProvider = ({ children }) => {
     updateCategoryModules,
     reorderCategoryModules,
     addModuleToCategory,
+    bulkAddModulesToCategory,
     removeModuleFromCategory,
+    bulkRemoveModulesFromCategory,
     setSelectedCategory,
   };
 

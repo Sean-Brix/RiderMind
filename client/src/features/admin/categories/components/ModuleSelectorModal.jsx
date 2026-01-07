@@ -1,19 +1,26 @@
 import { useState } from 'react';
-import { X, Search, Plus, Check } from 'lucide-react';
+import { X, Search, Plus, Check, CheckSquare, Square, Filter } from 'lucide-react';
 import { useCategories, useToast } from '../../shared';
 
 export default function ModuleSelectorModal({ isOpen, onClose, categoryId, availableModules }) {
-  const { addModuleToCategory } = useCategories();
+  const { bulkAddModulesToCategory } = useCategories();
   const { showToast } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedModules, setSelectedModules] = useState([]);
   const [adding, setAdding] = useState(false);
+  const [quickFilter, setQuickFilter] = useState('all'); // 'all', 'with-quiz', 'no-quiz'
 
-  const filteredModules = availableModules.filter(module =>
-    module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    module.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredModules = availableModules.filter(module => {
+    const matchesSearch = module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      module.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilter = quickFilter === 'all' ? true :
+      quickFilter === 'with-quiz' ? (module.quizzes && module.quizzes.length > 0) :
+      quickFilter === 'no-quiz' ? (!module.quizzes || module.quizzes.length === 0) : true;
+    
+    return matchesSearch && matchesFilter;
+  });
 
   const toggleModule = (moduleId) => {
     setSelectedModules(prev =>
@@ -21,6 +28,15 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
         ? prev.filter(id => id !== moduleId)
         : [...prev, moduleId]
     );
+  };
+
+  const handleSelectAll = () => {
+    const allFilteredIds = filteredModules.map(m => m.id);
+    setSelectedModules(allFilteredIds);
+  };
+
+  const handleClearAll = () => {
+    setSelectedModules([]);
   };
 
   const handleAddModules = async () => {
@@ -31,13 +47,8 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
 
     setAdding(true);
     try {
-      console.log('Adding modules:', selectedModules, 'to category:', categoryId);
-      // Add modules one by one (you could also create a batch endpoint)
-      for (const moduleId of selectedModules) {
-        console.log('Adding module:', moduleId);
-        const result = await addModuleToCategory(categoryId, moduleId);
-        console.log('Add module result:', result);
-      }
+      // Bulk add all modules in one request
+      await bulkAddModulesToCategory(categoryId, selectedModules);
       
       showToast({ 
         type: 'success', 
@@ -58,9 +69,9 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Add Modules to Category
@@ -77,8 +88,9 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
           </button>
         </div>
 
-        {/* Search */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        {/* Search & Controls */}
+        <div className="p-6 border-b border-gray-200 dark:border-neutral-700 space-y-4">
+          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -86,14 +98,75 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search modules..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          {selectedModules.length > 0 && (
-            <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">
-              {selectedModules.length} module(s) selected
-            </p>
-          )}
+
+          {/* Quick Filters */}
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setQuickFilter('all')}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  quickFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                All ({availableModules.length})
+              </button>
+              <button
+                onClick={() => setQuickFilter('with-quiz')}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  quickFilter === 'with-quiz'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                With Quiz ({availableModules.filter(m => m.quizzes?.length > 0).length})
+              </button>
+              <button
+                onClick={() => setQuickFilter('no-quiz')}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  quickFilter === 'no-quiz'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                No Quiz ({availableModules.filter(m => !m.quizzes || m.quizzes.length === 0).length})
+              </button>
+            </div>
+          </div>
+
+          {/* Selection Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSelectAll}
+                disabled={filteredModules.length === 0}
+                className="flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckSquare className="w-4 h-4 mr-1.5" />
+                Select All Visible
+              </button>
+              <button
+                onClick={handleClearAll}
+                disabled={selectedModules.length === 0}
+                className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Square className="w-4 h-4 mr-1.5" />
+                Clear All
+              </button>
+            </div>
+            {selectedModules.length > 0 && (
+              <div className="flex items-center px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  {selectedModules.length} selected
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Modules List */}
@@ -120,7 +193,7 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
                     className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600'
                     }`}
                   >
                     <div className="flex items-start">
@@ -128,7 +201,7 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
                       <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center mr-3 mt-0.5 ${
                         isSelected
                           ? 'bg-blue-600 border-blue-600'
-                          : 'border-gray-300 dark:border-gray-600'
+                          : 'border-gray-300 dark:border-neutral-600'
                       }`}>
                         {isSelected && <Check className="w-3 h-3 text-white" />}
                       </div>
@@ -168,10 +241,10 @@ export default function ModuleSelectorModal({ isOpen, onClose, categoryId, avail
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-neutral-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>

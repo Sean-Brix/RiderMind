@@ -22,13 +22,9 @@ export const ModulesProvider = ({ children }) => {
     setError(null);
     try {
       const data = await moduleService.getAllModules(filters);
-      console.log('ModulesContext: Received data:', data);
-      console.log('ModulesContext: Data type:', typeof data);
-      console.log('ModulesContext: Is array?', Array.isArray(data));
       
       // Handle both array response and object with data property
       const modulesArray = Array.isArray(data) ? data : (data?.data || []);
-      console.log('ModulesContext: Setting modules:', modulesArray);
       
       setModules(modulesArray);
       return modulesArray;

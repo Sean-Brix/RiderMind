@@ -117,7 +117,7 @@ export default function InfoCard({ sections, isEditing, profile, update, classNa
         >
           {/* Section header with icon */}
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-neutral-200 dark:border-neutral-800">
-            <div className="text-blue-600 dark:text-blue-400">
+            <div className="text-red-600 dark:text-red-400">
               {icons[section.icon] || icons.user}
             </div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">

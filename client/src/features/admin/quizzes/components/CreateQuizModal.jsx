@@ -64,7 +64,6 @@ export default function CreateQuizModal({ isOpen, onClose, preSelectedModuleId =
       };
 
       const response = await createQuiz(quizData);
-      console.log('Quiz created:', response);
       
       const newQuizId = response?.data?.id || response?.id;
       

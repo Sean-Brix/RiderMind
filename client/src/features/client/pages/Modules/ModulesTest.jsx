@@ -677,8 +677,40 @@ function ModulesTest() {
                       newLevel,
                       leveledUp,
                       completedModulesCount: completedCount,
-                      totalModulesCount: modules.length
+                      totalModulesCount: modules.length,
+                      completedModuleId: studentModuleId
                     });
+                    
+                    // Auto-scroll to next module after confetti completes
+                    setTimeout(() => {
+                      const completedIndex = modules.findIndex(m => m.id === studentModuleId);
+                      let nextIncompleteIndex = -1;
+                      
+                      if (completedIndex !== -1) {
+                        nextIncompleteIndex = modules.findIndex((m, idx) => 
+                          idx > completedIndex && !m.isCompleted
+                        );
+                        if (nextIncompleteIndex === -1) {
+                          nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                        }
+                      } else {
+                        nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                      }
+                      
+                      if (nextIncompleteIndex !== -1) {
+                        const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
+                        if (element) {
+                          console.log('🎯 Auto-scrolling to next module after confetti:', nextIncompleteIndex);
+                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      } else {
+                        console.log('🏁 All modules completed, scrolling to finish line');
+                        const finishLine = document.getElementById('finish-line');
+                        if (finishLine) {
+                          finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }
+                    }, 800);
                   }, 100);
                 } else {
                   console.error('❌ Missing required data:', {
@@ -705,8 +737,39 @@ function ModulesTest() {
           isOpen={true}
           onClose={() => {
             console.log('🎉 Congratulations modal closing...');
-            // Just close the modal - module state already updated
             modalManager.closeModal();
+            
+            // Auto-scroll to next module after modal closes
+            setTimeout(() => {
+              const completedModuleId = modalManager.modalData?.completedModuleId;
+              const completedIndex = modules.findIndex(m => m.id === completedModuleId);
+              
+              let nextIncompleteIndex = -1;
+              if (completedIndex !== -1) {
+                nextIncompleteIndex = modules.findIndex((m, idx) => 
+                  idx > completedIndex && !m.isCompleted
+                );
+                if (nextIncompleteIndex === -1) {
+                  nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+                }
+              } else {
+                nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+              }
+              
+              if (nextIncompleteIndex !== -1) {
+                const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
+                if (element) {
+                  console.log('🎯 Auto-scrolling to module index:', nextIncompleteIndex);
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              } else {
+                console.log('🏁 All modules completed, scrolling to finish line');
+                const finishLine = document.getElementById('finish-line');
+                if (finishLine) {
+                  finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }
+            }, 500);
           }}
           moduleTitle={modalManager.modalData?.moduleTitle}
           score={modalManager.modalData?.score}
@@ -715,14 +778,35 @@ function ModulesTest() {
           leveledUp={modalManager.modalData?.leveledUp}
           completedModulesCount={modalManager.modalData?.completedModulesCount}
           totalModulesCount={modalManager.modalData?.totalModulesCount}
+          userId={user?.id}
           onContinue={() => {
-            // Scroll to next module or finish line
-            const nextIncomplete = modules.findIndex(m => !m.isCompleted);
-            if (nextIncomplete !== -1) {
-              const element = document.querySelector(`[data-module-index="${nextIncomplete}"]`);
+            const completedModuleId = modalManager.modalData?.completedModuleId;
+            const completedIndex = modules.findIndex(m => m.id === completedModuleId);
+            
+            let nextIncompleteIndex = -1;
+            if (completedIndex !== -1) {
+              nextIncompleteIndex = modules.findIndex((m, idx) => 
+                idx > completedIndex && !m.isCompleted
+              );
+              if (nextIncompleteIndex === -1) {
+                nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+              }
+            } else {
+              nextIncompleteIndex = modules.findIndex(m => !m.isCompleted);
+            }
+            
+            if (nextIncompleteIndex !== -1) {
+              const element = document.querySelector(`[data-module-index="${nextIncompleteIndex}"]`);
               if (element) {
                 setTimeout(() => {
                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              }
+            } else {
+              const finishLine = document.getElementById('finish-line');
+              if (finishLine) {
+                setTimeout(() => {
+                  finishLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
               }
             }
@@ -788,15 +872,7 @@ function ModulesTest() {
               completionDate: new Date(),
               certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`
             }}
-            leaderboardData={{
-              rank: 1, // Mock data - fetch from API
-              totalUsers: 100, // Mock data - fetch from API
-              topPerformers: [
-                { name: 'Top Student 1', score: 98 },
-                { name: 'Top Student 2', score: 95 },
-                { name: 'Top Student 3', score: 92 },
-              ] // Mock data - fetch from API
-            }}
+            leaderboardData={{}}
           />
         </Suspense>
       )}

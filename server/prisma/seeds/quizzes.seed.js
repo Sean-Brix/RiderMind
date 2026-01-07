@@ -274,14 +274,34 @@ export async function seedQuizzes(prisma) {
 
     console.log(`📚 Found ${modules.length} modules`);
 
-    const minQuestionsPerQuiz = 10;
+    // Ensure at least one user exists for sample quiz attempts
+    let demoUser = await prisma.user.findFirst({
+      select: { id: true }
+    });
+    
+    if (!demoUser) {
+      console.log('👤 No users found. Creating demo user for quiz attempts...');
+      demoUser = await prisma.user.create({
+        data: {
+          email: 'demo@ridermind.com',
+          passwordHash: '$2b$10$dummyHashForDemoUser123456789',
+          role: 'USER',
+          first_name: 'Demo',
+          last_name: 'User'
+        },
+        select: { id: true }
+      });
+      console.log(`✅ Created demo user (ID: ${demoUser.id})`);
+    }
+
+    const minQuestionsPerQuiz = 5;
     let createdCount = 0;
 
     for (const module of modules) {
       console.log(`\n📝 Creating quiz for: ${module.title}`);
 
-      // Generate 10-15 questions per quiz for variety
-      const questionCount = minQuestionsPerQuiz + Math.floor(Math.random() * 6);
+      // Generate exactly 5 questions per quiz
+      const questionCount = minQuestionsPerQuiz;
       const questions = [];
 
       for (let i = 0; i < questionCount; i++) {
@@ -315,6 +335,38 @@ export async function seedQuizzes(prisma) {
       console.log(`  ✓ Created quiz with ${quiz.questions.length} questions`);
       console.log(`  ✓ Questions with media: ${quiz.questions.filter(q => q.imageUrl || q.videoUrl).length}`);
       createdCount++;
+
+      // Create sample quiz attempt with answers
+      const attempt = await prisma.quizAttempt.create({
+        data: {
+          quizId: quiz.id,
+          userId: demoUser.id,
+          startedAt: new Date(),
+          submittedAt: new Date(),
+          score: 100,
+          passed: true,
+          timeSpent: 60
+        }
+      });
+      
+      for (const question of quiz.questions) {
+        let answerData = {
+          attemptId: attempt.id,
+          questionId: question.id,
+          isCorrect: true,
+          pointsEarned: question.points || 1
+        };
+        if (question.type === 'MULTIPLE_CHOICE' || question.type === 'TRUE_FALSE') {
+          const correctOption = question.options.find(opt => opt.isCorrect);
+          if (correctOption) answerData.selectedOptionId = correctOption.id;
+        } else if (question.type === 'IDENTIFICATION') {
+          answerData.answerText = question.options[0]?.optionText || '';
+        } else if (question.type === 'ESSAY') {
+          answerData.answerText = 'Sample essay answer.';
+        }
+        await prisma.quizAnswer.create({ data: answerData });
+      }
+      console.log(`  ✓ Created sample quiz attempt with ${quiz.questions.length} answers`);
     }
 
     console.log(`\n✅ Quiz seeding completed! Created ${createdCount} quizzes`);

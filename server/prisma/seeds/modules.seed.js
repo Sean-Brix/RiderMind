@@ -249,10 +249,12 @@ export async function seedModules(prisma) {
     // Load media URLs from JSON
     const mediaMap = loadMediaMap();
 
-    console.log(`📚 Creating ${moduleTemplates.length} modules...\n`);
+    // Duplicate templates to get 20 modules
+    const duplicatedTemplates = [...moduleTemplates, ...moduleTemplates];
+    console.log(`📚 Creating ${duplicatedTemplates.length} modules...\n`);
 
-    for (let i = 0; i < moduleTemplates.length; i++) {
-      const template = moduleTemplates[i];
+    for (let i = 0; i < duplicatedTemplates.length; i++) {
+      const template = duplicatedTemplates[i];
       const mediaIndex = (i % 11) + 1; // Cycle through 11 media files
 
       console.log(`Creating module ${i + 1}: ${template.title}`);

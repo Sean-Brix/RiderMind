@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, ClipboardList } from 'lucide-react';
 import { useQuizzes, useToast } from '../../shared';
 import { LoadingSpinner, SearchBar } from '../../shared';
 import CreateQuizModal from '../../quizzes/components/CreateQuizModal';
+import DeleteQuizModal from '../../quizzes/components/DeleteQuizModal';
+import PageHeader from '../../components/PageHeader';
 
 export default function Quizes() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function Quizes() {
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [preSelectedModuleId, setPreSelectedModuleId] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, quizId: null, quizTitle: '', isBulk: false });
 
   // Check if we should open modal with pre-selected module
   useEffect(() => {
@@ -29,23 +32,10 @@ export default function Quizes() {
 
   // Load quizzes on mount
   useEffect(() => {
-    console.log('🔄 Quizes component: Loading quizzes');
     fetchQuizzes();
   }, [fetchQuizzes]);
 
-  useEffect(() => {
-    console.log('📊 Quizes component: Quizzes updated:', quizzes?.length);
-    if (quizzes && quizzes.length > 0) {
-      console.log('📝 First quiz:', quizzes[0]);
-    }
-  }, [quizzes]);
 
-  useEffect(() => {
-    console.log('📊 Quizes component: Quizzes updated:', quizzes?.length);
-    if (quizzes && quizzes.length > 0) {
-      console.log('📝 First quiz:', quizzes[0]);
-    }
-  }, [quizzes]);
 
   const availableFilters = [
     {
@@ -107,29 +97,26 @@ export default function Quizes() {
     navigate(`/admin/quizes/${quizId}/edit`);
   };
 
-  const handleDeleteQuiz = async (quizId) => {
-    if (!confirm('Delete this quiz? This action cannot be undone.')) {
-      return;
-    }
+  const handleDeleteQuiz = (quizId, quizTitle) => {
+    setDeleteModal({ isOpen: true, quizId, quizTitle, isBulk: false });
+  };
 
+  const confirmDeleteQuiz = async () => {
     try {
-      await deleteQuiz(quizId);
+      await deleteQuiz(deleteModal.quizId);
       showToast({ type: 'success', message: 'Quiz deleted successfully' });
-      setSelectedQuizzes((prev) => prev.filter((id) => id !== quizId));
+      setSelectedQuizzes((prev) => prev.filter((id) => id !== deleteModal.quizId));
     } catch (err) {
       showToast({ type: 'error', message: 'Failed to delete quiz' });
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedQuizzes.length === 0) return;
+    setDeleteModal({ isOpen: true, quizId: null, quizTitle: '', isBulk: true });
+  };
 
-    const confirm = window.confirm(
-      `Delete ${selectedQuizzes.length} quiz(zes)? This cannot be undone.`
-    );
-
-    if (!confirm) return;
-
+  const confirmBulkDelete = async () => {
     try {
       await Promise.all(selectedQuizzes.map((id) => deleteQuiz(id)));
       showToast({
@@ -168,29 +155,33 @@ export default function Quizes() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-neutral-900 p-6">
-      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
+    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 p-6">
+      <PageHeader
+        icon={ClipboardList}
+        title="Quizzes"
+        description="Create and manage quizzes to test student knowledge"
+        action={
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Quiz</span>
+          </button>
+        }
+      />
+      
+      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
         {/* Search and Filters */}
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <SearchBar
-                value={searchValue}
-                onChange={setSearchValue}
-                filters={filters}
-                onFilterChange={setFilters}
-                availableFilters={availableFilters}
-                placeholder="Search quizzes by title, description, or module..."
-              />
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Quiz</span>
-            </button>
-          </div>
+          <SearchBar
+            value={searchValue}
+            onChange={setSearchValue}
+            filters={filters}
+            onFilterChange={setFilters}
+            availableFilters={availableFilters}
+            placeholder="Search quizzes by title, description, or module..."
+          />
         </div>
 
         {/* Bulk Actions */}
@@ -336,7 +327,7 @@ export default function Quizes() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                           title="Delete quiz"
                         >
@@ -360,6 +351,16 @@ export default function Quizes() {
           setPreSelectedModuleId(null);
         }}
         preSelectedModuleId={preSelectedModuleId}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteQuizModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, quizId: null, quizTitle: '', isBulk: false })}
+        onConfirm={deleteModal.isBulk ? confirmBulkDelete : confirmDeleteQuiz}
+        quizTitle={deleteModal.quizTitle}
+        isBulk={deleteModal.isBulk}
+        count={selectedQuizzes.length}
       />
     </div>
   );

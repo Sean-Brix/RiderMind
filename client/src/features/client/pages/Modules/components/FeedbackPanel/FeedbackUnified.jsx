@@ -7,17 +7,18 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Star, Send, Loader2, MessageSquare } from 'lucide-react';
+import { Star, Send, Loader2, MessageSquare, Trash2 } from 'lucide-react';
 import { useFeedback } from '../../contexts/FeedbackContext';
 import { formatDistanceToNow } from 'date-fns';
 
 const FeedbackUnified = ({ moduleId }) => {
-  const { myFeedback, feedbacks, submitFeedback, loadMyFeedback, loadFeedbacks, loading } = useFeedback();
+  const { myFeedback, feedbacks, submitFeedback, deleteFeedback, loadMyFeedback, loadFeedbacks, loading } = useFeedback();
   
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Load data when module changes
   useEffect(() => {
@@ -25,6 +26,7 @@ const FeedbackUnified = ({ moduleId }) => {
       setRating(0);
       setComment('');
       setIsEditing(false);
+      setShowDeleteConfirm(false);
       loadMyFeedback(moduleId);
       loadFeedbacks(moduleId, 1, 50);
     }
@@ -54,6 +56,18 @@ const FeedbackUnified = ({ moduleId }) => {
       // Reload both my feedback and all feedbacks
       await loadMyFeedback(moduleId);
       await loadFeedbacks(moduleId, 1, 50);
+    }
+  };
+  
+  const handleDelete = async () => {
+    const result = await deleteFeedback(moduleId);
+    if (result.success) {
+      // Reload all feedbacks to update the list
+      await loadFeedbacks(moduleId, 1, 50);
+      setShowDeleteConfirm(false);
+      setRating(0);
+      setComment('');
+      setIsEditing(true);
     }
   };
   
@@ -117,13 +131,60 @@ const FeedbackUnified = ({ moduleId }) => {
               <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap mb-3">
                 {comment}
               </p>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Edit feedback
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Edit feedback
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-sm text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete feedback
+                </button>
+              </div>
             </div>
+            
+            {/* Delete Confirmation Dialog */}
+            {showDeleteConfirm && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-sm text-neutral-900 dark:text-neutral-100 mb-4">
+                  Are you sure you want to delete your feedback? This action cannot be undone.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleDelete}
+                    disabled={loading.delete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg
+                             transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                  >
+                    {loading.delete ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Yes, delete
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={loading.delete}
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 
+                             text-neutral-900 dark:text-neutral-100 text-sm font-medium rounded-lg
+                             transition-colors disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           // Editable form

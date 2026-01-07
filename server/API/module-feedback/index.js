@@ -4,11 +4,19 @@ import {
   getModuleFeedback,
   getModuleFeedbackStats,
   getMyModuleFeedback,
-  deleteModuleFeedback
+  deleteModuleFeedback,
+  getAllModuleFeedback
 } from '../../Controller/Feedback/moduleFeedback.js';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth.js';
 
 const router = express.Router();
+
+/**
+ * @route   GET /api/module-feedback/all
+ * @desc    Get all feedback across all modules (admin only)
+ * @access  Private (requires admin authentication)
+ */
+router.get('/all', authenticate, getAllModuleFeedback);
 
 /**
  * @route   POST /api/modules/:moduleId/feedback

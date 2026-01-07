@@ -86,10 +86,9 @@ const ModuleCard = memo(function ModuleCard({
           ${getStatusBgColor()}
           ${!isUnlocked ? 'opacity-60' : ''}
         `}
-        // Animate background and border when completing
+        // Animate background and border when completing (dark mode aware)
         animate={isCompleted ? {
-          borderColor: ['#6366f1', '#10b981', '#10b981'],
-          backgroundColor: ['#ffffff', '#f0fdf4', '#f0fdf4']
+          borderColor: ['#6366f1', '#10b981', '#10b981']
         } : {}}
         transition={{ duration: 0.5 }}
       >

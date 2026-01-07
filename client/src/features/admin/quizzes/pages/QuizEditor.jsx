@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Trash2, Plus, X, Upload, Image as ImageIcon, Video as 
 import { useQuizzes, useToast, useModules } from '../../shared';
 import { LoadingSpinner } from '../../shared';
 import { uploadQuestionImage, uploadQuestionVideo } from '../../../../services/quizService';
+import DeleteQuizModal from '../components/DeleteQuizModal';
 
 export default function QuizEditor() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function QuizEditor() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState({});
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -139,7 +141,6 @@ export default function QuizEditor() {
 
   const uploadPendingFiles = async (savedQuiz) => {
     if (!savedQuiz || !savedQuiz.questions || !Array.isArray(savedQuiz.questions)) {
-      console.log('No questions to upload files for');
       return;
     }
 
@@ -188,6 +189,52 @@ export default function QuizEditor() {
       return;
     }
 
+    // Validate that all questions have text
+    const questionsWithoutText = quizForm.questions
+      .map((q, idx) => !q.question || !q.question.trim() ? idx + 1 : null)
+      .filter(num => num !== null);
+
+    if (questionsWithoutText.length > 0) {
+      showToast({ 
+        type: 'error', 
+        message: `Questions ${questionsWithoutText.join(', ')} must have question text` 
+      });
+      return;
+    }
+
+    // Validate that all questions have at least one correct answer (except ESSAY)
+    const questionsWithoutCorrectAnswer = quizForm.questions.filter((q, idx) => {
+      const questionType = q.type || 'MULTIPLE_CHOICE';
+      // ESSAY questions don't need predefined answers
+      if (questionType === 'ESSAY') return false;
+      // IDENTIFICATION needs a non-empty answer
+      if (questionType === 'IDENTIFICATION') {
+        return !q.options.length || !q.options[0].optionText.trim();
+      }
+      // MULTIPLE_CHOICE and TRUE_FALSE need at least one correct option
+      return !q.options.some(opt => opt.isCorrect);
+    });
+
+    if (questionsWithoutCorrectAnswer.length > 0) {
+      const questionNumbers = quizForm.questions
+        .map((q, idx) => {
+          const questionType = q.type || 'MULTIPLE_CHOICE';
+          if (questionType === 'ESSAY') return null;
+          if (questionType === 'IDENTIFICATION') {
+            return (!q.options.length || !q.options[0].optionText.trim()) ? idx + 1 : null;
+          }
+          return !q.options.some(opt => opt.isCorrect) ? idx + 1 : null;
+        })
+        .filter(num => num !== null)
+        .join(', ');
+      
+      showToast({ 
+        type: 'error', 
+        message: `Questions ${questionNumbers} must have a correct answer` 
+      });
+      return;
+    }
+
     try {
       setSaving(true);
       
@@ -221,12 +268,8 @@ export default function QuizEditor() {
 
       let savedQuiz;
       if (isNewQuiz) {
-        console.log('📤 Creating quiz with data:', quizData);
         const response = await createQuiz(quizData);
-        console.log('📥 Create quiz response:', response);
         savedQuiz = response.data || response; // Handle both response formats
-        console.log('✅ Saved quiz:', savedQuiz);
-        console.log('📊 Question count:', savedQuiz._count?.questions, 'Questions array:', savedQuiz.questions?.length);
         showToast({ type: 'success', message: 'Quiz created successfully' });
         
         // Upload pending files
@@ -254,10 +297,6 @@ export default function QuizEditor() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       setDeleting(true);
       await deleteQuiz(quizId);
@@ -268,6 +307,7 @@ export default function QuizEditor() {
       console.error(error);
     } finally {
       setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -310,9 +350,36 @@ export default function QuizEditor() {
   const updateQuestion = (index, field, value) => {
     setQuizForm(prev => ({
       ...prev,
-      questions: prev.questions.map((q, i) => 
-        i === index ? { ...q, [field]: value } : q
-      )
+      questions: prev.questions.map((q, i) => {
+        if (i !== index) return q;
+        
+        const updated = { ...q, [field]: value };
+        
+        // Update options when type changes
+        if (field === 'type') {
+          if (value === 'TRUE_FALSE') {
+            updated.options = [
+              { optionText: 'True', isCorrect: false },
+              { optionText: 'False', isCorrect: false }
+            ];
+          } else if (value === 'ESSAY') {
+            updated.options = [];
+          } else if (value === 'IDENTIFICATION') {
+            updated.options = [
+              { optionText: '', isCorrect: true }
+            ];
+          } else if (value === 'MULTIPLE_CHOICE') {
+            updated.options = [
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false }
+            ];
+          }
+        }
+        
+        return updated;
+      })
     }));
   };
 
@@ -322,20 +389,22 @@ export default function QuizEditor() {
       questions: prev.questions.map((q, qIdx) => {
         if (qIdx !== questionIndex) return q;
         
+        // If setting isCorrect to true, uncheck all others and check only this one
+        if (field === 'isCorrect' && value === true) {
+          return {
+            ...q,
+            options: q.options.map((o, i) => ({
+              ...o,
+              isCorrect: i === optionIndex
+            }))
+          };
+        }
+        
+        // Otherwise, update only the specific field
         return {
           ...q,
           options: q.options.map((opt, oIdx) => {
             if (oIdx !== optionIndex) return opt;
-            
-            // If setting isCorrect to true, uncheck others
-            if (field === 'isCorrect' && value === true) {
-              const newOptions = q.options.map((o, i) => ({
-                ...o,
-                isCorrect: i === optionIndex
-              }));
-              return newOptions[optionIndex];
-            }
-            
             return { ...opt, [field]: value };
           })
         };
@@ -354,14 +423,14 @@ export default function QuizEditor() {
   // VIEW MODE - Show quiz preview
   if (!isEditMode && !isNewQuiz) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/admin/quizes')}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -369,7 +438,7 @@ export default function QuizEditor() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {quizForm.title}
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
                   Preview Mode
                 </p>
               </div>
@@ -385,12 +454,12 @@ export default function QuizEditor() {
           </div>
 
           {/* Quiz Info Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 quizForm.isActive 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                  : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-400'
               }`}>
                 {quizForm.isActive ? 'Active' : 'Inactive'}
               </span>
@@ -402,11 +471,11 @@ export default function QuizEditor() {
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Passing Score</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Passing Score</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">{quizForm.passingScore}%</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Questions</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Total Questions</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">{quizForm.questions.length}</p>
               </div>
             </div>
@@ -414,13 +483,13 @@ export default function QuizEditor() {
 
           {/* Question Viewer */}
           {quizForm.questions.length > 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700">
               {/* Navigation Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
                 <button
                   onClick={() => setCurrentQuestionPreview(Math.max(0, currentQuestionPreview - 1))}
                   disabled={currentQuestionPreview === 0}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -434,7 +503,7 @@ export default function QuizEditor() {
                 <button
                   onClick={() => setCurrentQuestionPreview(Math.min(quizForm.questions.length - 1, currentQuestionPreview + 1))}
                   disabled={currentQuestionPreview === quizForm.questions.length - 1}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -461,14 +530,14 @@ export default function QuizEditor() {
                           <img 
                             src={question.imageUrl} 
                             alt="Question" 
-                            className="w-full max-h-64 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                            className="w-full max-h-64 object-cover rounded-lg border border-gray-300 dark:border-neutral-600"
                           />
                         )}
                         {question.videoUrl && (
                           <video 
                             src={question.videoUrl} 
                             controls
-                            className="w-full max-h-64 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                            className="w-full max-h-64 object-cover rounded-lg border border-gray-300 dark:border-neutral-600"
                           />
                         )}
                       </div>
@@ -482,13 +551,13 @@ export default function QuizEditor() {
                           className={`flex items-center gap-3 p-3 rounded-lg border ${
                             option.isCorrect 
                               ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50'
+                              : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/50'
                           }`}
                         >
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-6">
+                          <span className="text-sm font-medium text-gray-600 dark:text-neutral-400 w-6">
                             {String.fromCharCode(65 + oIdx)}.
                           </span>
-                          <span className={`flex-1 ${option.isCorrect ? 'font-medium text-green-900 dark:text-green-100' : 'text-gray-900 dark:text-white'}`}>
+                          <span className={`flex-1 ${option.isCorrect ? 'font-medium text-green-900 dark:text-neutral-100' : 'text-gray-900 dark:text-white'}`}>
                             {option.optionText}
                           </span>
                           {option.isCorrect && (
@@ -504,8 +573,8 @@ export default function QuizEditor() {
               })()}
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
-              <p className="text-gray-500 dark:text-gray-400">No questions added yet</p>
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-12 text-center">
+              <p className="text-gray-500 dark:text-neutral-400">No questions added yet</p>
             </div>
           )}
         </div>
@@ -515,14 +584,14 @@ export default function QuizEditor() {
 
   // EDIT MODE
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/admin/quizes')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -530,7 +599,7 @@ export default function QuizEditor() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {isNewQuiz ? 'Create New Quiz' : 'Edit Quiz'}
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
                 {isNewQuiz ? 'Add questions and configure quiz settings' : 'Modify quiz details and questions'}
               </p>
             </div>
@@ -541,18 +610,18 @@ export default function QuizEditor() {
               <>
                 <button
                   onClick={() => setIsEditMode(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-gray-700 dark:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   Preview
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteModal(true)}
                   disabled={deleting}
-                  className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  Delete
                 </button>
               </>
             )}
@@ -568,12 +637,12 @@ export default function QuizEditor() {
         </div>
 
         {/* Basic Info */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
                 Quiz Title *
               </label>
               <input
@@ -581,13 +650,13 @@ export default function QuizEditor() {
                 value={quizForm.title}
                 onChange={(e) => setQuizForm(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter quiz title"
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
                   Pass Score (%) *
                 </label>
                 <input
@@ -596,18 +665,18 @@ export default function QuizEditor() {
                   max="100"
                   value={quizForm.passingScore}
                   onChange={(e) => setQuizForm(prev => ({ ...prev, passingScore: e.target.value }))}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
                   Module
                 </label>
                 <select
                   value={quizForm.moduleId || ''}
                   onChange={(e) => setQuizForm(prev => ({ ...prev, moduleId: e.target.value || null }))}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">No Module (Standalone)</option>
                   {modules.map(module => (
@@ -625,7 +694,7 @@ export default function QuizEditor() {
                 onChange={(e) => setQuizForm(prev => ({ ...prev, isActive: e.target.checked }))}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
               />
-              <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 dark:text-neutral-100">
                 Active (visible to students)
               </label>
             </div>
@@ -633,7 +702,7 @@ export default function QuizEditor() {
         </div>
 
         {/* Questions */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Questions ({quizForm.questions.length})
@@ -648,26 +717,39 @@ export default function QuizEditor() {
           </div>
 
           {quizForm.questions.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-12 text-gray-500 dark:text-neutral-400">
               No questions yet. Click "Add Question" to create one.
             </div>
           ) : (
             <div className="space-y-6">
               {/* Question Selector Dropdown */}
               <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-sm font-medium text-gray-700 dark:text-neutral-100">
                   Select Question:
                 </label>
                 <select
                   value={selectedQuestionIndex}
                   onChange={(e) => setSelectedQuestionIndex(parseInt(e.target.value))}
-                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
-                  {quizForm.questions.map((q, idx) => (
-                    <option key={idx} value={idx}>
-                      Question {idx + 1}{q.question ? `: ${q.question.substring(0, 50)}${q.question.length > 50 ? '...' : ''}` : ' (Empty)'}
-                    </option>
-                  ))}
+                  {quizForm.questions.map((q, idx) => {
+                    const questionType = q.type || 'MULTIPLE_CHOICE';
+                    let hasCorrectAnswer = true;
+                    
+                    if (questionType === 'ESSAY') {
+                      hasCorrectAnswer = true; // ESSAY doesn't need correct answer
+                    } else if (questionType === 'IDENTIFICATION') {
+                      hasCorrectAnswer = q.options.length > 0 && q.options[0].optionText.trim() !== '';
+                    } else {
+                      hasCorrectAnswer = q.options.some(opt => opt.isCorrect);
+                    }
+                    
+                    return (
+                      <option key={idx} value={idx}>
+                        Q{idx + 1}{!hasCorrectAnswer ? ' ⚠️' : ''}{q.question ? `: ${q.question.substring(0, 40)}${q.question.length > 40 ? '...' : ''}` : ''}
+                      </option>
+                    );
+                  })}
                 </select>
                 <button
                   onClick={() => removeQuestion(selectedQuestionIndex)}
@@ -681,10 +763,25 @@ export default function QuizEditor() {
 
               {/* Single Question Editor */}
               {quizForm.questions[selectedQuestionIndex] && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
+                        Question Type
+                      </label>
+                      <select
+                        value={quizForm.questions[selectedQuestionIndex].type || 'MULTIPLE_CHOICE'}
+                        onChange={e => updateQuestion(selectedQuestionIndex, 'type', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 mb-2"
+                      >
+                        <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+                        <option value="TRUE_FALSE">True/False</option>
+                        <option value="ESSAY">Essay</option>
+                        <option value="IDENTIFICATION">Identification</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
                         Question Text *
                       </label>
                       <textarea
@@ -692,20 +789,20 @@ export default function QuizEditor() {
                         onChange={(e) => updateQuestion(selectedQuestionIndex, 'question', e.target.value)}
                         placeholder="Enter question text"
                         rows="2"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
                     {/* Media Upload Section */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
                         Media (Optional)
                       </label>
                       
                       <div className="grid grid-cols-2 gap-4">
                         {/* Image Upload */}
                         <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-2">Image</label>
+                          <label className="block text-xs text-gray-600 dark:text-neutral-400 mb-2">Image</label>
                           <div className="space-y-2">
                             <input
                               type="file"
@@ -742,7 +839,7 @@ export default function QuizEditor() {
                                 <img 
                                   src={quizForm.questions[selectedQuestionIndex].imageUrl} 
                                   alt="Question preview" 
-                                  className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                                  className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-neutral-600"
                                 />
                                 <button
                                   onClick={() => {
@@ -761,7 +858,7 @@ export default function QuizEditor() {
 
                         {/* Video Upload */}
                         <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-2">Video</label>
+                          <label className="block text-xs text-gray-600 dark:text-neutral-400 mb-2">Video</label>
                           <div className="space-y-2">
                             <input
                               type="file"
@@ -798,7 +895,7 @@ export default function QuizEditor() {
                                 <video 
                                   src={quizForm.questions[selectedQuestionIndex].videoUrl} 
                                   controls
-                                  className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                                  className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-neutral-600"
                                 />
                                 <button
                                   onClick={() => {
@@ -818,32 +915,98 @@ export default function QuizEditor() {
                     </div>
 
                     {/* Options */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Answer Options * (Check the correct answer)
-                      </label>
-                      <div className="space-y-2">
-                        {quizForm.questions[selectedQuestionIndex].options.map((option, oIdx) => (
-                          <div key={oIdx} className="flex items-center gap-3">
-                            <input
-                              type="radio"
-                              name={`question-${selectedQuestionIndex}-correct`}
-                              checked={option.isCorrect}
-                              onChange={() => updateOption(selectedQuestionIndex, oIdx, 'isCorrect', true)}
-                              className="w-4 h-4 text-green-600"
-                            />
-                            <span className="text-sm text-gray-600 dark:text-gray-400 w-4">{String.fromCharCode(65 + oIdx)}.</span>
+                    {(() => {
+                      const questionType = quizForm.questions[selectedQuestionIndex].type || 'MULTIPLE_CHOICE';
+                      
+                      if (questionType === 'ESSAY') {
+                        return (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
+                              Answer Type
+                            </label>
+                            <p className="text-sm text-gray-600 dark:text-neutral-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                              Essay questions allow students to write free-form text answers. No pre-defined options needed.
+                            </p>
+                          </div>
+                        );
+                      }
+                      
+                      if (questionType === 'IDENTIFICATION') {
+                        return (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
+                              Correct Answer *
+                            </label>
                             <input
                               type="text"
-                              value={option.optionText}
-                              onChange={(e) => updateOption(selectedQuestionIndex, oIdx, 'optionText', e.target.value)}
-                              placeholder={`Option ${String.fromCharCode(65 + oIdx)}`}
-                              className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              value={quizForm.questions[selectedQuestionIndex].options[0]?.optionText || ''}
+                              onChange={(e) => updateOption(selectedQuestionIndex, 0, 'optionText', e.target.value)}
+                              placeholder="Enter the correct answer"
+                              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                             />
+                            <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
+                              Students will type their answer and it will be compared with this correct answer.
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        );
+                      }
+                      
+                      if (questionType === 'TRUE_FALSE') {
+                        return (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
+                              Answer Options * (Select the correct answer)
+                            </label>
+                            <div className="space-y-2">
+                              {quizForm.questions[selectedQuestionIndex].options.map((option, oIdx) => (
+                                <div key={oIdx} className="flex items-center gap-3">
+                                  <input
+                                    type="radio"
+                                    name={`question-${selectedQuestionIndex}-correct`}
+                                    checked={option.isCorrect}
+                                    onChange={() => updateOption(selectedQuestionIndex, oIdx, 'isCorrect', true)}
+                                    className="w-4 h-4 text-green-600"
+                                  />
+                                  <span className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-700/50 text-gray-900 dark:text-white">
+                                    {option.optionText}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // MULTIPLE_CHOICE
+                      return (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-100 mb-2">
+                            Answer Options * (Check the correct answer)
+                          </label>
+                          <div className="space-y-2">
+                            {quizForm.questions[selectedQuestionIndex].options.map((option, oIdx) => (
+                              <div key={oIdx} className="flex items-center gap-3">
+                                <input
+                                  type="radio"
+                                  name={`question-${selectedQuestionIndex}-correct`}
+                                  checked={option.isCorrect}
+                                  onChange={() => updateOption(selectedQuestionIndex, oIdx, 'isCorrect', true)}
+                                  className="w-4 h-4 text-green-600"
+                                />
+                                <span className="text-sm text-gray-600 dark:text-neutral-400 w-4">{String.fromCharCode(65 + oIdx)}.</span>
+                                <input
+                                  type="text"
+                                  value={option.optionText}
+                                  onChange={(e) => updateOption(selectedQuestionIndex, oIdx, 'optionText', e.target.value)}
+                                  placeholder={`Option ${String.fromCharCode(65 + oIdx)}`}
+                                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
@@ -851,6 +1014,14 @@ export default function QuizEditor() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteQuizModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        quizTitle={quizForm.title}
+      />
     </div>
   );
 }

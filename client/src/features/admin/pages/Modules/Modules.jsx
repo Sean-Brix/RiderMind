@@ -16,10 +16,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { BookOpen } from 'lucide-react';
 import LessonModal from '../../../../components/LessonModal';
 import { ModuleListItem, ActiveModuleItem, DroppableArea, FileUpload } from './components';
 import * as moduleService from '../../../../services/moduleService';
 import * as categoryService from '../../../../services/categoryService';
+import PageHeader from '../../components/PageHeader';
 
 // Sortable Slide Item Component
 function SortableSlideItem({ slide, index, isEditingModule, onEdit, onDelete }) {
@@ -641,10 +643,16 @@ export default function Modules() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      <PageHeader
+        icon={BookOpen}
+        title="Modules"
+        description="Create and manage learning modules with interactive content"
+      />
+      
       {/* Loading State */}
       {loading && (
-        <div className="bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:bg-gray-900 rounded-lg shadow border border-neutral-200 dark:border-neutral-700 p-12 text-center backdrop-blur-sm">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700 p-12 text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
           <p className="mt-4 text-neutral-600 dark:text-neutral-400">Loading modules...</p>
         </div>
@@ -673,8 +681,8 @@ export default function Modules() {
 
       {/* Main Content */}
       {!loading && !error && (
-      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
-        {/* Header with Quick Actions */}
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700">
+        {/* Header with Quick Actions */
         <div className="border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between">
           <div className="flex gap-1">
             <button
@@ -728,7 +736,7 @@ export default function Modules() {
               <div className="flex gap-6">
                 {/* Left Sidebar - All Modules */}
                 <div className="w-80 flex-shrink-0">
-                  <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col backdrop-blur-sm">
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col">
                     <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
                       {/* Category Selector */}
                       <div className="mb-3">
@@ -764,12 +772,12 @@ export default function Modules() {
                             value={newCategoryName}
                             onChange={(e) => setNewCategoryName(e.target.value)}
                             placeholder="Category name"
-                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
+                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
                           />
                           <select
                             value={newCategoryVehicleType}
                             onChange={(e) => setNewCategoryVehicleType(e.target.value)}
-                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
+                            className="w-full px-3 py-1.5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm"
                           >
                             <option value="MOTORCYCLE">Motorcycle</option>
                             <option value="CAR">Car</option>
@@ -820,7 +828,7 @@ export default function Modules() {
                             <ModuleListItem key={module.id} module={module} isEditMode={isEditMode} />
                           ))}
                           {availableModules.length === 0 && (
-                            <div className="text-center py-8 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-600">
+                            <div className="text-center py-8 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-600">
                               All modules active
                             </div>
                           )}
@@ -915,7 +923,7 @@ export default function Modules() {
                           <ActiveModuleItem key={module.id} module={module} index={index} isEditMode={isEditMode} />
                         ))}
                         {activeModules.length === 0 && (
-                          <div className="text-center py-20 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-gray-900/50 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600 h-full flex flex-col items-center justify-center min-h-[400px]">
+                          <div className="text-center py-20 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600 h-full flex flex-col items-center justify-center min-h-[400px]">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full mb-4">
                               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -950,7 +958,7 @@ export default function Modules() {
               {/* Drag Overlay */}
               <DragOverlay>
                 {activeId ? (
-                  <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 border-2 border-brand-500 rounded-lg shadow-xl">
+                  <div className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-800 border-2 border-brand-500 rounded-lg shadow-xl">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm truncate">
                         {allModules.find(m => m.id === activeId)?.title}
@@ -966,7 +974,7 @@ export default function Modules() {
             <div className="flex gap-6">
               {/* Left Sidebar - Module List */}
               <div className="w-80 flex-shrink-0">
-                <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col backdrop-blur-sm">
+                <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 sticky top-6 h-[calc(100vh-120px)] flex flex-col">
                   <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
                     <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
                       All Modules
@@ -990,7 +998,7 @@ export default function Modules() {
                         className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
                           selectedModuleId === module.id
                             ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500'
-                            : 'bg-neutral-50 dark:bg-gray-900/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
+                            : 'bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
@@ -1110,7 +1118,7 @@ export default function Modules() {
                     </div>
 
                     {/* Module Basic Info */}
-                    <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
                       <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4">
                         Basic Information
                       </h3>
@@ -1127,10 +1135,10 @@ export default function Modules() {
                               value={moduleForm.title}
                               onChange={(e) => handleModuleFormChange('title', e.target.value)}
                               placeholder="e.g., Road Safety Basics"
-                              className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             />
                           ) : (
-                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100">
+                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100">
                               {moduleForm.title || 'N/A'}
                             </p>
                           )}
@@ -1147,10 +1155,10 @@ export default function Modules() {
                               onChange={(e) => handleModuleFormChange('description', e.target.value)}
                               placeholder="Brief description of what students will learn..."
                               rows={3}
-                              className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                             />
                           ) : (
-                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 min-h-[88px] whitespace-pre-wrap">
+                            <p className="w-full px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 min-h-[88px] whitespace-pre-wrap">
                               {moduleForm.description || 'No description provided'}
                             </p>
                           )}
@@ -1159,7 +1167,7 @@ export default function Modules() {
                     </div>
 
                     {/* Learning Objectives */}
-                    <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
                           Learning Objectives
@@ -1187,7 +1195,7 @@ export default function Modules() {
                                 value={objective}
                                 onChange={(e) => handleObjectiveChange(index, e.target.value)}
                                 placeholder={`Objective ${index + 1}`}
-                                className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                className="flex-1 px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                               />
                               {moduleForm.objectives.length > 1 && (
                                 <button
@@ -1215,7 +1223,7 @@ export default function Modules() {
                     </div>
 
                     {/* Slides Section */}
-                    <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
                           Slides ({moduleForm.slides.length})
@@ -1318,7 +1326,7 @@ export default function Modules() {
                             <select
                               value={slideForm.type}
                               onChange={(e) => handleSlideFormChange('type', e.target.value)}
-                              className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             >
                               <option value="text">Text</option>
                               <option value="image">Image</option>
@@ -1334,7 +1342,7 @@ export default function Modules() {
                             <select
                               value={slideForm.skillLevel}
                               onChange={(e) => handleSlideFormChange('skillLevel', e.target.value)}
-                              className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             >
                               <option value="Beginner">Beginner</option>
                               <option value="Intermediate">Intermediate</option>
@@ -1355,7 +1363,7 @@ export default function Modules() {
                               value={slideForm.title}
                               onChange={(e) => handleSlideFormChange('title', e.target.value)}
                               placeholder="e.g., Welcome to the Course"
-                              className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             />
                           </div>
 
@@ -1370,7 +1378,7 @@ export default function Modules() {
                                 onChange={(e) => handleSlideFormChange('content', e.target.value)}
                                 placeholder="Enter your slide content here..."
                                 rows={6}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                                className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                               />
                             ) : (
                               <FileUpload
@@ -1398,7 +1406,7 @@ export default function Modules() {
                               value={slideForm.description}
                               onChange={(e) => handleSlideFormChange('description', e.target.value)}
                               placeholder="Brief description of this slide"
-                              className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                              className="w-full px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             />
                           </div>
                         </div>
@@ -1406,8 +1414,8 @@ export default function Modules() {
 
                       {/* Empty State */}
                       {moduleForm.slides.length === 0 && editingSlideIndex === null && (
-                        <div className="text-center py-8 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600">
-                          <div className="inline-flex items-center justify-center w-12 h-12 bg-neutral-100 dark:bg-gray-900 rounded-full mb-3">
+                        <div className="text-center py-8 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600">
+                          <div className="inline-flex items-center justify-center w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-3">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
@@ -1458,4 +1466,6 @@ export default function Modules() {
     </div>
   );
 }
+
+
 

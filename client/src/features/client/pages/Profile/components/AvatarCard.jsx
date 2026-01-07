@@ -59,7 +59,7 @@ export default function AvatarCard({ name, avatarUrl, role, email, onUpload, onD
             />
           ) : null}
           <div
-            className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-2xl font-bold"
+            className="w-full h-full rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white text-2xl font-bold"
             style={{ display: avatarUrl ? 'none' : 'flex' }}
           >
             {getInitials(name)}
@@ -75,7 +75,7 @@ export default function AvatarCard({ name, avatarUrl, role, email, onUpload, onD
             <div className="flex gap-2">
               <button
                 onClick={handleUploadClick}
-                className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                className="p-2 rounded-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white transition-colors"
                 title="Upload picture"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export default function AvatarCard({ name, avatarUrl, role, email, onUpload, onD
           {name}
         </h1>
         {role && (
-          <p className="flex text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+          <p className="flex text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide">
             {role}
           </p>
         )}

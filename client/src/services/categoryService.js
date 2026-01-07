@@ -170,6 +170,31 @@ export async function addModuleToCategory(categoryId, moduleId) {
 }
 
 /**
+ * Bulk add multiple modules to a category
+ * @param {number} categoryId - Category ID
+ * @param {Array<number>} moduleIds - Array of module IDs to add
+ */
+export async function bulkAddModulesToCategory(categoryId, moduleIds) {
+  const token = getAuthToken();
+  
+  const response = await fetch(`${API_BASE}/${categoryId}/modules/bulk`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ moduleIds })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to add modules');
+  }
+
+  return response.json();
+}
+
+/**
  * Remove a module from a category
  * @param {number} categoryId - Category ID
  * @param {number} moduleId - Module ID to remove
@@ -187,6 +212,31 @@ export async function removeModuleFromCategory(categoryId, moduleId) {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to remove module');
+  }
+
+  return response.json();
+}
+
+/**
+ * Bulk remove multiple modules from a category
+ * @param {number} categoryId - Category ID
+ * @param {Array<number>} moduleIds - Array of module IDs to remove
+ */
+export async function bulkRemoveModulesFromCategory(categoryId, moduleIds) {
+  const token = getAuthToken();
+  
+  const response = await fetch(`${API_BASE}/${categoryId}/modules/bulk`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ moduleIds })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to remove modules');
   }
 
   return response.json();

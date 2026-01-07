@@ -52,18 +52,13 @@ export default function AccountList() {
         ? `/api/auth/registration-requests?status=${filterStatus}`
         : '/api/auth/registration-requests';
       
-      console.log('Fetching requests from:', url);
-      
       const res = await fetch(url, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
       const data = await res.json();
       
-      console.log('Response status:', res.ok, 'Data:', data);
-      
       if (!res.ok) throw new Error(data.message || 'Failed to load registration requests');
       setRequests(data.data || []);
-      console.log('Requests set to:', data.data);
     } catch (err) {
       console.error('Error fetching requests:', err);
       setError(err.message);
@@ -271,7 +266,7 @@ export default function AccountList() {
   return (
     <div className="space-y-6 p-6">
       {/* Tab Navigation */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
         <div className="flex border-b border-neutral-200 dark:border-neutral-700">
           <button
             onClick={() => {
@@ -331,7 +326,7 @@ export default function AccountList() {
       </div>
 
       {/* Simplified Statistics Bar */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
         <div className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-wrap">
             {activeTab === 'accounts' ? (
@@ -417,7 +412,7 @@ export default function AccountList() {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
@@ -518,7 +513,7 @@ export default function AccountList() {
       {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">{error}</div>}
       
       {/* Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
         <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -563,7 +558,7 @@ export default function AccountList() {
             <AccountTable users={filteredUsers} onEdit={handleEditUser} onDelete={handleDeleteUser} />
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-neutral-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
@@ -586,7 +581,7 @@ export default function AccountList() {
             />
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-neutral-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -667,7 +662,7 @@ export default function AccountList() {
                   Are you sure you want to delete the following user account?
                 </p>
                 
-                <div className="p-4 bg-neutral-50 dark:bg-gray-900 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold">
                       {(userToDelete.displayName || userToDelete.email).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
@@ -706,7 +701,7 @@ export default function AccountList() {
                 <button
                   onClick={cancelDelete}
                   disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-gray-900 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

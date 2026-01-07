@@ -17,8 +17,6 @@ export default function ModulesListView() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, moduleId: null, errorMessage: null });
 
-  console.log('ModulesListView: Rendering', { modules, loading, error });
-
   // Load modules on mount
   useEffect(() => {
     fetchModules();
@@ -169,8 +167,8 @@ export default function ModulesListView() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-neutral-900 p-6">
-      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
+    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 p-6">
+      <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
         {/* Search and Filters */}
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3">

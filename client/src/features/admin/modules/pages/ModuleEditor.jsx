@@ -11,8 +11,6 @@ export default function ModuleEditor() {
   const { fetchModuleById, createModule, updateModule, deleteModule } = useModules();
   const { showToast } = useToast();
 
-  console.log('ModuleEditor: moduleId from params =', moduleId, 'type:', typeof moduleId);
-
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -96,7 +94,6 @@ export default function ModuleEditor() {
       if (originalSlide?.imageFile && slide.id) {
         try {
           await uploadSlideImage(slide.id, originalSlide.imageFile);
-          console.log(`Uploaded image for slide ${i + 1}`);
         } catch (error) {
           console.error(`Failed to upload image for slide ${i + 1}:`, error);
         }
@@ -105,7 +102,6 @@ export default function ModuleEditor() {
       if (originalSlide?.videoFile && slide.id) {
         try {
           await uploadSlideVideo(slide.id, originalSlide.videoFile);
-          console.log(`Uploaded video for slide ${i + 1}`);
         } catch (error) {
           console.error(`Failed to upload video for slide ${i + 1}:`, error);
         }
@@ -153,7 +149,6 @@ export default function ModuleEditor() {
 
       if (isNewModule) {
         const response = await createModule(moduleData);
-        console.log('Create module response:', response);
         const newModuleId = response?.data?.id || response?.id;
         
         if (!newModuleId) {
@@ -369,14 +364,14 @@ export default function ModuleEditor() {
     const currentSlide = moduleForm.slides[currentSlidePreview];
     
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/admin/modules')}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -384,7 +379,7 @@ export default function ModuleEditor() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {moduleForm.title}
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
                   Preview Mode
                 </p>
               </div>
@@ -400,12 +395,12 @@ export default function ModuleEditor() {
           </div>
 
           {/* Module Info Card */}
-          <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-3">
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 moduleForm.isActive 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                  : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-400'
               }`}>
                 {moduleForm.isActive ? 'Active' : 'Inactive'}
               </span>
@@ -413,13 +408,13 @@ export default function ModuleEditor() {
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               {moduleForm.description || 'No description available'}
             </p>
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="border-t border-gray-200 dark:border-neutral-700 pt-4">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                 Learning Objectives:
               </h3>
               <ul className="list-disc list-inside space-y-1">
                 {moduleForm.objectives.map((obj, index) => (
-                  <li key={index} className="text-sm text-gray-600 dark:text-gray-400">
+                  <li key={index} className="text-sm text-gray-600 dark:text-neutral-400">
                     {obj}
                   </li>
                 ))}
@@ -429,9 +424,9 @@ export default function ModuleEditor() {
 
           {/* Slide Viewer */}
           {moduleForm.slides.length > 0 ? (
-            <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 overflow-hidden backdrop-blur-sm">
               {/* Slide Progress */}
-              <div className="bg-gray-100 dark:bg-gray-700 px-6 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-600">
+              <div className="bg-gray-100 dark:bg-neutral-700 px-6 py-3 flex items-center justify-between border-b border-gray-200 dark:border-neutral-600">
                 <div className="flex items-center gap-2">
                   {getSlideIcon(currentSlide.type)}
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -445,14 +440,14 @@ export default function ModuleEditor() {
                   <button
                     onClick={handlePrevSlide}
                     disabled={currentSlidePreview === 0}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleNextSlide}
                     disabled={currentSlidePreview === moduleForm.slides.length - 1}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -465,7 +460,7 @@ export default function ModuleEditor() {
                   {currentSlide.title}
                 </h2>
                 {currentSlide.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-sm text-gray-600 dark:text-neutral-400 mb-6">
                     {currentSlide.description}
                   </p>
                 )}
@@ -490,12 +485,12 @@ export default function ModuleEditor() {
                     {currentSlide.imageUrl && (
                       <div className="relative">
                         {imageLoading[currentSlidePreview] && (
-                          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+                          <div className="absolute inset-0 bg-gray-200 dark:bg-neutral-700 rounded-lg animate-pulse" />
                         )}
                         <img 
                           src={currentSlide.imageUrl} 
                           alt={currentSlide.title}
-                          className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
+                          className="w-full rounded-lg border border-gray-300 dark:border-neutral-600"
                           onLoadStart={() => setImageLoading(prev => ({ ...prev, [currentSlidePreview]: true }))}
                           onLoad={() => setImageLoading(prev => ({ ...prev, [currentSlidePreview]: false }))}
                           onError={() => setImageLoading(prev => ({ ...prev, [currentSlidePreview]: false }))}
@@ -517,14 +512,14 @@ export default function ModuleEditor() {
                     {currentSlide.videoUrl && (
                       <div className="relative">
                         {videoLoading[currentSlidePreview] && (
-                          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gray-200 dark:bg-neutral-700 rounded-lg animate-pulse flex items-center justify-center">
                             <LoadingSpinner size="lg" />
                           </div>
                         )}
                         <video 
                           src={currentSlide.videoUrl} 
                           controls
-                          className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
+                          className="w-full rounded-lg border border-gray-300 dark:border-neutral-600"
                           onLoadStart={() => setVideoLoading(prev => ({ ...prev, [currentSlidePreview]: true }))}
                           onLoadedData={() => setVideoLoading(prev => ({ ...prev, [currentSlidePreview]: false }))}
                           onError={() => setVideoLoading(prev => ({ ...prev, [currentSlidePreview]: false }))}
@@ -537,9 +532,9 @@ export default function ModuleEditor() {
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-12 text-center">
               <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
+              <p className="text-gray-500 dark:text-neutral-400 mb-2">
                 No slides in this module
               </p>
               <button
@@ -557,14 +552,14 @@ export default function ModuleEditor() {
 
   // EDIT MODE - Show editor interface
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/admin/modules')}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -572,7 +567,7 @@ export default function ModuleEditor() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {isNewModule ? 'Create New Module' : 'Edit Module'}
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
                 {isNewModule ? 'Create a new learning module' : 'Modify module details and objectives'}
               </p>
             </div>
@@ -609,7 +604,7 @@ export default function ModuleEditor() {
         </div>
 
         {/* Basic Information Card */}
-        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6 backdrop-blur-sm">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Basic Information
           </h2>
@@ -625,7 +620,7 @@ export default function ModuleEditor() {
                 value={moduleForm.title}
                 onChange={(e) => setModuleForm(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="e.g., Road Safety Basics"
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -639,7 +634,7 @@ export default function ModuleEditor() {
                 onChange={(e) => setModuleForm(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Brief description of what students will learn..."
                 rows={3}
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
             </div>
 
@@ -650,7 +645,7 @@ export default function ModuleEditor() {
                 id="isActive"
                 checked={moduleForm.isActive}
                 onChange={(e) => setModuleForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-neutral-700 dark:border-neutral-600"
               />
               <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Module is active (visible to students)
@@ -660,7 +655,7 @@ export default function ModuleEditor() {
         </div>
 
         {/* Learning Objectives Card */}
-        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 mb-6 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 mb-6 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Learning Objectives
@@ -677,7 +672,7 @@ export default function ModuleEditor() {
           <div className="space-y-3">
             {moduleForm.objectives.map((objective, index) => (
               <div key={index} className="flex items-start gap-2">
-                <div className="flex-shrink-0 w-8 h-9 flex items-center justify-center text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="flex-shrink-0 w-8 h-9 flex items-center justify-center text-sm font-medium text-gray-600 dark:text-neutral-400">
                   {index + 1}.
                 </div>
                 <input
@@ -685,7 +680,7 @@ export default function ModuleEditor() {
                   value={objective}
                   onChange={(e) => handleObjectiveChange(index, e.target.value)}
                   placeholder={`Objective ${index + 1}`}
-                  className="flex-1 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {moduleForm.objectives.length > 1 && (
                   <button
@@ -702,7 +697,7 @@ export default function ModuleEditor() {
         </div>
 
         {/* Slides Section */}
-        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-6 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Slides ({moduleForm.slides.length})
@@ -717,9 +712,9 @@ export default function ModuleEditor() {
           </div>
 
           {moduleForm.slides.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+            <div className="text-center py-12 bg-gray-50 dark:bg-neutral-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-neutral-600">
               <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
+              <p className="text-gray-500 dark:text-neutral-400 mb-2">
                 No slides yet
               </p>
               <p className="text-sm text-gray-400 dark:text-gray-500">
@@ -736,7 +731,7 @@ export default function ModuleEditor() {
                 <select
                   value={selectedSlideIndex === null ? '' : selectedSlideIndex}
                   onChange={(e) => setSelectedSlideIndex(e.target.value === '' ? null : parseInt(e.target.value))}
-                  className="flex-1 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">-- Select a slide to edit --</option>
                   {moduleForm.slides.map((slide, index) => (
@@ -749,7 +744,7 @@ export default function ModuleEditor() {
 
               {/* Slide Editor */}
               {selectedSlideIndex !== null && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       {getSlideIcon(moduleForm.slides[selectedSlideIndex].type)}
@@ -759,7 +754,7 @@ export default function ModuleEditor() {
                       <button
                         onClick={() => moveSlide(selectedSlideIndex, 'up')}
                         disabled={selectedSlideIndex === 0}
-                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move up"
                       >
                         <ChevronUp className="w-4 h-4" />
@@ -767,7 +762,7 @@ export default function ModuleEditor() {
                       <button
                         onClick={() => moveSlide(selectedSlideIndex, 'down')}
                         disabled={selectedSlideIndex === moduleForm.slides.length - 1}
-                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move down"
                       >
                         <ChevronDown className="w-4 h-4" />
@@ -791,7 +786,7 @@ export default function ModuleEditor() {
                         <select
                           value={moduleForm.slides[selectedSlideIndex].type}
                           onChange={(e) => handleSlideChange(selectedSlideIndex, 'type', e.target.value)}
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="text">Text</option>
                           <option value="image">Image</option>
@@ -806,7 +801,7 @@ export default function ModuleEditor() {
                         <select
                           value={moduleForm.slides[selectedSlideIndex].skillLevel}
                           onChange={(e) => handleSlideChange(selectedSlideIndex, 'skillLevel', e.target.value)}
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="Beginner">Beginner</option>
                           <option value="Intermediate">Intermediate</option>
@@ -824,7 +819,7 @@ export default function ModuleEditor() {
                         value={moduleForm.slides[selectedSlideIndex].title}
                         onChange={(e) => handleSlideChange(selectedSlideIndex, 'title', e.target.value)}
                         placeholder="Enter slide title"
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
@@ -837,7 +832,7 @@ export default function ModuleEditor() {
                         value={moduleForm.slides[selectedSlideIndex].description}
                         onChange={(e) => handleSlideChange(selectedSlideIndex, 'description', e.target.value)}
                         placeholder="Brief description (optional)"
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
@@ -850,7 +845,7 @@ export default function ModuleEditor() {
                         onChange={(e) => handleSlideChange(selectedSlideIndex, 'content', e.target.value)}
                         placeholder="Enter slide content..."
                         rows={8}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="w-full px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-neutral-100 focus:ring-2 focus:ring-blue-500 resize-none"
                       />
                     </div>
 
@@ -904,12 +899,12 @@ export default function ModuleEditor() {
                           {moduleForm.slides[selectedSlideIndex].imageUrl && (
                             <div className="mt-3 relative">
                               {imageLoading[`edit-${selectedSlideIndex}`] && (
-                                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ maxHeight: '16rem' }} />
+                                <div className="absolute inset-0 bg-gray-200 dark:bg-neutral-700 rounded animate-pulse" style={{ maxHeight: '16rem' }} />
                               )}
                               <img 
                                 src={moduleForm.slides[selectedSlideIndex].imageUrl} 
                                 alt="Preview" 
-                                className="max-w-full max-h-64 rounded border border-gray-300 dark:border-gray-600"
+                                className="max-w-full max-h-64 rounded border border-gray-300 dark:border-neutral-600"
                                 onLoadStart={() => setImageLoading(prev => ({ ...prev, [`edit-${selectedSlideIndex}`]: true }))}
                                 onLoad={() => setImageLoading(prev => ({ ...prev, [`edit-${selectedSlideIndex}`]: false }))}
                                 onError={(e) => {
@@ -974,14 +969,14 @@ export default function ModuleEditor() {
                           {moduleForm.slides[selectedSlideIndex].videoUrl && (
                             <div className="mt-3 relative">
                               {videoLoading[`edit-${selectedSlideIndex}`] && (
-                                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded animate-pulse flex items-center justify-center" style={{ maxHeight: '16rem' }}>
+                                <div className="absolute inset-0 bg-gray-200 dark:bg-neutral-700 rounded animate-pulse flex items-center justify-center" style={{ maxHeight: '16rem' }}>
                                   <LoadingSpinner size="lg" />
                                 </div>
                               )}
                               <video 
                                 src={moduleForm.slides[selectedSlideIndex].videoUrl} 
                                 controls
-                                className="max-w-full max-h-64 rounded border border-gray-300 dark:border-gray-600"
+                                className="max-w-full max-h-64 rounded border border-gray-300 dark:border-neutral-600"
                                 onLoadStart={() => setVideoLoading(prev => ({ ...prev, [`edit-${selectedSlideIndex}`]: true }))}
                                 onLoadedData={() => setVideoLoading(prev => ({ ...prev, [`edit-${selectedSlideIndex}`]: false }))}
                                 onError={() => setVideoLoading(prev => ({ ...prev, [`edit-${selectedSlideIndex}`]: false }))}

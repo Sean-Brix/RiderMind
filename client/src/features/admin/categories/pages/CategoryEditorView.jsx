@@ -16,13 +16,13 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowLeft, Plus, GripVertical, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, GripVertical, Trash2, Save, CheckSquare, Square } from 'lucide-react';
 import { useCategories, useModules, useToast } from '../../shared';
 import { LoadingSpinner } from '../../shared';
 import ModuleSelectorModal from '../components/ModuleSelectorModal';
 
 // Sortable Module Item Component
-function SortableModuleItem({ module, index, onRemove }) {
+function SortableModuleItem({ module, index, onRemove, isSelected, onToggleSelect, selectionMode }) {
   const {
     attributes,
     listeners,
@@ -43,13 +43,29 @@ function SortableModuleItem({ module, index, onRemove }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-gray-900 rounded-lg border ${
+      className={`bg-white dark:bg-neutral-800 rounded-lg border ${
         isDragging
           ? 'border-blue-500 shadow-2xl scale-105'
-          : 'border-gray-200 dark:border-gray-700 shadow-sm'
+          : isSelected
+          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10'
+          : 'border-gray-200 dark:border-neutral-700 shadow-sm'
       } p-4 transition-shadow hover:shadow-md cursor-default`}
     >
       <div className="flex items-start">
+        {/* Checkbox for bulk selection */}
+        {selectionMode && (
+          <button
+            onClick={() => onToggleSelect(module.id)}
+            className="flex-shrink-0 mr-3 mt-1"
+          >
+            {isSelected ? (
+              <CheckSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <Square className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+        )}
+
         {/* Drag Handle */}
         <div
           {...attributes}
@@ -99,35 +115,29 @@ function SortableModuleItem({ module, index, onRemove }) {
 export default function CategoryEditorView() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const { selectedCategory, fetchCategoryById, reorderCategoryModules, removeModuleFromCategory, loading: categoryLoading } = useCategories();
+  const { selectedCategory, fetchCategoryById, reorderCategoryModules, removeModuleFromCategory, bulkRemoveModulesFromCategory, loading: categoryLoading } = useCategories();
   const { modules: allModules, fetchModules } = useModules();
   const { showToast } = useToast();
 
   const [categoryModules, setCategoryModules] = useState([]);
   const [isModuleSelectorOpen, setIsModuleSelectorOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedModuleIds, setSelectedModuleIds] = useState([]);
 
   useEffect(() => {
-    console.log('CategoryEditorView: Fetching data for category:', categoryId);
     fetchCategoryById(parseInt(categoryId));
-    fetchModules().then(modules => {
-      console.log('CategoryEditorView: Modules fetched:', modules);
-    }).catch(err => {
+    fetchModules().catch(err => {
       console.error('CategoryEditorView: Error fetching modules:', err);
     });
   }, [categoryId, fetchCategoryById, fetchModules]);
 
   useEffect(() => {
-    console.log('Selected category changed:', selectedCategory);
     if (selectedCategory?.modules) {
-      console.log('Modules from category:', selectedCategory.modules);
-      console.log('First module structure:', selectedCategory.modules[0]);
       // Sort modules by position
       const sorted = [...selectedCategory.modules].sort((a, b) => a.position - b.position);
-      console.log('Sorted modules:', sorted);
       setCategoryModules(sorted);
     } else {
-      console.log('No modules in category');
       setCategoryModules([]);
     }
   }, [selectedCategory]);
@@ -198,21 +208,53 @@ export default function CategoryEditorView() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedModuleIds.length === 0) return;
+
+    try {
+      // Bulk remove all selected modules in one request
+      await bulkRemoveModulesFromCategory(parseInt(categoryId), selectedModuleIds);
+      
+      showToast({ 
+        type: 'success', 
+        message: `${selectedModuleIds.length} module(s) removed from category` 
+      });
+      setSelectedModuleIds([]);
+      setSelectionMode(false);
+    } catch (error) {
+      showToast({ type: 'error', message: error.message || 'Failed to remove modules' });
+    }
+  };
+
+  const handleToggleSelect = (moduleId) => {
+    setSelectedModuleIds(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedModuleIds.length === categoryModules.length) {
+      setSelectedModuleIds([]);
+    } else {
+      const allIds = categoryModules.map(cm => cm.module?.id || cm.moduleId || cm.id);
+      setSelectedModuleIds(allIds);
+    }
+  };
+
   const getAvailableModules = () => {
     const assignedModuleIds = categoryModules.map(cm => {
       const moduleId = cm.module?.id || cm.moduleId || cm.id;
       return moduleId;
     }).filter(Boolean); // Remove any undefined/null values
     
-    console.log('Assigned module IDs:', assignedModuleIds);
-    console.log('All modules:', allModules);
     // Filter modules to only show those with quizzes attached and not already assigned
     const available = allModules.filter(m => 
       !assignedModuleIds.includes(m.id) && 
       m.quizzes && 
       m.quizzes.length > 0
     );
-    console.log('Available modules (with quizzes):', available);
     return available;
   };
 
@@ -225,7 +267,7 @@ export default function CategoryEditorView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-800 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -240,7 +282,7 @@ export default function CategoryEditorView() {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => navigate('/admin/categories')}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -256,20 +298,59 @@ export default function CategoryEditorView() {
             )}
           </div>
         </div>
-        {/* Add Module Button */}
-        <div className="mb-6">
+        {/* Action Buttons */}
+        <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => setIsModuleSelectorOpen(true)}
-            className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+            className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Add Module to Category
+            Add Modules
           </button>
+          
+          {categoryModules.length > 0 && (
+            <>
+              {!selectionMode ? (
+                <button
+                  onClick={() => setSelectionMode(true)}
+                  className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Select
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSelectAll}
+                    className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {selectedModuleIds.length === categoryModules.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={selectedModuleIds.length === 0}
+                    className="px-4 py-3 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete ({selectedModuleIds.length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectionMode(false);
+                      setSelectedModuleIds([]);
+                    }}
+                    className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </>
+          )}
         </div>
 
         {/* Modules List */}
         {categoryModules.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               No modules assigned to this category yet
             </p>
@@ -304,6 +385,9 @@ export default function CategoryEditorView() {
                       module={{ ...module, id: moduleId }}
                       index={index}
                       onRemove={handleRemoveModule}
+                      isSelected={selectedModuleIds.includes(moduleId)}
+                      onToggleSelect={handleToggleSelect}
+                      selectionMode={selectionMode}
                     />
                   );
                 })}

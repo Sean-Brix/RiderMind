@@ -52,7 +52,7 @@ export default function CategoriesListView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-pink-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 p-8">
       <div className="max-w-7xl mx-auto">
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -70,7 +70,7 @@ export default function CategoriesListView() {
               <button
                 key={category.id}
                 onClick={() => handleManageCategory(category.id)}
-                className="group bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:bg-gray-900 rounded-lg shadow-sm border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all p-6 text-left backdrop-blur-sm"
+                className="group bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-lg shadow-sm border-2 border-gray-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all p-6 text-left backdrop-blur-sm"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-blue-600 dark:text-blue-400">
@@ -90,7 +90,7 @@ export default function CategoriesListView() {
                   {category.description || 'No description'}
                 </p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-neutral-700">
                   <div className="flex items-center space-x-4">
                     <div>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">

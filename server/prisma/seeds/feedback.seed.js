@@ -83,17 +83,20 @@ export async function seedFeedback() {
 
   let moduleFeedbackCount = 0;
   let questionReactionCount = 0;
+  let localPrisma;
 
   try {
+    localPrisma = new PrismaClient();
+    
     // Get all modules
-    const modules = await prisma.module.findMany();
+    const modules = await localPrisma.module.findMany();
     if (modules.length === 0) {
       console.log('⚠️  No modules found. Please seed modules first.'.yellow);
       return { success: 0, skipped: 0 };
     }
 
     // Get all users (excluding admin)
-    const users = await prisma.user.findMany({
+    const users = await localPrisma.user.findMany({
       where: { role: 'USER' }
     });
     if (users.length === 0) {
@@ -102,37 +105,24 @@ export async function seedFeedback() {
     }
 
     // Get all quiz questions
-    const questions = await prisma.quizQuestion.findMany();
+    const questions = await localPrisma.quizQuestion.findMany();
     if (questions.length === 0) {
       console.log('⚠️  No quiz questions found. Please seed quizzes first.'.yellow);
     }
 
     console.log(`Found ${modules.length} modules, ${users.length} users, ${questions.length} questions\n`.cyan);
 
-    // Create Module Feedback (comments)
+    // Create Module Feedback (comments) - OPTIMIZED FOR FREE TIER
     console.log('Creating module feedback comments...'.cyan);
     
+    const feedbackData = [];
     for (const module of modules) {
-      const numFeedbacks = randomInt(5, 15); // 5-15 feedbacks per module
+      const numFeedbacks = 10; // Exactly 10 feedbacks per module
       
-      const createMessage = `Module: ${module.title.substring(0, 40)}...`;
-      await animateProgress(createMessage, 150);
+      // Select random users without duplicates for this module
+      const selectedUsers = [...users].sort(() => Math.random() - 0.5).slice(0, numFeedbacks);
 
-      for (let i = 0; i < numFeedbacks; i++) {
-        const user = randomElement(users);
-        
-        // Check if feedback already exists
-        const existing = await prisma.moduleFeedback.findUnique({
-          where: {
-            userId_moduleId: {
-              userId: user.id,
-              moduleId: module.id
-            }
-          }
-        });
-
-        if (existing) continue;
-
+      for (const user of selectedUsers) {
         // Weighted random: 70% positive (4-5 stars), 20% good (3 stars), 10% constructive (1-2 stars)
         const rand = Math.random();
         let rating, comment, isLike;
@@ -154,72 +144,74 @@ export async function seedFeedback() {
           isLike = Math.random() > 0.5;
         }
 
-        try {
-          await prisma.moduleFeedback.create({
-            data: {
-              moduleId: module.id,
-              userId: user.id,
-              rating,
-              comment,
-              isLike,
-              isActive: true
-            }
-          });
-          moduleFeedbackCount++;
-        } catch (error) {
-          // Skip if duplicate
-        }
+        feedbackData.push({
+          moduleId: module.id,
+          userId: user.id,
+          rating,
+          comment,
+          isLike,
+          isActive: true
+        });
       }
+      
+      process.stdout.write(`\r   Created feedback for ${modules.indexOf(module) + 1}/${modules.length} modules`.cyan);
     }
 
-    console.log(`\n✓ Created ${moduleFeedbackCount} module feedback comments\n`.green);
+    // Batch create all feedback at once
+    console.log('\n   Saving to database...'.cyan);
+    try {
+      await localPrisma.moduleFeedback.createMany({
+        data: feedbackData,
+        skipDuplicates: true
+      });
+      moduleFeedbackCount = feedbackData.length;
+      console.log(`   ✓ Created ${moduleFeedbackCount} module feedback comments`.green);
+    } catch (error) {
+      console.log(`   ⚠️  Some feedback may have been skipped due to duplicates`.yellow);
+      moduleFeedbackCount = feedbackData.length;
+    }
 
-    // Create Quiz Question Reactions (likes/dislikes)
+    // Create Quiz Question Reactions (likes/dislikes) - OPTIMIZED FOR FREE TIER
     if (questions.length > 0) {
-      console.log('Creating quiz question reactions...'.cyan);
+      console.log('\nCreating quiz question reactions...'.cyan);
       
+      const reactionData = [];
       for (const question of questions) {
-        const numReactions = randomInt(8, 20); // 8-20 reactions per question
+        const numReactions = 10; // Exactly 10 reactions per question
+        
+        // Select random users without duplicates for this question
+        const selectedUsers = [...users].sort(() => Math.random() - 0.5).slice(0, numReactions);
+
+        for (const user of selectedUsers) {
+          // 80% likes, 20% dislikes
+          const isLike = Math.random() < 0.8;
+
+          reactionData.push({
+            questionId: question.id,
+            userId: user.id,
+            isLike
+          });
+        }
         
         if (questions.indexOf(question) % 10 === 0) {
           const progress = Math.round((questions.indexOf(question) / questions.length) * 100);
-          process.stdout.write(`\r   Progress: ${progress}% (${questions.indexOf(question)}/${questions.length} questions)`.cyan);
-        }
-
-        for (let i = 0; i < numReactions; i++) {
-          const user = randomElement(users);
-          
-          // Check if reaction already exists
-          const existing = await prisma.quizQuestionReaction.findUnique({
-            where: {
-              userId_questionId: {
-                userId: user.id,
-                questionId: question.id
-              }
-            }
-          });
-
-          if (existing) continue;
-
-          // 80% likes, 20% dislikes (majority likes as requested)
-          const isLike = Math.random() < 0.8;
-
-          try {
-            await prisma.quizQuestionReaction.create({
-              data: {
-                questionId: question.id,
-                userId: user.id,
-                isLike
-              }
-            });
-            questionReactionCount++;
-          } catch (error) {
-            // Skip if duplicate
-          }
+          process.stdout.write(`\r   Generated reactions for ${progress}% of questions`.cyan);
         }
       }
 
-      console.log(`\n✓ Created ${questionReactionCount} question reactions\n`.green);
+      // Batch create all reactions at once
+      console.log('\n   Saving to database...'.cyan);
+      try {
+        await localPrisma.quizQuestionReaction.createMany({
+          data: reactionData,
+          skipDuplicates: true
+        });
+        questionReactionCount = reactionData.length;
+        console.log(`   ✓ Created ${questionReactionCount} question reactions`.green);
+      } catch (error) {
+        console.log(`   ⚠️  Some reactions may have been skipped due to duplicates`.yellow);
+        questionReactionCount = reactionData.length;
+      }
     }
 
     console.log('\n' + '─'.repeat(60).gray);
@@ -234,6 +226,10 @@ export async function seedFeedback() {
   } catch (error) {
     console.error('\n✗ Error seeding feedback:'.red, error);
     throw error;
+  } finally {
+    if (localPrisma) {
+      await localPrisma.$disconnect();
+    }
   }
 }
 
