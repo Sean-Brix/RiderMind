@@ -19,6 +19,7 @@ import moduleFeedbackRouter from './module-feedback/index.js';
 import quizReactionsRouter from './quiz-reactions/index.js';
 import analyticsRouter from './analytics/index.js';
 import devRouter from './dev/index.js';
+import adminStudentModulesRouter from './admin/student-modules.js';
 
 router.use('/auth', authRouter);
 router.use('/account', accountRouter);
@@ -32,5 +33,6 @@ router.use('/module-feedback', moduleFeedbackRouter);
 router.use('/quiz-questions', quizReactionsRouter);
 router.use('/analytics', analyticsRouter);
 router.use('/dev', devRouter);
+router.use('/admin/student-modules', adminStudentModulesRouter);
 
 export default router;

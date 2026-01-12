@@ -763,7 +763,8 @@ function Modules() {
                 })(),
                 totalTimeSpent: 120,
                 completionDate: new Date(),
-                certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`
+                certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`,
+                studentModuleId: modules[0]?.id // Get first module ID for tracking
               }}
               leaderboardData={{}}
             />

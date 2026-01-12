@@ -776,7 +776,6 @@ export default function QuizEditor() {
                       >
                         <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                         <option value="TRUE_FALSE">True/False</option>
-                        <option value="ESSAY">Essay</option>
                         <option value="IDENTIFICATION">Identification</option>
                       </select>
                     </div>

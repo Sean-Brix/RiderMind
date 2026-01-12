@@ -28,6 +28,7 @@ import ModulesTest from './features/client/pages/Modules/ModulesTest.jsx';
 import TestPhase1 from './features/admin/pages/TestPhase1.jsx';
 import CategoriesListView from './features/admin/categories/pages/CategoriesListView.jsx';
 import CategoryEditorView from './features/admin/categories/pages/CategoryEditorView.jsx';
+import StudentModules from './features/admin/pages/StudentModules.jsx';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -78,6 +79,7 @@ function App() {
         <Route path="modules" element={<ModulesListView />} />
         <Route path="modules/new" element={<ModuleEditor />} />
         <Route path="modules/:moduleId/edit" element={<ModuleEditor />} />
+        <Route path="student-modules" element={<StudentModules />} />
         <Route path="quizes" element={<Quizes />} />
         <Route path="quizes/new" element={<QuizEditor />} />
         <Route path="quizes/:quizId/edit" element={<QuizEditor />} />

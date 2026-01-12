@@ -52,8 +52,12 @@ export function CompletionModal({
     averageScore = 0,
     totalTimeSpent = 0, // in minutes
     completionDate = new Date(),
-    certificateId = `CERT-${Date.now()}`
+    certificateId = `CERT-${Date.now()}`,
+    studentModuleId = '0000'
   } = completionData;
+
+  // Generate Reference ID for certificate tracking
+  const refId = `REF-${userId}-${studentModuleId}`;
 
   // Use real leaderboard data if available, otherwise fallback to prop data
   const {
@@ -367,8 +371,7 @@ export function CompletionModal({
                     completionDate={completionDate}
                     totalModules={totalModules}
                     averageScore={averageScore}
-                    certificateId={certificateId}
-                  />
+                    certificateId={certificateId}                    refId={refId}                  />
                 </div>
               </div>
 
@@ -526,6 +529,7 @@ export function CompletionModal({
           totalModules={totalModules}
           averageScore={averageScore}
           certificateId={certificateId}
+          refId={refId}
         />
         </div>
       </div>

@@ -181,7 +181,6 @@ export function QuestionTypeSelector({ value, onChange, disabled = false }) {
     { value: 'MULTIPLE_ANSWER', label: 'Multiple Answer', icon: '☑' },
     { value: 'IDENTIFICATION', label: 'Identification', icon: 'Aa' },
     { value: 'FILL_BLANK', label: 'Fill in the Blank', icon: '___' },
-    { value: 'ESSAY', label: 'Essay', icon: '📝' },
   ];
 
   return (

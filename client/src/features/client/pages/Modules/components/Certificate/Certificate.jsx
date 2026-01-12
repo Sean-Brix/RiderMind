@@ -322,31 +322,68 @@ const Certificate = forwardRef(({
           </div>
         </div>
 
-        {/* Certificate ID */}
+        {/* Certificate ID and Reference Number */}
         <div style={{ marginTop: '25px', textAlign: 'center', paddingBottom: '10px' }}>
-          <p style={{ 
-            fontSize: '12px', 
-            color: colors.neutral600,
-            fontFamily: 'monospace',
-            letterSpacing: '0.05em',
-            margin: '0 0 5px 0'
+          <div style={{
+            display: 'inline-block',
+            backgroundColor: colors.neutral50,
+            border: `2px solid ${colors.brand}`,
+            borderRadius: '8px',
+            padding: '12px 24px',
+            marginBottom: '8px'
           }}>
-            Certificate ID: {certificateId}
-          </p>
-          <p style={{ 
-            fontSize: '12px', 
-            color: colors.brand,
-            fontFamily: 'monospace',
-            letterSpacing: '0.05em',
-            fontWeight: '600',
-            margin: '0 0 5px 0'
-          }}>
-            Ref ID: {refId}
-          </p>
+            <p style={{ 
+              fontSize: '11px', 
+              color: colors.neutral600,
+              fontFamily: 'monospace',
+              letterSpacing: '0.05em',
+              margin: '0 0 4px 0',
+              textTransform: 'uppercase',
+              fontWeight: '600'
+            }}>
+              Certificate ID
+            </p>
+            <p style={{ 
+              fontSize: '13px', 
+              color: colors.neutral900,
+              fontFamily: 'monospace',
+              letterSpacing: '0.1em',
+              fontWeight: 'bold',
+              margin: '0 0 8px 0'
+            }}>
+              {certificateId}
+            </p>
+            <div style={{
+              height: '1px',
+              backgroundColor: colors.neutral300,
+              margin: '8px 0'
+            }}></div>
+            <p style={{ 
+              fontSize: '11px', 
+              color: colors.brand,
+              fontFamily: 'monospace',
+              letterSpacing: '0.05em',
+              margin: '0 0 4px 0',
+              textTransform: 'uppercase',
+              fontWeight: '600'
+            }}>
+              Reference Number
+            </p>
+            <p style={{ 
+              fontSize: '15px', 
+              color: colors.brand,
+              fontFamily: 'monospace',
+              letterSpacing: '0.1em',
+              fontWeight: 'bold',
+              margin: '0'
+            }}>
+              {refId}
+            </p>
+          </div>
           <p style={{ 
             fontSize: '11px', 
             color: colors.neutral600,
-            margin: '0'
+            margin: '8px 0 0 0'
           }}>
             Verify at ridermind.com/verify
           </p>

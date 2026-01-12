@@ -45,6 +45,13 @@ export default async function updateProgress(req, res) {
     
     if (progress !== undefined) {
       updateData.progress = Math.min(100, Math.max(0, parseFloat(progress)));
+      
+      // Automatically mark as COMPLETED if progress reaches 100%
+      if (updateData.progress >= 100 && studentModule.status === 'ONGOING') {
+        updateData.status = 'COMPLETED';
+        updateData.isCompleted = true;
+        updateData.completedAt = new Date();
+      }
     }
 
     // Set startedAt if not already set

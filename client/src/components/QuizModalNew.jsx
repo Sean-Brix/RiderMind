@@ -594,7 +594,23 @@ export default function QuizModal({ isOpen, onClose, quiz, onSubmit, onQuizCompl
 
                   {/* Answer Options */}
                   <div className="space-y-2 lg:space-y-4">
-                    {!currentQuestionData.options || currentQuestionData.options.length === 0 ? (
+                    {currentQuestionData.type === 'ESSAY' ? (
+                      <textarea
+                        value={answers[currentQuestionData.id] || ''}
+                        onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
+                        placeholder="Type your answer here..."
+                        className="w-full p-5 text-lg border-2 border-neutral-200 dark:border-neutral-600 rounded-xl focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 resize-none min-h-[150px] shadow-sm"
+                        rows={5}
+                      />
+                    ) : currentQuestionData.type === 'IDENTIFICATION' || currentQuestionData.type === 'FILL_BLANK' ? (
+                      <textarea
+                        value={answers[currentQuestionData.id] || ''}
+                        onChange={(e) => handleAnswerChange(currentQuestionData.id, e.target.value)}
+                        placeholder="Type your answer here..."
+                        className="w-full p-5 text-lg border-2 border-neutral-200 dark:border-neutral-600 rounded-xl focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 resize-none min-h-[150px] shadow-sm"
+                        rows={5}
+                      />
+                    ) : !currentQuestionData.options || currentQuestionData.options.length === 0 ? (
                       <div className="p-4 lg:p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-lg lg:rounded-xl text-center">
                         <svg className="w-12 h-12 lg:w-16 lg:h-16 text-red-600 dark:text-red-400 mx-auto mb-2 lg:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -430,14 +430,7 @@ export default function Landing() {
           </div>
 
           <div className="relative">
-            {/* Popular Badge */}
-            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
-              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                🔥 Most Popular
-              </span>
-            </div>
-
-            <div className="bg-gradient-to-br from-brand-600 to-brand-800 dark:from-brand-700 dark:to-brand-900 rounded-3xl shadow-2xl p-10 md:p-12 text-white border-4 border-yellow-400">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-800 dark:from-brand-700 dark:to-brand-900 rounded-3xl shadow-2xl p-10 md:p-12 text-white border-4 border-brand-500">
               <div className="text-center mb-8">
                 <h3 className="text-3xl font-bold mb-4">Complete Driver Education</h3>
                 <div className="flex items-end justify-center gap-2 mb-2">

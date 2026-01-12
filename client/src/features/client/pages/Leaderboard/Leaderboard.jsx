@@ -278,24 +278,20 @@ export default function Leaderboard() {
                         
                         {/* Stats Container */}
                         <div className="flex flex-col items-center gap-2 w-full">
-                          {/* Score */}
+                          {/* Total Score */}
                           <div className="font-bold text-white text-base md:text-lg">
                             {user.averageQuizScore}%
                           </div>
-
-                          {/* Performance Score */}
-                          <div className="text-xs text-white/90 font-medium">
-                            {user.performanceScore} pts
-                          </div>
+                          <div className="text-[10px] text-white/80 -mt-1">Total Score</div>
 
                           {/* Stats Grid */}
-                          <div className="text-xs text-white/90 flex flex-col gap-1.5 w-full px-1">
+                          <div className="text-xs text-white/90 flex flex-col gap-2 w-full px-1 mt-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="flex items-center gap-1">
-                                <span>📚</span>
-                                <span className="text-[10px]">Modules</span>
+                                <span>🏆</span>
+                                <span className="text-[10px]">Points</span>
                               </span>
-                              <span className="font-semibold">{user.totalModulesCompleted}</span>
+                              <span className="font-semibold">{user.performanceScore}</span>
                             </div>
                             <div className="flex items-center justify-between gap-2">
                               <span className="flex items-center gap-1">
@@ -303,13 +299,6 @@ export default function Leaderboard() {
                                 <span className="text-[10px]">Attempts</span>
                               </span>
                               <span className="font-semibold">{user.totalQuizAttempts}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-1">
-                                <span>✅</span>
-                                <span className="text-[10px]">Pass Rate</span>
-                              </span>
-                              <span className="font-semibold">{user.passRate}%</span>
                             </div>
                           </div>
                         </div>
@@ -332,13 +321,10 @@ export default function Leaderboard() {
                   <table className="w-full min-w-[700px]">
                     <thead className="bg-neutral-100 dark:bg-neutral-700">
                       <tr>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rank</th>
                         <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Rider</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Avg Score</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Total Score (%)</th>
                         <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Points</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Modules</th>
                         <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Attempts</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300">Pass Rate</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -352,12 +338,9 @@ export default function Leaderboard() {
                             user.userId === currentUser?.id ? 'bg-brand-50 dark:bg-brand-900/20' : ''
                           }`}
                         >
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                            #{user.rank}
-                          </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm overflow-hidden">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm overflow-hidden flex-shrink-0">
                                 {profilePictures[user.userId] ? (
                                   <img 
                                     src={profilePictures[user.userId]} 
@@ -372,18 +355,16 @@ export default function Leaderboard() {
                                   <span>{getInitials(user.displayName)}</span>
                                 )}
                               </div>
-                              <div>
-                                <span className="font-medium text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm block">
-                                  {user.displayName}
-                                  {user.userId === currentUser?.id && (
-                                    <span className="ml-2 text-xs bg-brand-600 text-white px-2 py-0.5 rounded">You</span>
-                                  )}
-                                </span>
-                                {user.categories.length > 0 && (
-                                  <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                                    {user.categories.join(', ')}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">#{user.rank}</span>
+                                <div>
+                                  <span className="font-medium text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm block">
+                                    {user.displayName}
+                                    {user.userId === currentUser?.id && (
+                                      <span className="ml-2 text-xs bg-brand-600 text-white px-2 py-0.5 rounded">You</span>
+                                    )}
                                   </span>
-                                )}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -398,21 +379,7 @@ export default function Leaderboard() {
                             </span>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm">
-                            {user.totalModulesCompleted}
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm">
                             {user.totalQuizAttempts}
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                              user.passRate >= 80 
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                : user.passRate >= 60
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                            }`}>
-                              {user.passRate}%
-                            </span>
                           </td>
                         </motion.tr>
                       ))}
@@ -462,7 +429,7 @@ export default function Leaderboard() {
                       <div className="text-2xl font-bold text-brand-600 dark:text-brand-400">
                         {currentUserRank.averageQuizScore}%
                       </div>
-                      <div className="text-xs text-neutral-600 dark:text-neutral-400">Avg Score</div>
+                      <div className="text-xs text-neutral-600 dark:text-neutral-400">Total Score</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-neutral-700 dark:text-neutral-300">
@@ -472,9 +439,9 @@ export default function Leaderboard() {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-neutral-700 dark:text-neutral-300">
-                        {currentUserRank.totalModulesCompleted}
+                        {currentUserRank.totalQuizAttempts}
                       </div>
-                      <div className="text-xs text-neutral-600 dark:text-neutral-400">Modules</div>
+                      <div className="text-xs text-neutral-600 dark:text-neutral-400">Attempts</div>
                     </div>
                   </div>
                 </div>

@@ -870,7 +870,8 @@ function ModulesTest() {
               })(),
               totalTimeSpent: 120, // Mock data - calculate from actual time tracking
               completionDate: new Date(),
-              certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`
+              certificateId: `CERT-${user?.id || '0000'}-${Date.now()}`,
+              studentModuleId: displayModules[0]?.id // Get first completed module ID for tracking
             }}
             leaderboardData={{}}
           />
