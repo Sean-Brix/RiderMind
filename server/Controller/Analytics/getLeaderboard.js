@@ -78,7 +78,7 @@ export default async function getLeaderboard(req, res) {
     console.log(`[Leaderboard] After role filter: ${userModules.length} student modules`);
     console.log(`[Leaderboard] TimeFrame: ${timeFrame}, Date filter:`, studentModuleDateFilter);
 
-    // Get quiz attempts for more detailed scoring
+    // Get quiz attempts for more detailed scoring (including time spent)
     const quizAttempts = await prisma.quizAttempt.findMany({
       where: {
         ...quizAttemptDateFilter,
@@ -91,7 +91,13 @@ export default async function getLeaderboard(req, res) {
         userId: true,
         score: true,
         passed: true,
-        submittedAt: true
+        submittedAt: true,
+        timeSpent: true,
+        quiz: {
+          select: {
+            timeLimit: true
+          }
+        }
       }
     });
 
@@ -151,12 +157,30 @@ export default async function getLeaderboard(req, res) {
       }
     });
 
-    // Process quiz attempts to count passed quizzes
+    // Aggregate quiz attempts per user for time and pass stats
+    const userTimeStats = {};
+
+    // Process quiz attempts to count passed quizzes and track time usage
     quizAttempts.forEach(attempt => {
       const userId = attempt.userId;
       if (userId && userStats[userId]) {
         if (attempt.passed) {
           userStats[userId].totalQuizzesPassed++;
+        }
+
+        const timeSpent = attempt.timeSpent || 0;
+        const timeLimit = attempt.quiz?.timeLimit || 0;
+
+        if (!userTimeStats[userId]) {
+          userTimeStats[userId] = {
+            totalTimeSpent: 0,
+            totalTimeLimit: 0
+          };
+        }
+
+        userTimeStats[userId].totalTimeSpent += timeSpent;
+        if (timeLimit > 0) {
+          userTimeStats[userId].totalTimeLimit += timeLimit;
         }
       }
     });
@@ -169,18 +193,10 @@ export default async function getLeaderboard(req, res) {
       
       user.averageQuizScore = avgScore;
 
-      // Calculate overall performance score (weighted)
-      // 40% average quiz score, 30% completion rate, 20% quiz attempts, 10% pass rate
-      const completionWeight = user.totalModulesCompleted * 5; // Each completed module is worth 5 points
-      const attemptWeight = Math.min(user.totalQuizAttempts * 2, 40); // Cap at 40 points
-      const passRateWeight = user.totalQuizAttempts > 0 
-        ? (user.totalQuizzesPassed / user.totalQuizAttempts) * 20 
-        : 0;
-      const scoreWeight = avgScore * 0.4;
-
-      const performanceScore = Math.round(
-        scoreWeight + completionWeight + attemptWeight + passRateWeight
-      );
+      // For ranking and display, we now align "Points" directly
+      // with the visible total score percentage. This avoids
+      // confusing cases where someone has a high % but 0 points.
+      const performanceScore = Math.max(0, Math.round(avgScore));
 
       return {
         ...user,
