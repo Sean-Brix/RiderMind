@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const FORM_STORAGE_KEY = 'ridermind_registration_form';
+
+  const INITIAL_FORM_DATA = {
     // Account Information
     email: '',
     password: '',
@@ -42,6 +44,24 @@ export default function Register() {
     
     // Student Type
     student_type: ''
+  };
+
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FORM_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_FORM_DATA,
+          ...parsed,
+          password: '',
+          confirmPassword: ''
+        };
+      }
+    } catch (e) {
+      console.error('Failed to load cached registration form:', e);
+    }
+    return INITIAL_FORM_DATA;
   });
 
   const [loading, setLoading] = useState(false);
@@ -49,13 +69,34 @@ export default function Register() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [requestId, setRequestId] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [captchaText, setCaptchaText] = useState(() => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let value = '';
+    for (let i = 0; i < 6; i++) {
+      value += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return value;
+  });
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: value
+      };
+
+      // Cache non-sensitive fields in localStorage
+      try {
+        const { password, confirmPassword, ...safeToCache } = updated;
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(safeToCache));
+      } catch (err) {
+        console.error('Failed to cache registration form:', err);
+      }
+
+      return updated;
+    });
     setError('');
   };
 
@@ -186,6 +227,11 @@ export default function Register() {
       return;
     }
 
+    if (!captchaAnswer || captchaAnswer.trim().toUpperCase() !== captchaText.toUpperCase()) {
+      setError('CAPTCHA text does not match. Please try again.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -233,6 +279,19 @@ export default function Register() {
       // Show success modal with request ID
       setRequestId(data.requestId);
       setShowSuccessModal(true);
+      try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+      } catch (e) {
+        console.error('Failed to clear cached registration form:', e);
+      }
+      setFormData(INITIAL_FORM_DATA);
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let value = '';
+      for (let i = 0; i < 6; i++) {
+        value += chars[Math.floor(Math.random() * chars.length)];
+      }
+      setCaptchaText(value);
+      setCaptchaAnswer('');
 
     } catch (err) {
       setError(err.message || 'Failed to submit registration request');
@@ -798,6 +857,47 @@ export default function Register() {
                         className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                       />
                     </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col items-center gap-2">
+                  <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">Type the characters below in order</span>
+                  <div className="px-4 py-2 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 inline-flex gap-1 select-none">
+                    {captchaText.split('').map((ch, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block text-lg font-bold text-neutral-900 dark:text-neutral-100"
+                        style={{
+                          transform: `rotate(${(idx % 2 === 0 ? 1 : -1) * (5 + idx * 2)}deg) translateY(${(idx % 3) - 1}px)`
+                        }}
+                      >
+                        {ch}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={captchaAnswer}
+                      onChange={(e) => setCaptchaAnswer(e.target.value)}
+                      className="w-40 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-600 focus:border-transparent text-center text-sm tracking-widest uppercase"
+                      placeholder="Enter text"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                        let value = '';
+                        for (let i = 0; i < 6; i++) {
+                          value += chars[Math.floor(Math.random() * chars.length)];
+                        }
+                        setCaptchaText(value);
+                        setCaptchaAnswer('');
+                        setError('');
+                      }}
+                      className="px-3 py-1 text-xs rounded-md border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                    >
+                      Refresh
+                    </button>
                   </div>
                 </div>
               </div>
