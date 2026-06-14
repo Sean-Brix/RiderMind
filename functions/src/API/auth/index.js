@@ -12,7 +12,7 @@ import {
   rejectRegistration,
   deleteRegistrationRequest
 } from '../../Controller/Authentication/registerRequest.js';
-import { uploadReceipt, upload } from '../../Controller/Authentication/uploadReceipt.js';
+import { uploadReceipt, parseReceiptUpload } from '../../Controller/Authentication/uploadReceipt.js';
 
 const router = express.Router();
 
@@ -24,7 +24,7 @@ router.post('/reset-password', resetPassword);
 
 router.get('/registration-requests', authenticate, requireRole('ADMIN'), getRegistrationRequests);
 router.get('/registration-requests/:id', authenticate, requireRole('ADMIN'), getRegistrationRequest);
-router.post('/registration-requests/:id/upload-receipt', authenticate, requireRole('ADMIN'), upload.single('receipt'), uploadReceipt);
+router.post('/registration-requests/:id/upload-receipt', authenticate, requireRole('ADMIN'), parseReceiptUpload, uploadReceipt);
 router.post('/registration-requests/:id/approve', authenticate, requireRole('ADMIN'), approveRegistration);
 router.post('/registration-requests/:id/reject', authenticate, requireRole('ADMIN'), rejectRegistration);
 router.delete('/registration-requests/:id', authenticate, requireRole('ADMIN'), deleteRegistrationRequest);
