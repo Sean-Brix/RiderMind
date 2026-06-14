@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All reads and writes go through the Firebase Admin SDK via Cloud Functions.
+    // The Express API validates JWT tokens server-side before any Firestore access.
+    // Client SDKs should never access Firestore directly — deny all direct access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

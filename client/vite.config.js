@@ -6,7 +6,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: path.resolve(__dirname, '../server/public/build'),
+    outDir: path.resolve(__dirname, '../public/build'),
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -34,12 +34,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
-      },
-      '/profile-pictures': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
+        // Rewrite path to match Firebase Functions emulator URL structure
+        rewrite: (path) => `/ridermind-f546f/us-central1/api${path}`,
       },
     },
   },

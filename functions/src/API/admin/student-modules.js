@@ -1,0 +1,14 @@
+import express from 'express';
+import { authenticate } from '../../middleware/auth.js';
+import { requireRole } from '../../middleware/roles.js';
+import getAllStudentModules from '../../Controller/admin/getAllStudentModules.js';
+import getStudentModuleStats from '../../Controller/admin/getStudentModuleStats.js';
+import getStudentModuleById from '../../Controller/admin/getStudentModuleById.js';
+
+const router = express.Router();
+
+router.get('/stats', authenticate, requireRole('ADMIN'), getStudentModuleStats);
+router.get('/', authenticate, requireRole('ADMIN'), getAllStudentModules);
+router.get('/:id', authenticate, requireRole('ADMIN'), getStudentModuleById);
+
+export default router;
